@@ -83,69 +83,74 @@ export default function ChatPage() {
   };
 
   const handleSendMessage = async () => {
-    if (!message.trim() && uploadedFiles.length === 0) return;
+  if (!message.trim() && uploadedFiles.length === 0) return;
 
-    setIsTyping(true);
-    const userMessageContent = message;
-    setMessage('');
+  setIsTyping(true);
+  const userMessageContent = message;
+  setMessage('');
 
-    try {
-      // Get auth token
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) throw new Error('No auth session');
+  try {
+    // ✅ Get latest session and token
+    const { data: { session }, error } = await supabase.auth.getSession();
+    
+    if (error || !session || !session.access_token) {
+      throw new Error('User session not found. Please log in again.');
+    }
 
-      // Upload files if any
-      let fileUploads = [];
-      if (uploadedFiles.length > 0) {
-        setIsUploading(true);
-        for (const file of uploadedFiles) {
-          try {
-            const formData = new FormData();
-            formData.append('file', file);
-            
-            const response = await fetch('/api/upload', {
-              method: 'POST',
-              headers: {
-                'Authorization': `Bearer ${session.access_token}`,
-              },
-              body: formData,
-            });
+    const token = session.access_token;
+    console.log("✅ Got session token:", token);
 
-            if (response.ok) {
-              const result = await response.json();
-              fileUploads.push(result.file);
-            }
-          } catch (error) {
-            console.error('File upload error:', error);
-            toast.error(`Failed to upload ${file.name}`);
-          }
+    // 🔁 Upload files if any
+    let fileUploads = [];
+    if (uploadedFiles.length > 0) {
+      setIsUploading(true);
+      for (const file of uploadedFiles) {
+        const formData = new FormData();
+        formData.append('file', file);
+
+        const response = await fetch('/api/upload', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`, // ✅ using the token
+          },
+          body: formData,
+        });
+
+        if (response.ok) {
+          const result = await response.json();
+          fileUploads.push(result.file);
+        } else {
+          console.error('File upload error:', await response.text());
+          toast.error(`Failed to upload ${file.name}`);
         }
-        setIsUploading(false);
-        setUploadedFiles([]);
       }
+      setIsUploading(false);
+      setUploadedFiles([]);
+    }
 
-      // Send chat message
-      const response = await fetch('/api/chat', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${session.access_token}`,
-        },
-        body: JSON.stringify({
-          message: userMessageContent,
-          chatId: currentChat?.id,
-          files: fileUploads,
-        }),
-      });
+    // 🔁 Send chat message
+    const response = await fetch('/api/chat', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`, // ✅ again using the token
+      },
+      body: JSON.stringify({
+        message: userMessageContent,
+        chatId: currentChat?.id,
+        files: fileUploads,
+      }),
+    });
 
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || 'Failed to send message');
-      }
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Failed to send message');
+    }
 
-      const result = await response.json();
-      
-      // Update current chat with new messages
+    const result = await response.json();
+
+    // Update current chat...
+    // Update current chat with new messages
       if (currentChat?.id === result.chatId) {
         setCurrentChat(prev => prev ? {
           ...prev,
@@ -158,18 +163,16 @@ export default function ChatPage() {
         const chat = newChat.find(c => c.id === result.chatId);
         if (chat) setCurrentChat(chat);
       }
+    // (keep your logic here as-is)
 
-    } catch (error: any) {
-      console.error('Send message error:', error);
-      if (error.message.includes('limit')) {
-        toast.error('Daily message limit reached. Please upgrade your plan.');
-      } else {
-        toast.error(error.message || 'Failed to send message');
-      }
-    } finally {
-      setIsTyping(false);
-    }
-  };
+  } catch (error: any) {
+    console.error('Send message error:', error);
+    toast.error(error.message || 'Failed to send message');
+  } finally {
+    setIsTyping(false);
+  }
+};
+
 
   const startNewChat = () => {
     setCurrentChat(null);

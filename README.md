@@ -71,7 +71,7 @@ Required environment variables:
 #### Gemini API
 1. Visit [Google AI Studio](https://makersuite.google.com/app/apikey)
 2. Create a new API key
-3. Add it to your `.env.local` as `GEMINI_API_KEY`
+3. Add it to your `.env.local` as `OPENAI_API_KEY`
 
 #### Stripe (Optional)
 1. Create a Stripe account

@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { supabase } from '@/lib/supabase';
+import { supabaseAdmin } from '@/lib/supabase-admin';
 import { fileService } from '@/lib/file-service';
 import { aiService } from '@/lib/ai-service';
+import jwt from 'jsonwebtoken';
 
 export async function POST(request: NextRequest) {
   try {
@@ -13,29 +14,31 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'No file provided' }, { status: 400 });
     }
 
-    // Get user from auth header
     const authHeader = request.headers.get('authorization');
     if (!authHeader) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     const token = authHeader.replace('Bearer ', '');
-    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+    const decoded = jwt.decode(token) as { sub?: string };
+    const userId = decoded?.sub;
 
-    if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    if (!userId) {
+      return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
     }
 
-    // Validate file
+    const { data: { user }, error: userError } = await supabaseAdmin.auth.admin.getUserById(userId);
+
+    if (userError || !user) {
+      return NextResponse.json({ error: 'User not found' }, { status: 401 });
+    }
+
     const validation = fileService.validateFile(file);
     if (!validation.valid) {
       return NextResponse.json({ error: validation.error }, { status: 400 });
     }
 
-    // Upload file
-    const uploadedFile = await fileService.uploadFile(file, user.id, messageId);
-
-    // Analyze file content
+    const uploadedFile = await fileService.uploadFile(file, userId, messageId);
     const analysis = await aiService.analyzeFile(file);
 
     return NextResponse.json({
