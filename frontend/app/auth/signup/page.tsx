@@ -69,22 +69,16 @@ export default function SignupPage() {
       }
 
       if (data.user) {
-        // Create user profile
-        const { error: profileError } = await supabase
-          .from('profiles')
-          .insert({
-            id: data.user.id,
-            email: formData.email,
-            name: formData.name,
-            plan: selectedPlan || 'free',
-          });
-
-        if (profileError) {
-          console.error('Profile creation error:', profileError);
+        // Check if user has a session (auto-confirmed) or needs email confirmation
+        if (data.session) {
+          // User is immediately authenticated (auto-confirm enabled)
+          toast.success('Account created successfully!');
+          router.push('/chat');
+        } else {
+          // User needs to confirm email
+          toast.success('Account created! Please check your email to verify your account before signing in.');
+          router.push('/auth/login');
         }
-
-        toast.success('Account created successfully!');
-        router.push('/chat');
       }
     } catch (error) {
       toast.error('An unexpected error occurred');
@@ -100,6 +94,10 @@ export default function SignupPage() {
         provider: 'google',
         options: {
           redirectTo: `${window.location.origin}/chat`,
+          queryParams: {
+            access_type: 'offline',
+            prompt: 'consent',
+          },
         },
       });
 
