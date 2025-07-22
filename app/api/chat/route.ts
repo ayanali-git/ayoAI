@@ -1,90 +1,95 @@
+// app/api/chat/route.ts
 import { NextRequest, NextResponse } from 'next/server';
-import { supabaseAdmin } from '@/lib/supabase-admin';
-import { aiService } from '@/lib/ai-service';
-import { chatService } from '@/lib/chat-service';
-import { subscriptionService } from '@/lib/subscription-service';
-import jwt from 'jsonwebtoken';
+import { createClient } from '@supabase/supabase-js';
 
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 
 export async function POST(request: NextRequest) {
   try {
-    const { message, chatId, files } = await request.json();
-
+    console.log('🚀 API Route called');
+    
+    // Get the authorization header
     const authHeader = request.headers.get('authorization');
-    if (!authHeader) {
+    console.log('🔑 Auth header present:', !!authHeader);
+    console.log('🔑 Auth header starts with Bearer:', authHeader?.startsWith('Bearer '));
+    
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      console.log('❌ No valid authorization token');
+      return NextResponse.json({ error: 'No authorization token' }, { status: 401 });
+    }
+
+    const token = authHeader.substring(7); // Remove 'Bearer ' prefix
+    console.log('🎫 Token extracted (first 20 chars):', token.substring(0, 20) + '...');
+
+    // Create Supabase client with the user's token
+    const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+      global: {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      },
+    });
+
+    console.log('🔧 Supabase client created');
+
+    // Verify the user is authenticated
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    
+    console.log('👤 Auth check - User:', !!user);
+    console.log('👤 Auth check - User ID:', user?.id);
+    console.log('❌ Auth error:', authError);
+    
+    if (authError || !user) {
+      console.error('Auth error details:', authError);
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const token = authHeader.replace('Bearer ', '');
+    const body = await request.json();
+    const { message } = body;
+    console.log('📝 Message received:', message?.substring(0, 50));
 
-let decoded: any;
-try {
-  decoded = jwt.decode(token);
-} catch {
-  return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
-}
+    // Log what we're about to insert
+    const insertData = {
+      title: message.substring(0, 50) + (message.length > 50 ? '...' : ''),
+      user_id: user.id,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    };
+    console.log('💾 About to insert:', insertData);
 
-const userId = decoded?.sub;
-if (!userId) {
-  return NextResponse.json({ error: 'Invalid token payload' }, { status: 401 });
-}
+    // Create a new chat with the authenticated user's ID
+    const { data: chat, error: chatError } = await supabase
+      .from('chats')
+      .insert(insertData)
+      .select()
+      .single();
 
-const { data: { user }, error: userError } = await supabaseAdmin.auth.admin.getUserById(userId);
-
-if (userError || !user) {
-  return NextResponse.json({ error: 'User not found' }, { status: 401 });
-}
-
-
-    const usageCheck = await subscriptionService.checkUsageLimit(user.id, 'messages');
-    if (!usageCheck.allowed) {
-      return NextResponse.json({
-        error: 'Daily message limit reached. Please upgrade your plan.',
-        code: 'USAGE_LIMIT_EXCEEDED'
-      }, { status: 429 });
+    if (chatError) {
+      console.error('💥 Chat creation error details:', {
+        message: chatError.message,
+        details: chatError.details,
+        hint: chatError.hint,
+        code: chatError.code
+      });
+      return NextResponse.json(
+        { error: `Failed to create chat: ${chatError.message}` },
+        { status: 500 }
+      );
     }
 
-    let currentChatId = chatId;
+    console.log('✅ Chat created successfully:', chat);
 
-    if (!currentChatId) {
-      const newChat = await chatService.createChat(user.id, message.slice(0, 50) + (message.length > 50 ? '...' : ''));
-      currentChatId = newChat.id;
-    }
-
-    const userMessage = await chatService.addMessage(currentChatId, 'user', message);
-
-    let fileContext = '';
-    if (files && files.length > 0) {
-      fileContext = files.map((file: any) =>
-        `File: ${file.filename} (${file.fileType})`
-      ).join('\n');
-    }
-
-    const aiResponse = await aiService.generateResponse(
-      [{ role: 'user', content: message }],
-      fileContext
-    );
-
-    const assistantMessage = await chatService.addMessage(
-      currentChatId,
-      'assistant',
-      aiResponse.content
-    );
-
-    return NextResponse.json({
-      chatId: currentChatId,
-      userMessage,
-      assistantMessage,
-      usage: {
-        remaining: usageCheck.remaining,
-        limit: usageCheck.limit
-      }
+    return NextResponse.json({ 
+      success: true, 
+      chatId: chat.id,
+      chat: chat 
     });
 
-  } catch (error: any) {
-    console.error('Chat API error:', error);
+  } catch (error) {
+    console.error('💥 API error:', error);
     return NextResponse.json(
-      { error: error.message || 'Internal server error', details: error.stack || error },
+      { error: 'Internal server error' },
       { status: 500 }
     );
   }

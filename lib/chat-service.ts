@@ -29,45 +29,36 @@ export interface FileAttachment {
 }
 
 class ChatService {
-async createChat(authToken: string, title: string): Promise<Chat> {
-  try {
-    const { data: { user }, error: authError } = await supabase.auth.getUser(authToken);
+  // ✅ Fixed: Accept userId directly instead of trying to extract from token
+  async createChat(userId: string, title: string): Promise<Chat> {
+    try {
+      const { data, error } = await supabase
+        .from('chats')
+        .insert({
+          user_id: userId,
+          title: title.slice(0, 100),
+        })
+        .select()
+        .single();
 
-    if (authError || !user) {
-      console.warn('⚠️ Token auth failed, falling back to unsafe method');
-      throw new Error('Unauthorized: Failed to get Supabase user from token');
+      if (error) {
+        throw new Error(`Failed to create chat: ${error.message}`);
+      }
+
+      return {
+        id: data.id,
+        userId: data.user_id,
+        title: data.title,
+        starred: data.starred,
+        createdAt: data.created_at,
+        updatedAt: data.updated_at,
+        messages: [],
+      };
+    } catch (error) {
+      console.error('Create chat error:', error);
+      throw error;
     }
-
-    const userId = user.id;
-    
-    const { data, error } = await supabase
-      .from('chats')
-      .insert({
-        user_id: userId,
-        title: title.slice(0, 100),
-      })
-      .select()
-      .single();
-
-    if (error) {
-      throw new Error(`Failed to create chat: ${error.message}`);
-    }
-
-    return {
-      id: data.id,
-      userId: data.user_id,
-      title: data.title,
-      starred: data.starred,
-      createdAt: data.created_at,
-      updatedAt: data.updated_at,
-      messages: [],
-    };
-  } catch (error) {
-    console.error('Create chat error:', error);
-    throw error;
   }
-}
-
 
   async getUserChats(userId: string): Promise<Chat[]> {
     try {
