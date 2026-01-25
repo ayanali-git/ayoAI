@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { aiService } from '@/lib/ai-service';
+import { subscriptionService } from '@/lib/subscription-service';
 
 // Create admin client for database operations
 const supabaseAdmin = createClient(
@@ -29,6 +30,18 @@ export async function POST(request: NextRequest) {
 
         if (!message || typeof message !== 'string') {
             return NextResponse.json({ error: 'Message is required' }, { status: 400 });
+        }
+
+        // Check usage limits
+        const usageCheck = await subscriptionService.checkUsageLimit(user.id, 'messages');
+        if (!usageCheck.allowed) {
+            return NextResponse.json({
+                error: 'Daily message limit reached',
+                code: 'LIMIT_EXCEEDED',
+                limit: usageCheck.limit,
+                remaining: usageCheck.remaining,
+                upgradeUrl: '/upgrade',
+            }, { status: 429 });
         }
 
         let currentChatId = chatId;

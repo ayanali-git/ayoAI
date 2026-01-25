@@ -63,7 +63,10 @@ class SubscriptionService {
         .single();
 
       if (error) {
-        console.error('Get user plan error:', error);
+        // Ignore "no rows found" error and default to free
+        if (error.code !== 'PGRST116') {
+          console.error('Get user plan error:', error);
+        }
         return 'free';
       }
 
@@ -105,9 +108,9 @@ class SubscriptionService {
     try {
       const plan = await this.getUserPlan(userId);
       const limits = this.getUsageLimits(plan);
-      
+
       const dailyLimit = type === 'messages' ? limits.dailyMessages : limits.dailyImageGenerations;
-      
+
       if (dailyLimit === -1) {
         return { allowed: true, remaining: -1, limit: -1 };
       }
@@ -115,9 +118,9 @@ class SubscriptionService {
       // Get today's usage count
       const today = new Date();
       today.setHours(0, 0, 0, 0);
-      
+
       let usageCount = 0;
-      
+
       if (type === 'messages') {
         // First, get all chat IDs for the user
         const { data: chats, error: chatsError } = await supabase

@@ -1,13 +1,16 @@
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { Switch } from '@/components/ui/switch';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/hooks/use-auth';
+import { useSubscription } from '@/components/subscription-provider';
+import { supabase } from '@/lib/supabase';
 import { motion } from 'framer-motion';
+import toast from 'react-hot-toast';
 import {
   ChevronLeft,
   Crown,
@@ -62,8 +65,8 @@ const plans = [
     icon: Zap,
   },
   {
-    id: 'ultra',
-    name: 'Ultra Pro',
+    id: 'plus',
+    name: 'Plus',
     description: 'For teams and heavy users',
     monthlyPrice: 199,
     yearlyPrice: 1999,
@@ -102,18 +105,110 @@ const faqs = [
 
 export default function UpgradePage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { user } = useAuth();
+  const { plan: currentPlan, hasActiveSubscription, refreshSubscription } = useSubscription();
   const [isYearly, setIsYearly] = useState(false);
+  const [loading, setLoading] = useState<string | null>(null);
 
-  const currentPlan = user?.user_metadata?.plan || 'free';
+  // Handle success/cancel from Stripe checkout
+  useEffect(() => {
+    const success = searchParams.get('success');
+    const canceled = searchParams.get('canceled');
 
-  const handleUpgrade = (planId: string) => {
-    if (planId === 'ultra') {
-      // Contact sales for ultra plan
-      window.open('mailto:sales@ayoai.com?subject=Ultra Pro Plan Inquiry', '_blank');
-    } else if (planId === 'pro') {
-      // TODO: Integrate with payment gateway
-      alert('Payment integration coming soon! You will be redirected to our payment gateway.');
+    if (success === 'true') {
+      toast.success('Subscription successful! Your plan has been upgraded.');
+      refreshSubscription();
+      // Clean URL
+      router.replace('/upgrade');
+    } else if (canceled === 'true') {
+      toast.error('Checkout was canceled.');
+      router.replace('/upgrade');
+    }
+  }, [searchParams, router, refreshSubscription]);
+
+  const handleUpgrade = async (planId: string) => {
+    if (!user) {
+      toast.error('Please login to upgrade your plan');
+      router.push('/auth/login');
+      return;
+    }
+
+    if (planId === 'plus') {
+      // Contact sales for plus plan
+      window.open('mailto:sales@ayoai.com?subject=Plus Plan Inquiry', '_blank');
+      return;
+    }
+
+    setLoading(planId);
+
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) {
+        toast.error('Session expired. Please login again.');
+        router.push('/auth/login');
+        return;
+      }
+
+      const response = await fetch('/api/stripe/checkout', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({
+          plan: planId,
+          interval: isYearly ? 'yearly' : 'monthly',
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to create checkout session');
+      }
+
+      // Redirect to Stripe Checkout
+      window.location.href = data.url;
+    } catch (error: any) {
+      console.error('Checkout error:', error);
+      toast.error(error.message || 'Failed to start checkout');
+    } finally {
+      setLoading(null);
+    }
+  };
+
+  const handleManageSubscription = async () => {
+    setLoading('manage');
+
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) {
+        toast.error('Session expired. Please login again.');
+        router.push('/auth/login');
+        return;
+      }
+
+      const response = await fetch('/api/stripe/portal', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${session.access_token}`,
+        },
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to open subscription portal');
+      }
+
+      // Redirect to Stripe Customer Portal
+      window.location.href = data.url;
+    } catch (error: any) {
+      console.error('Portal error:', error);
+      toast.error(error.message || 'Failed to open subscription portal');
+    } finally {
+      setLoading(null);
     }
   };
 
@@ -169,6 +264,20 @@ export default function UpgradePage() {
               </Badge>
             </span>
           </div>
+
+          {/* Manage Subscription Button */}
+          {hasActiveSubscription && (
+            <div className="flex justify-center mb-8">
+              <Button
+                variant="outline"
+                className="border-purple-500/50 text-purple-400 hover:bg-purple-500/10"
+                onClick={handleManageSubscription}
+                disabled={loading === 'manage'}
+              >
+                {loading === 'manage' ? 'Loading...' : 'Manage Subscription'}
+              </Button>
+            </div>
+          )}
         </motion.div>
 
         {/* Pricing Cards */}
@@ -281,8 +390,9 @@ export default function UpgradePage() {
                           : 'bg-secondary text-foreground hover:bg-muted'
                           }`}
                         onClick={() => handleUpgrade(plan.id)}
+                        disabled={loading !== null}
                       >
-                        {plan.id === 'ultra' ? 'Contact Sales' : 'Upgrade to Pro'}
+                        {loading === plan.id ? 'Processing...' : plan.id === 'plus' ? 'Contact Sales' : 'Upgrade to Pro'}
                       </Button>
                     )}
                   </CardContent>
