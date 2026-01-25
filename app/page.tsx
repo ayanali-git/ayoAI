@@ -6,14 +6,14 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { 
-  Brain, 
-  MessageCircle, 
-  Image, 
-  FileText, 
-  Zap, 
-  Users, 
-  Star, 
+import {
+  Brain,
+  MessageCircle,
+  Image,
+  FileText,
+  Zap,
+  Users,
+  Star,
   ChevronRight,
   Sparkles,
   Shield,
@@ -23,6 +23,7 @@ import {
 import Link from 'next/link';
 import { useAuth } from '@/hooks/use-auth';
 import { ThemeToggle } from '@/components/theme-toggle';
+import { Footer } from '@/components/ui/footer';
 
 const features = [
   {
@@ -88,7 +89,7 @@ export default function LandingPage() {
                 ayoAI
               </span>
             </div>
-            
+
             <nav className="hidden md:flex items-center space-x-8">
               <Link href="#features" className="text-sm font-medium hover:text-primary transition-colors">
                 Features
@@ -140,18 +141,18 @@ export default function LandingPage() {
               <Sparkles className="w-3 h-3 mr-1" />
               Now with Advanced AI
             </Badge>
-            
+
             <h1 className="text-4xl md:text-6xl font-bold mb-6 bg-gradient-to-r from-blue-500 via-purple-600 to-green-500 bg-clip-text text-transparent">
               Your AI-Powered
               <br />
               Assistant Awaits
             </h1>
-            
+
             <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
-              Interact with advanced AI using text, images, and documents. Generate stunning visuals, 
+              Interact with advanced AI using text, images, and documents. Generate stunning visuals,
               get intelligent answers, and boost your productivity like never before.
             </p>
-            
+
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Button size="lg" asChild className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700">
                 <Link href="/auth/signup">
@@ -383,61 +384,7 @@ export default function LandingPage() {
       </section>
 
       {/* Footer */}
-      <footer className="border-t py-12 px-4 sm:px-6 lg:px-8">
-        <div className="container mx-auto max-w-6xl">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-            <div>
-              <div className="flex items-center space-x-2 mb-4">
-                <div className="flex items-center justify-center w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg">
-                  <Sparkles className="w-4 h-4 text-white" />
-                </div>
-                <span className="text-xl font-bold bg-gradient-to-r from-blue-500 to-purple-600 bg-clip-text text-transparent">
-                  ayoAI
-                </span>
-              </div>
-              <p className="text-sm text-muted-foreground">
-                Your AI-powered assistant for the modern world.
-              </p>
-            </div>
-            
-            <div>
-              <h4 className="font-semibold mb-4">Product</h4>
-              <div className="space-y-2 text-sm text-muted-foreground">
-                <div>Features</div>
-                <div>Pricing</div>
-                <div>API</div>
-                <div>Documentation</div>
-              </div>
-            </div>
-            
-            <div>
-              <h4 className="font-semibold mb-4">Company</h4>
-              <div className="space-y-2 text-sm text-muted-foreground">
-                <div>About</div>
-                <div>Blog</div>
-                <div>Careers</div>
-                <div>Contact</div>
-              </div>
-            </div>
-            
-            <div>
-              <h4 className="font-semibold mb-4">Support</h4>
-              <div className="space-y-2 text-sm text-muted-foreground">
-                <div>Help Center</div>
-                <div>Privacy Policy</div>
-                <div>Terms of Service</div>
-                <div>Status</div>
-              </div>
-            </div>
-          </div>
-          
-          <Separator className="my-8" />
-          
-          <div className="text-center text-sm text-muted-foreground">
-            © 2024 ayoAI. All rights reserved.
-          </div>
-        </div>
-      </footer>
+      <Footer />
     </div>
   );
 }

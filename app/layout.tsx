@@ -40,14 +40,45 @@ export default function RootLayout({
         >
           <AuthProvider>
             {children}
-            <Toaster 
+            <Toaster
               position="top-right"
+              containerStyle={{
+                top: 20,
+                right: 20,
+                zIndex: 99999,
+              }}
               toastOptions={{
                 duration: 4000,
                 style: {
-                  background: 'var(--background)',
-                  color: 'var(--foreground)',
-                  border: '1px solid var(--border)',
+                  background: '#1a1a2e',
+                  color: '#ffffff',
+                  border: '1px solid rgba(139, 92, 246, 0.3)',
+                  borderRadius: '12px',
+                  padding: '16px',
+                  fontSize: '14px',
+                  fontWeight: '500',
+                  boxShadow: '0 10px 40px rgba(0, 0, 0, 0.4), 0 0 20px rgba(139, 92, 246, 0.1)',
+                  maxWidth: '400px',
+                },
+                success: {
+                  iconTheme: {
+                    primary: '#10b981',
+                    secondary: '#ffffff',
+                  },
+                  style: {
+                    background: '#1a1a2e',
+                    border: '1px solid rgba(16, 185, 129, 0.4)',
+                  },
+                },
+                error: {
+                  iconTheme: {
+                    primary: '#ef4444',
+                    secondary: '#ffffff',
+                  },
+                  style: {
+                    background: '#1a1a2e',
+                    border: '1px solid rgba(239, 68, 68, 0.4)',
+                  },
                 },
               }}
             />

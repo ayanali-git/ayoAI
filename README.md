@@ -4,14 +4,14 @@ A comprehensive AI-powered assistant web application built with Next.js, Supabas
 
 ## Features
 
-- 🤖 **AI Chat Interface** - Interactive chat with advanced AI models
-- 📁 **File Upload & Analysis** - Upload and analyze documents, images, and more
-- 🎨 **Image Generation** - Generate images from text prompts
-- 🔐 **Authentication** - Google OAuth and email/password login
-- 💳 **Subscription Management** - Tiered pricing with Stripe integration
-- 📱 **Responsive Design** - Works on desktop, tablet, and mobile
-- 🌙 **Dark/Light Theme** - Beautiful UI with theme switching
-- 💾 **Chat History** - Persistent chat storage with search
+- **AI Chat Interface** - Interactive chat with advanced AI models
+- **File Upload & Analysis** - Upload and analyze documents, images, and more
+- **Image Generation** - Generate images from text prompts
+- **Authentication** - Google OAuth and email/password login
+- **Subscription Management** - Tiered pricing with Stripe integration
+- **Responsive Design** - Works on desktop, tablet, and mobile
+- **Dark/Light Theme** - Beautiful UI with theme switching
+- **Chat History** - Persistent chat storage with search
 
 ## Tech Stack
 

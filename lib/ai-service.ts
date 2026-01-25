@@ -29,7 +29,6 @@ export class AIService {
     if (key) {
       return new GoogleGenerativeAI(key);
     }
-    console.log('Google API Key is missing in process.env');
     return null;
   }
 
@@ -40,10 +39,8 @@ export class AIService {
     // If it fails, report THAT error, because likely OpenAI is dead anyway.
     if (this.useGemini && genAI) {
       try {
-        console.log('Attempting to generate response with Gemini...');
         return await this.generateGeminiResponse(messages, fileContext, imageUrls);
       } catch (geminiError: any) {
-        console.error('Gemini generation failed:', geminiError);
         throw new Error(`Gemini Error: ${geminiError.message || geminiError}`);
       }
     }
@@ -90,8 +87,6 @@ Please provide helpful, accurate, and engaging responses.`;
       };
 
     } catch (error: any) {
-      console.error('AI Service (OpenAI) error:', error);
-
       // Handle specific OpenAI errors
       if (error.code === 'invalid_api_key') {
         throw new Error('Invalid OpenAI API key. Please check your configuration.');
@@ -159,7 +154,7 @@ ${fileContext ? `\n\nFile Context:\n${fileContext}` : ''}
             }
           });
         } catch (error) {
-          console.error('Failed to fetch image:', imageUrl, error);
+          // Silent fail for image fetch errors
         }
       }
     }
@@ -210,7 +205,6 @@ ${fileContext ? `\n\nFile Context:\n${fileContext}` : ''}
       return response.data[0].url;
 
     } catch (error: any) {
-      console.error('Image generation error:', error);
       throw new Error(`Image generation error: ${error.message || 'Unknown error occurred'}`);
     }
   }
@@ -240,7 +234,6 @@ ${fileContext ? `\n\nFile Context:\n${fileContext}` : ''}
       return analysis;
 
     } catch (error: any) {
-      console.error('File analysis error:', error);
       throw new Error(`File analysis error: ${error.message || 'Unknown error occurred'}`);
     }
   }
@@ -254,7 +247,6 @@ ${fileContext ? `\n\nFile Context:\n${fileContext}` : ''}
       return await this.generateGhibliStyleImage(prompt);
 
     } catch (error: any) {
-      console.error('Image conversion error:', error);
       throw new Error(`Image conversion error: ${error.message || 'Unknown error occurred'}`);
     }
   }

@@ -1,22 +1,53 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
+import { Switch } from '@/components/ui/switch';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/hooks/use-auth';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'react-hot-toast';
-import { ChevronLeft } from 'lucide-react';
+import {
+  ChevronLeft,
+  Camera,
+  User,
+  Shield,
+  Bell,
+  Palette,
+  Crown,
+  Loader2,
+  Check,
+  Upload
+} from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { motion } from 'framer-motion';
 
 export default function SettingsPage() {
   const { user, loading } = useAuth();
   const [profile, setProfile] = useState({ name: '', email: '', plan: '' });
   const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
+
+  // Notification preferences
+  const [emailNotifications, setEmailNotifications] = useState(true);
+  const [marketingEmails, setMarketingEmails] = useState(false);
+
+  // Get user's plan dynamically
+  const userPlan = user?.user_metadata?.plan || 'free';
+  const planLabels: { [key: string]: string } = {
+    'free': 'Free',
+    'pro': 'Pro',
+    'ultra': 'Ultra Pro'
+  };
 
   useEffect(() => {
     if (user) {
@@ -25,8 +56,86 @@ export default function SettingsPage() {
         email: user.email || '',
         plan: user.user_metadata?.plan || 'free',
       });
+      setAvatarUrl(user.user_metadata?.avatar_url || null);
     }
   }, [user]);
+
+  const handleAvatarUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      toast.error('Please upload an image file');
+      return;
+    }
+
+    // Validate file size (max 2MB)
+    if (file.size > 2 * 1024 * 1024) {
+      toast.error('Image size should be less than 2MB');
+      return;
+    }
+
+    setUploading(true);
+    try {
+      // Generate unique filename
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${user!.id}-${Date.now()}.${fileExt}`;
+      const filePath = `avatars/${fileName}`;
+
+      // Upload to Supabase Storage
+      const { error: uploadError } = await supabase.storage
+        .from('avatars')
+        .upload(filePath, file, { upsert: true });
+
+      if (uploadError) {
+        // If bucket doesn't exist, create a local URL instead
+        if (uploadError.message.includes('Bucket not found') || uploadError.message.includes('bucket')) {
+          // Fallback: Use base64 data URL
+          const reader = new FileReader();
+          reader.onload = async (e) => {
+            const base64Url = e.target?.result as string;
+
+            // Update user metadata with base64 avatar
+            const { error: updateError } = await supabase.auth.updateUser({
+              data: { avatar_url: base64Url },
+            });
+
+            if (updateError) {
+              throw updateError;
+            }
+
+            setAvatarUrl(base64Url);
+            toast.success('Profile picture updated!');
+          };
+          reader.readAsDataURL(file);
+          return;
+        }
+        throw uploadError;
+      }
+
+      // Get public URL
+      const { data: { publicUrl } } = supabase.storage
+        .from('avatars')
+        .getPublicUrl(filePath);
+
+      // Update user metadata with avatar URL
+      const { error: updateError } = await supabase.auth.updateUser({
+        data: { avatar_url: publicUrl },
+      });
+
+      if (updateError) {
+        throw updateError;
+      }
+
+      setAvatarUrl(publicUrl);
+      toast.success('Profile picture updated!');
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to upload image');
+    } finally {
+      setUploading(false);
+    }
+  };
 
   const handleProfileUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -49,6 +158,17 @@ export default function SettingsPage() {
 
   const handlePasswordChange = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (newPassword !== confirmPassword) {
+      toast.error('Passwords do not match');
+      return;
+    }
+
+    if (newPassword.length < 8) {
+      toast.error('Password must be at least 8 characters');
+      return;
+    }
+
     setSaving(true);
     try {
       const { error } = await supabase.auth.updateUser({
@@ -57,8 +177,9 @@ export default function SettingsPage() {
       if (error) {
         toast.error(error.message);
       } else {
-        toast.success('Password changed!');
+        toast.success('Password changed successfully!');
         setNewPassword('');
+        setConfirmPassword('');
       }
     } catch (err) {
       toast.error('An error occurred');
@@ -67,62 +188,287 @@ export default function SettingsPage() {
     }
   };
 
-  if (loading) return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-[#0a0a12]">
+        <Loader2 className="w-8 h-8 animate-spin text-purple-500" />
+      </div>
+    );
+  }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5 flex items-center justify-center p-4">
-      <div className="w-full max-w-lg mx-auto">
-        <Button variant="ghost" className="mb-6" onClick={() => router.back()}>
-          <ChevronLeft className="w-4 h-4 mr-1" /> Back to Chat
-        </Button>
-        <Card className="border-muted shadow-xl">
-          <CardHeader className="text-center">
-            <CardTitle className="text-2xl font-bold mb-2">Settings</CardTitle>
-            <CardDescription>Manage your profile and account settings</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleProfileUpdate} className="space-y-6">
-              <div>
-                <Label htmlFor="name">Name</Label>
-                <Input
-                  id="name"
-                  value={profile.name}
-                  onChange={e => setProfile({ ...profile, name: e.target.value })}
-                  className="mt-1"
-                  required
-                />
-              </div>
-              <div>
-                <Label htmlFor="email">Email</Label>
-                <Input id="email" value={profile.email} disabled className="mt-1 bg-muted" />
-              </div>
-              <div>
-                <Label>Current Plan</Label>
-                <div className="mt-1 text-sm font-medium text-primary capitalize">{profile.plan}</div>
-              </div>
-              <Button type="submit" className="w-full" disabled={saving}>
-                {saving ? 'Saving...' : 'Save Changes'}
-              </Button>
-            </form>
-            <Separator className="my-6" />
-            <form onSubmit={handlePasswordChange} className="space-y-4">
-              <Label htmlFor="newPassword">Change Password</Label>
-              <Input
-                id="newPassword"
-                type="password"
-                value={newPassword}
-                onChange={e => setNewPassword(e.target.value)}
-                placeholder="Enter new password"
-                className="mt-1"
-                required
-              />
-              <Button type="submit" className="w-full" disabled={saving}>
-                {saving ? 'Changing...' : 'Change Password'}
-              </Button>
-            </form>
-          </CardContent>
-        </Card>
+    <div className="min-h-screen bg-[#0a0a12]">
+      {/* Header */}
+      <div className="border-b border-white/5 bg-[#0a0a12]/80 backdrop-blur-xl sticky top-0 z-10">
+        <div className="max-w-4xl mx-auto px-4 py-4">
+          <Button
+            variant="ghost"
+            className="text-gray-400 hover:text-white hover:bg-white/5"
+            onClick={() => router.back()}
+          >
+            <ChevronLeft className="w-4 h-4 mr-1" />
+            Back to Chat
+          </Button>
+        </div>
+      </div>
+
+      <div className="max-w-4xl mx-auto px-4 py-8">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+        >
+          {/* Page Header */}
+          <div className="text-center mb-8">
+            <h1 className="text-3xl font-bold text-white mb-2">Settings</h1>
+            <p className="text-gray-400">Manage your profile and account settings</p>
+          </div>
+
+          <div className="grid gap-6">
+            {/* Profile Section */}
+            <Card className="bg-[#12121a] border-white/5">
+              <CardHeader>
+                <div className="flex items-center gap-3">
+                  <div className="p-2 rounded-lg bg-purple-500/10">
+                    <User className="w-5 h-5 text-purple-400" />
+                  </div>
+                  <div>
+                    <CardTitle className="text-white">Profile Information</CardTitle>
+                    <CardDescription className="text-gray-500">Update your personal details</CardDescription>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <form onSubmit={handleProfileUpdate} className="space-y-6">
+                  {/* Avatar Upload */}
+                  <div className="flex items-center gap-6">
+                    <div className="relative group">
+                      <Avatar className="w-24 h-24 ring-4 ring-purple-500/20">
+                        <AvatarImage src={avatarUrl || undefined} />
+                        <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white text-2xl">
+                          {profile.name?.[0] || profile.email?.[0] || 'U'}
+                        </AvatarFallback>
+                      </Avatar>
+                      <button
+                        type="button"
+                        onClick={() => fileInputRef.current?.click()}
+                        className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-full opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+                        disabled={uploading}
+                      >
+                        {uploading ? (
+                          <Loader2 className="w-6 h-6 text-white animate-spin" />
+                        ) : (
+                          <Camera className="w-6 h-6 text-white" />
+                        )}
+                      </button>
+                      <input
+                        ref={fileInputRef}
+                        type="file"
+                        accept="image/*"
+                        onChange={handleAvatarUpload}
+                        className="hidden"
+                      />
+                    </div>
+                    <div>
+                      <h3 className="text-white font-medium mb-1">Profile Picture</h3>
+                      <p className="text-sm text-gray-500 mb-3">Click on the avatar to upload a new photo</p>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        className="border-white/10 text-gray-400 hover:text-white hover:bg-white/5"
+                        onClick={() => fileInputRef.current?.click()}
+                        disabled={uploading}
+                      >
+                        <Upload className="w-4 h-4 mr-2" />
+                        Upload Image
+                      </Button>
+                    </div>
+                  </div>
+
+                  <Separator className="bg-white/5" />
+
+                  {/* Name Field */}
+                  <div className="space-y-2">
+                    <Label htmlFor="name" className="text-gray-300">Full Name</Label>
+                    <Input
+                      id="name"
+                      value={profile.name}
+                      onChange={e => setProfile({ ...profile, name: e.target.value })}
+                      className="bg-white/5 border-white/10 text-white placeholder:text-gray-500 focus:border-purple-500/50"
+                      placeholder="Enter your name"
+                    />
+                  </div>
+
+                  {/* Email Field */}
+                  <div className="space-y-2">
+                    <Label htmlFor="email" className="text-gray-300">Email Address</Label>
+                    <Input
+                      id="email"
+                      value={profile.email}
+                      disabled
+                      className="bg-white/5 border-white/10 text-gray-400"
+                    />
+                    <p className="text-xs text-gray-500">Email cannot be changed</p>
+                  </div>
+
+                  <Button
+                    type="submit"
+                    className="w-full bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white"
+                    disabled={saving}
+                  >
+                    {saving ? (
+                      <>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        Saving...
+                      </>
+                    ) : (
+                      <>
+                        <Check className="w-4 h-4 mr-2" />
+                        Save Changes
+                      </>
+                    )}
+                  </Button>
+                </form>
+              </CardContent>
+            </Card>
+
+            {/* Subscription Section */}
+            <Card className="bg-[#12121a] border-white/5">
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 rounded-lg bg-yellow-500/10">
+                      <Crown className="w-5 h-5 text-yellow-400" />
+                    </div>
+                    <div>
+                      <CardTitle className="text-white">Subscription</CardTitle>
+                      <CardDescription className="text-gray-500">Manage your plan</CardDescription>
+                    </div>
+                  </div>
+                  <Badge className={`${userPlan === 'pro'
+                      ? 'bg-blue-500/20 text-blue-400 border-blue-500/30'
+                      : userPlan === 'ultra'
+                        ? 'bg-purple-500/20 text-purple-400 border-purple-500/30'
+                        : 'bg-white/5 text-gray-400 border-white/10'
+                    }`}>
+                    {planLabels[userPlan]}
+                  </Badge>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="flex items-center justify-between p-4 rounded-lg bg-white/5 border border-white/5">
+                  <div>
+                    <h3 className="text-white font-medium mb-1">Current Plan: {planLabels[userPlan]}</h3>
+                    <p className="text-sm text-gray-500">
+                      {userPlan === 'free'
+                        ? 'Upgrade to unlock more features'
+                        : 'You have access to all premium features'
+                      }
+                    </p>
+                  </div>
+                  <Button
+                    variant={userPlan === 'free' ? 'default' : 'outline'}
+                    className={userPlan === 'free'
+                      ? 'bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white'
+                      : 'border-white/10 text-gray-400 hover:text-white hover:bg-white/5'
+                    }
+                    onClick={() => router.push('/upgrade')}
+                  >
+                    {userPlan === 'free' ? 'Upgrade Now' : 'Manage Plan'}
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Security Section */}
+            <Card className="bg-[#12121a] border-white/5">
+              <CardHeader>
+                <div className="flex items-center gap-3">
+                  <div className="p-2 rounded-lg bg-red-500/10">
+                    <Shield className="w-5 h-5 text-red-400" />
+                  </div>
+                  <div>
+                    <CardTitle className="text-white">Security</CardTitle>
+                    <CardDescription className="text-gray-500">Update your password</CardDescription>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <form onSubmit={handlePasswordChange} className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="newPassword" className="text-gray-300">New Password</Label>
+                    <Input
+                      id="newPassword"
+                      type="password"
+                      value={newPassword}
+                      onChange={e => setNewPassword(e.target.value)}
+                      placeholder="Enter new password"
+                      className="bg-white/5 border-white/10 text-white placeholder:text-gray-500 focus:border-purple-500/50"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="confirmPassword" className="text-gray-300">Confirm Password</Label>
+                    <Input
+                      id="confirmPassword"
+                      type="password"
+                      value={confirmPassword}
+                      onChange={e => setConfirmPassword(e.target.value)}
+                      placeholder="Confirm new password"
+                      className="bg-white/5 border-white/10 text-white placeholder:text-gray-500 focus:border-purple-500/50"
+                    />
+                  </div>
+                  <Button
+                    type="submit"
+                    variant="outline"
+                    className="w-full border-white/10 text-white hover:bg-white/5"
+                    disabled={saving || !newPassword || !confirmPassword}
+                  >
+                    {saving ? 'Updating...' : 'Update Password'}
+                  </Button>
+                </form>
+              </CardContent>
+            </Card>
+
+            {/* Notifications Section */}
+            <Card className="bg-[#12121a] border-white/5">
+              <CardHeader>
+                <div className="flex items-center gap-3">
+                  <div className="p-2 rounded-lg bg-blue-500/10">
+                    <Bell className="w-5 h-5 text-blue-400" />
+                  </div>
+                  <div>
+                    <CardTitle className="text-white">Notifications</CardTitle>
+                    <CardDescription className="text-gray-500">Manage your notification preferences</CardDescription>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex items-center justify-between p-4 rounded-lg bg-white/5">
+                  <div>
+                    <h3 className="text-white font-medium">Email Notifications</h3>
+                    <p className="text-sm text-gray-500">Receive updates about your conversations</p>
+                  </div>
+                  <Switch
+                    checked={emailNotifications}
+                    onCheckedChange={setEmailNotifications}
+                  />
+                </div>
+                <div className="flex items-center justify-between p-4 rounded-lg bg-white/5">
+                  <div>
+                    <h3 className="text-white font-medium">Marketing Emails</h3>
+                    <p className="text-sm text-gray-500">Receive news and promotional content</p>
+                  </div>
+                  <Switch
+                    checked={marketingEmails}
+                    onCheckedChange={setMarketingEmails}
+                  />
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </motion.div>
       </div>
     </div>
   );
-} 
+}

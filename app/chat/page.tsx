@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
+import { useState, useEffect, useMemo } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -22,7 +22,12 @@ import {
   Paperclip,
   Loader2,
   Upload,
-  X
+  X,
+  ChevronLeft,
+  ChevronRight,
+  MoreHorizontal,
+  Edit3,
+  Pin
 } from 'lucide-react';
 import { useAuth } from '@/hooks/use-auth';
 import { useRouter } from 'next/navigation';
@@ -39,10 +44,49 @@ import toast from 'react-hot-toast';
 import { supabase } from '@/lib/supabase';
 import ReactMarkdown from 'react-markdown';
 
+// Helper function to group chats by date
+const groupChatsByDate = (chats: Chat[]) => {
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const yesterday = new Date(today.getTime() - 24 * 60 * 60 * 1000);
+  const lastWeek = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
+  const lastMonth = new Date(today.getTime() - 30 * 24 * 60 * 60 * 1000);
+
+  const groups: { [key: string]: Chat[] } = {
+    'Pinned': [],
+    'Today': [],
+    'Yesterday': [],
+    'Previous 7 Days': [],
+    'Previous 30 Days': [],
+    'Older': []
+  };
+
+  chats.forEach(chat => {
+    const chatDate = new Date(chat.updatedAt || chat.createdAt);
+
+    if (chat.starred) {
+      groups['Pinned'].push(chat);
+    } else if (chatDate >= today) {
+      groups['Today'].push(chat);
+    } else if (chatDate >= yesterday) {
+      groups['Yesterday'].push(chat);
+    } else if (chatDate >= lastWeek) {
+      groups['Previous 7 Days'].push(chat);
+    } else if (chatDate >= lastMonth) {
+      groups['Previous 30 Days'].push(chat);
+    } else {
+      groups['Older'].push(chat);
+    }
+  });
+
+  return groups;
+};
+
 export default function ChatPage() {
   const { user, loading, signOut } = useAuth();
   const router = useRouter();
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [currentChat, setCurrentChat] = useState<Chat | null>(null);
   const [chats, setChats] = useState<Chat[]>([]);
   const [message, setMessage] = useState('');
@@ -51,6 +95,21 @@ export default function ChatPage() {
   const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
   const [isUploading, setIsUploading] = useState(false);
   const [pendingMessage, setPendingMessage] = useState<{ content: string, files: File[] } | null>(null);
+  const [hoveredChatId, setHoveredChatId] = useState<string | null>(null);
+
+  // Get user's plan dynamically
+  const userPlan = useMemo(() => {
+    return user?.user_metadata?.plan || 'free';
+  }, [user]);
+
+  const planLabel = useMemo(() => {
+    const plans: { [key: string]: string } = {
+      'free': 'Free Plan',
+      'pro': 'Pro Plan',
+      'ultra': 'Ultra Pro'
+    };
+    return plans[userPlan] || 'Free Plan';
+  }, [userPlan]);
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop: (acceptedFiles) => {
@@ -62,7 +121,7 @@ export default function ChatPage() {
       'application/*': ['.pdf', '.doc', '.docx']
     },
     maxFiles: 5,
-    maxSize: 10 * 1024 * 1024, // 10MB
+    maxSize: 10 * 1024 * 1024,
     noClick: true,
   });
 
@@ -79,7 +138,6 @@ export default function ChatPage() {
       const userChats = await chatService.getUserChats(supabase, user!.id);
       setChats(userChats);
     } catch (error) {
-      console.error('Failed to load chats:', error);
       toast.error('Failed to load chat history');
     }
   };
@@ -90,16 +148,12 @@ export default function ChatPage() {
     const userMessageContent = message;
     const filesToUpload = [...uploadedFiles];
 
-    // Clear input immediately for better UX
     setMessage('');
     setUploadedFiles([]);
-
-    // Show pending message immediately (optimistic UI)
     setPendingMessage({ content: userMessageContent, files: filesToUpload });
     setIsTyping(true);
 
     try {
-      // ✅ Get latest session and token
       const { data: { session }, error } = await supabase.auth.getSession();
 
       if (error || !session || !session.access_token) {
@@ -108,7 +162,6 @@ export default function ChatPage() {
 
       const token = session.access_token;
 
-      // 🔁 Upload files if any
       let fileUploads = [];
       if (filesToUpload.length > 0) {
         setIsUploading(true);
@@ -128,19 +181,17 @@ export default function ChatPage() {
             const result = await response.json();
             fileUploads.push(result.file);
           } else {
-            console.error('File upload error:', await response.text());
             toast.error(`Failed to upload ${file.name}`);
           }
         }
         setIsUploading(false);
       }
 
-      // 🔁 Send chat message
       const response = await fetch('/api/chat', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`, // ✅ again using the token
+          'Authorization': `Bearer ${token}`,
         },
         body: JSON.stringify({
           message: userMessageContent,
@@ -156,31 +207,25 @@ export default function ChatPage() {
 
       const result = await response.json();
 
-      // Update current chat...
-      // Update current chat with new messages
       if (currentChat?.id === result.chatId) {
         setCurrentChat(prev => prev ? {
           ...prev,
           messages: [...prev.messages, result.userMessage, result.assistantMessage]
         } : null);
       } else {
-        // New chat created
         await loadChats();
         const newChat = await chatService.getUserChats(supabase, user!.id);
         const chat = newChat.find(c => c.id === result.chatId);
         if (chat) setCurrentChat(chat);
       }
-      // (keep your logic here as-is)
 
     } catch (error: any) {
-      console.error('Send message error:', error);
       toast.error(error.message || 'Failed to send message');
     } finally {
       setIsTyping(false);
       setPendingMessage(null);
     }
   };
-
 
   const startNewChat = () => {
     setCurrentChat(null);
@@ -197,7 +242,6 @@ export default function ChatPage() {
       }
       toast.success('Chat deleted');
     } catch (error) {
-      console.error('Delete chat error:', error);
       toast.error('Failed to delete chat');
     }
   };
@@ -209,7 +253,6 @@ export default function ChatPage() {
         c.id === chatId ? { ...c, starred: !starred } : c
       ));
     } catch (error) {
-      console.error('Toggle star error:', error);
       toast.error('Failed to update chat');
     }
   };
@@ -220,8 +263,13 @@ export default function ChatPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <Loader2 className="w-8 h-8 animate-spin" />
+      <div className="flex items-center justify-center min-h-screen bg-background">
+        <div className="flex flex-col items-center space-y-4">
+          <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center animate-pulse">
+            <Sparkles className="w-6 h-6 text-white" />
+          </div>
+          <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+        </div>
       </div>
     );
   }
@@ -234,161 +282,257 @@ export default function ChatPage() {
     chat.title.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
+  const groupedChats = groupChatsByDate(filteredChats);
+
   return (
     <div className="flex h-screen bg-background">
       {/* Sidebar */}
-      <div className={`${sidebarOpen ? 'w-80' : 'w-0'} transition-all duration-300 border-r bg-muted/30 flex flex-col`}>
+      <AnimatePresence>
         {sidebarOpen && (
-          <>
+          <motion.div
+            initial={{ width: 0, opacity: 0 }}
+            animate={{ width: sidebarCollapsed ? 72 : 320, opacity: 1 }}
+            exit={{ width: 0, opacity: 0 }}
+            transition={{ duration: 0.2, ease: 'easeInOut' }}
+            className="border-r bg-[#0a0a12] flex flex-col relative overflow-hidden"
+          >
             {/* Sidebar Header */}
-            <div className="p-4 border-b">
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center space-x-2">
-                  <div className="flex items-center justify-center w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg">
-                    <Sparkles className="w-4 h-4 text-white" />
+            <div className={`p-3 border-b border-white/5 ${sidebarCollapsed ? 'px-2' : ''}`}>
+              <div className={`flex items-center ${sidebarCollapsed ? 'justify-center' : 'justify-between'} mb-3`}>
+                {!sidebarCollapsed && (
+                  <div className="flex items-center space-x-2">
+                    <div className="flex items-center justify-center w-9 h-9 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl shadow-lg shadow-purple-500/20">
+                      <Sparkles className="w-5 h-5 text-white" />
+                    </div>
+                    <span className="font-bold text-lg bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent">ayoAI</span>
                   </div>
-                  <span className="font-bold text-lg">ayoAI</span>
+                )}
+                <div className="flex items-center gap-1">
+                  {!sidebarCollapsed && <ThemeToggle />}
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-8 w-8 p-0 text-gray-400 hover:text-white hover:bg-white/5"
+                    onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+                  >
+                    {sidebarCollapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
+                  </Button>
                 </div>
-                <ThemeToggle />
               </div>
 
-              <Button onClick={startNewChat} className="w-full mb-3">
-                <Plus className="w-4 h-4 mr-2" />
-                New Chat
+              <Button
+                onClick={startNewChat}
+                className={`w-full bg-white/5 hover:bg-white/10 border border-white/10 text-white ${sidebarCollapsed ? 'px-2' : ''}`}
+              >
+                <Plus className="w-4 h-4" />
+                {!sidebarCollapsed && <span className="ml-2">New Chat</span>}
               </Button>
 
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Search chats..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-10"
-                />
-              </div>
+              {!sidebarCollapsed && (
+                <div className="relative mt-3">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-500" />
+                  <Input
+                    placeholder="Search chats..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="pl-10 bg-white/5 border-white/10 text-white placeholder:text-gray-500 focus:border-purple-500/50"
+                  />
+                </div>
+              )}
             </div>
 
             {/* Chat History */}
-            <ScrollArea className="flex-1 p-4">
-              <div className="space-y-2">
-                {filteredChats.map((chat) => (
-                  <motion.div
-                    key={chat.id}
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    className={`p-3 rounded-lg cursor-pointer transition-colors ${currentChat?.id === chat.id
-                      ? 'bg-primary/10 border border-primary/20'
-                      : 'hover:bg-muted'
-                      }`}
-                    onClick={() => setCurrentChat(chat)}
-                  >
-                    <div className="flex items-center justify-between">
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center space-x-2">
-                          <MessageCircle className="w-4 h-4 text-muted-foreground" />
-                          <span className="text-sm font-medium truncate">
-                            {chat.title}
+            <ScrollArea className="flex-1">
+              <div className={`${sidebarCollapsed ? 'p-2' : 'p-3'} space-y-4`}>
+                {Object.entries(groupedChats).map(([groupName, groupChats]) => {
+                  if (groupChats.length === 0) return null;
+
+                  return (
+                    <div key={groupName}>
+                      {!sidebarCollapsed && (
+                        <div className="flex items-center gap-2 px-2 mb-2">
+                          {groupName === 'Pinned' && <Pin className="w-3 h-3 text-yellow-500" />}
+                          <span className="text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            {groupName}
                           </span>
                         </div>
-                        <div className="text-xs text-muted-foreground mt-1">
-                          {new Date(chat.createdAt).toLocaleDateString()}
-                        </div>
-                      </div>
-                      <div className="flex items-center space-x-1">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            toggleStar(chat.id, chat.starred);
-                          }}
-                        >
-                          <Star className={`w-3 h-3 ${chat.starred ? 'text-yellow-500 fill-current' : ''}`} />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            deleteChat(chat.id);
-                          }}
-                        >
-                          <Trash2 className="w-3 h-3" />
-                        </Button>
+                      )}
+                      <div className="space-y-1">
+                        {groupChats.map((chat) => (
+                          <motion.div
+                            key={chat.id}
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            className={`group relative rounded-lg cursor-pointer transition-all duration-150 ${currentChat?.id === chat.id
+                                ? 'bg-white/10'
+                                : 'hover:bg-white/5'
+                              } ${sidebarCollapsed ? 'p-2 flex justify-center' : 'p-3'}`}
+                            onClick={() => setCurrentChat(chat)}
+                            onMouseEnter={() => setHoveredChatId(chat.id)}
+                            onMouseLeave={() => setHoveredChatId(null)}
+                          >
+                            {sidebarCollapsed ? (
+                              <MessageCircle className="w-5 h-5 text-gray-400" />
+                            ) : (
+                              <>
+                                <div className="flex items-center gap-3">
+                                  <MessageCircle className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                                  <div className="flex-1 min-w-0">
+                                    <div className="text-sm font-medium text-gray-200 truncate pr-16">
+                                      {chat.title}
+                                    </div>
+                                  </div>
+                                </div>
+
+                                {/* Action buttons on hover */}
+                                <AnimatePresence>
+                                  {hoveredChatId === chat.id && (
+                                    <motion.div
+                                      initial={{ opacity: 0 }}
+                                      animate={{ opacity: 1 }}
+                                      exit={{ opacity: 0 }}
+                                      className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1 bg-[#0a0a12]/90 rounded-md p-1"
+                                    >
+                                      <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        className="h-7 w-7 p-0 text-gray-400 hover:text-yellow-500 hover:bg-white/10"
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          toggleStar(chat.id, chat.starred);
+                                        }}
+                                      >
+                                        <Star className={`w-3.5 h-3.5 ${chat.starred ? 'text-yellow-500 fill-current' : ''}`} />
+                                      </Button>
+                                      <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        className="h-7 w-7 p-0 text-gray-400 hover:text-red-500 hover:bg-white/10"
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          deleteChat(chat.id);
+                                        }}
+                                      >
+                                        <Trash2 className="w-3.5 h-3.5" />
+                                      </Button>
+                                    </motion.div>
+                                  )}
+                                </AnimatePresence>
+                              </>
+                            )}
+                          </motion.div>
+                        ))}
                       </div>
                     </div>
-                  </motion.div>
-                ))}
+                  );
+                })}
               </div>
             </ScrollArea>
 
-            {/* User Profile */}
-            <div className="p-4 border-t">
-              <div className="flex items-center space-x-3 mb-3">
-                <Avatar className="w-10 h-10">
-                  <AvatarImage src={user.user_metadata?.avatar_url} />
-                  <AvatarFallback>
-                    {user.user_metadata?.name?.[0] || user.email?.[0] || 'U'}
-                  </AvatarFallback>
-                </Avatar>
-                <div className="flex-1 min-w-0">
-                  <div className="text-sm font-medium truncate">
-                    {user.user_metadata?.name || user.email}
-                  </div>
-                  <div className="text-xs text-muted-foreground">
-                    Free Plan
-                  </div>
+            {/* User Profile Section */}
+            <div className={`border-t border-white/5 ${sidebarCollapsed ? 'p-2' : 'p-3'}`}>
+              {sidebarCollapsed ? (
+                <div className="flex flex-col items-center gap-2">
+                  <Avatar className="w-10 h-10 ring-2 ring-purple-500/30">
+                    <AvatarImage src={user.user_metadata?.avatar_url} />
+                    <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white">
+                      {user.user_metadata?.name?.[0] || user.email?.[0] || 'U'}
+                    </AvatarFallback>
+                  </Avatar>
                 </div>
-              </div>
+              ) : (
+                <>
+                  <div className="flex items-center gap-3 p-2 rounded-lg hover:bg-white/5 transition-colors mb-2">
+                    <Avatar className="w-10 h-10 ring-2 ring-purple-500/30">
+                      <AvatarImage src={user.user_metadata?.avatar_url} />
+                      <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white font-medium">
+                        {user.user_metadata?.name?.[0] || user.email?.[0] || 'U'}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="flex-1 min-w-0">
+                      <div className="text-sm font-medium text-white truncate">
+                        {user.user_metadata?.name || user.email?.split('@')[0]}
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <div className={`w-1.5 h-1.5 rounded-full ${userPlan === 'pro' ? 'bg-blue-500' : userPlan === 'ultra' ? 'bg-purple-500' : 'bg-gray-500'}`} />
+                        <span className="text-xs text-gray-400">{planLabel}</span>
+                      </div>
+                    </div>
+                  </div>
 
-              <div className="grid grid-cols-2 gap-2">
-                <Button variant="outline" size="sm" onClick={() => router.push('/settings')}>
-                  <Settings className="w-4 h-4 mr-1" />
-                  Settings
-                </Button>
-                <Button variant="outline" size="sm" onClick={() => router.push('/upgrade')}>
-                  Upgrade
-                </Button>
-                <Button variant="outline" size="sm" onClick={signOut}>
-                  <LogOut className="w-4 h-4 mr-1" />
-                  Logout
-                </Button>
-              </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="text-gray-400 hover:text-white hover:bg-white/5 justify-start"
+                      onClick={() => router.push('/settings')}
+                    >
+                      <Settings className="w-4 h-4 mr-2" />
+                      Settings
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="text-purple-400 hover:text-purple-300 hover:bg-purple-500/10 justify-start"
+                      onClick={() => router.push('/upgrade')}
+                    >
+                      <Crown className="w-4 h-4 mr-2" />
+                      Upgrade
+                    </Button>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="w-full text-gray-400 hover:text-red-400 hover:bg-red-500/10 justify-start mt-1"
+                    onClick={signOut}
+                  >
+                    <LogOut className="w-4 h-4 mr-2" />
+                    Logout
+                  </Button>
+                </>
+              )}
             </div>
-          </>
+          </motion.div>
         )}
-      </div>
+      </AnimatePresence>
 
       {/* Main Chat Area */}
-      <div className="flex-1 flex flex-col">
+      <div className="flex-1 flex flex-col bg-[#0f0f1a]">
         {/* Chat Header */}
-        <div className="p-4 border-b bg-background/80 backdrop-blur-sm">
+        <div className="p-4 border-b border-white/5 bg-[#0f0f1a]/80 backdrop-blur-xl">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={() => setSidebarOpen(!sidebarOpen)}
+                className="text-gray-400 hover:text-white hover:bg-white/5"
               >
-                <MessageCircle className="w-4 h-4" />
+                <MessageCircle className="w-5 h-5" />
               </Button>
               <div>
-                <h1 className="text-xl font-semibold">
+                <h1 className="text-lg font-semibold text-white">
                   {currentChat?.title || 'New Chat'}
                 </h1>
-                <p className="text-sm text-muted-foreground">
+                <p className="text-xs text-gray-500">
                   AI Assistant powered by advanced language models
                 </p>
               </div>
             </div>
-            <div className="flex items-center space-x-2">
-              <Badge variant="secondary">
+            <div className="flex items-center space-x-3">
+              <Badge className={`${userPlan === 'pro' ? 'bg-blue-500/20 text-blue-400 border-blue-500/30' : userPlan === 'ultra' ? 'bg-purple-500/20 text-purple-400 border-purple-500/30' : 'bg-white/5 text-gray-400 border-white/10'}`}>
                 <Crown className="w-3 h-3 mr-1" />
-                Free Plan
+                {planLabel}
               </Badge>
-              <Button variant="outline" size="sm" onClick={() => router.push('/upgrade')}>
-                Upgrade
-              </Button>
+              {userPlan === 'free' && (
+                <Button
+                  size="sm"
+                  className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white border-0"
+                  onClick={() => router.push('/upgrade')}
+                >
+                  Upgrade
+                </Button>
+              )}
             </div>
           </div>
         </div>
@@ -396,7 +540,7 @@ export default function ChatPage() {
         {/* Messages */}
         <ScrollArea className="flex-1 p-4">
           {currentChat?.messages.length ? (
-            <div className="space-y-4 max-w-4xl mx-auto">
+            <div className="space-y-6 max-w-4xl mx-auto">
               {currentChat.messages.map((msg) => (
                 <motion.div
                   key={msg.id}
@@ -404,110 +548,106 @@ export default function ChatPage() {
                   animate={{ opacity: 1, y: 0 }}
                   className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
                 >
-                  <div className={`max-w-[80%] ${msg.role === 'user' ? 'order-2' : 'order-1'}`}>
-                    <div className={`p-4 rounded-lg ${msg.role === 'user'
-                      ? 'bg-primary text-primary-foreground'
-                      : (msg.content.startsWith('I encountered an issue') || msg.content.startsWith('Gemini Error') || msg.content.startsWith('AI Service'))
-                        ? 'bg-destructive/10 text-destructive border border-destructive/20'
-                        : 'bg-muted'
+                  <div className={`flex gap-3 max-w-[85%] ${msg.role === 'user' ? 'flex-row-reverse' : ''}`}>
+                    <Avatar className="w-8 h-8 flex-shrink-0">
+                      {msg.role === 'user' ? (
+                        <>
+                          <AvatarImage src={user.user_metadata?.avatar_url} />
+                          <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white text-xs">
+                            {user.user_metadata?.name?.[0] || user.email?.[0] || 'U'}
+                          </AvatarFallback>
+                        </>
+                      ) : (
+                        <div className="w-full h-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
+                          <Sparkles className="w-4 h-4 text-white" />
+                        </div>
+                      )}
+                    </Avatar>
+                    <div className={`p-4 rounded-2xl ${msg.role === 'user'
+                        ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white'
+                        : (msg.content.startsWith('I encountered an issue') || msg.content.startsWith('Gemini Error') || msg.content.startsWith('AI Service'))
+                          ? 'bg-red-500/10 text-red-400 border border-red-500/20'
+                          : 'bg-white/5 text-gray-200 border border-white/5'
                       }`}>
                       {msg.role === 'user' ? (
                         <p className="text-sm whitespace-pre-wrap">{msg.content}</p>
                       ) : (
-                        <div className="text-sm prose prose-sm dark:prose-invert max-w-none prose-p:my-1 prose-ul:my-1 prose-ol:my-1 prose-li:my-0 prose-headings:my-2">
+                        <div className="text-sm prose prose-sm dark:prose-invert max-w-none prose-p:my-1 prose-ul:my-1 prose-ol:my-1 prose-li:my-0 prose-headings:my-2 prose-code:text-purple-400 prose-code:bg-purple-500/10 prose-code:px-1 prose-code:py-0.5 prose-code:rounded">
                           <ReactMarkdown>{msg.content}</ReactMarkdown>
                         </div>
                       )}
                       {msg.files && msg.files.length > 0 && (
                         <div className="mt-2 space-y-1">
                           {msg.files.map((file, idx) => (
-                            <div key={idx} className="text-xs opacity-70">
-                              📎 {file.filename}
+                            <div key={idx} className="text-xs opacity-70 flex items-center gap-1">
+                              <Paperclip className="w-3 h-3" />
+                              {file.filename}
                             </div>
                           ))}
                         </div>
                       )}
-                      <div className="text-xs opacity-70 mt-2">
+                      <div className="text-xs opacity-50 mt-2">
                         {new Date(msg.createdAt).toLocaleTimeString()}
                       </div>
                     </div>
                   </div>
-                  <div className={`${msg.role === 'user' ? 'order-1 mr-3' : 'order-2 ml-3'}`}>
-                    <Avatar className="w-8 h-8">
-                      {msg.role === 'user' ? (
-                        <AvatarImage src={user.user_metadata?.avatar_url} />
-                      ) : (
-                        <div className="w-full h-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
-                          <Sparkles className="w-4 h-4 text-white" />
-                        </div>
-                      )}
-                      <AvatarFallback>
-                        {msg.role === 'user' ? (
-                          user.user_metadata?.name?.[0] || user.email?.[0] || 'U'
-                        ) : (
-                          'AI'
-                        )}
-                      </AvatarFallback>
-                    </Avatar>
-                  </div>
                 </motion.div>
               ))}
 
-              {/* Show pending user message immediately */}
+              {/* Pending message */}
               {pendingMessage && (
                 <motion.div
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   className="flex justify-end"
                 >
-                  <div className="max-w-[80%] order-2">
-                    <div className="p-4 rounded-lg bg-primary text-primary-foreground">
+                  <div className="flex gap-3 max-w-[85%] flex-row-reverse">
+                    <Avatar className="w-8 h-8 flex-shrink-0">
+                      <AvatarImage src={user.user_metadata?.avatar_url} />
+                      <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white text-xs">
+                        {user.user_metadata?.name?.[0] || user.email?.[0] || 'U'}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="p-4 rounded-2xl bg-gradient-to-r from-blue-500 to-purple-600 text-white">
                       <p className="text-sm whitespace-pre-wrap">{pendingMessage.content}</p>
                       {pendingMessage.files.length > 0 && (
                         <div className="mt-2 space-y-1">
                           {pendingMessage.files.map((file, idx) => (
-                            <div key={idx} className="text-xs opacity-70">
-                              📎 {file.name}
+                            <div key={idx} className="text-xs opacity-70 flex items-center gap-1">
+                              <Paperclip className="w-3 h-3" />
+                              {file.name}
                             </div>
                           ))}
                         </div>
                       )}
-                      <div className="text-xs opacity-70 mt-2">
-                        {new Date().toLocaleTimeString()}
-                      </div>
                     </div>
-                  </div>
-                  <div className="order-1 mr-3">
-                    <Avatar className="w-8 h-8">
-                      <AvatarImage src={user.user_metadata?.avatar_url} />
-                      <AvatarFallback>
-                        {user.user_metadata?.name?.[0] || user.email?.[0] || 'U'}
-                      </AvatarFallback>
-                    </Avatar>
                   </div>
                 </motion.div>
               )}
 
+              {/* Typing indicator */}
               {isTyping && (
                 <motion.div
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   className="flex justify-start"
                 >
-                  <div className="max-w-[80%] order-1">
-                    <div className="p-4 rounded-lg bg-muted">
-                      <div className="flex items-center space-x-2">
-                        <Loader2 className="w-4 h-4 animate-spin" />
-                        <span className="text-sm">AI is typing...</span>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="order-2 ml-3">
-                    <Avatar className="w-8 h-8">
+                  <div className="flex gap-3 max-w-[85%]">
+                    <Avatar className="w-8 h-8 flex-shrink-0">
                       <div className="w-full h-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
                         <Sparkles className="w-4 h-4 text-white" />
                       </div>
                     </Avatar>
+                    <div className="p-4 rounded-2xl bg-white/5 border border-white/5">
+                      <div className="flex items-center space-x-2">
+                        <div className="flex space-x-1">
+                          <div className="w-2 h-2 bg-purple-500 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                          <div className="w-2 h-2 bg-purple-500 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                          <div className="w-2 h-2 bg-purple-500 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                        </div>
+                        <span className="text-sm text-gray-400">AI is thinking...</span>
+                      </div>
+                    </div>
                   </div>
                 </motion.div>
               )}
@@ -515,25 +655,29 @@ export default function ChatPage() {
           ) : (
             <div className="flex items-center justify-center h-full">
               <div className="text-center max-w-md">
-                <div className="w-20 h-20 mx-auto mb-4 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center">
-                  <Sparkles className="w-10 h-10 text-white" />
-                </div>
-                <h2 className="text-2xl font-bold mb-2">Welcome to ayoAI</h2>
-                <p className="text-muted-foreground mb-6">
+                <motion.div
+                  initial={{ scale: 0.8, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  className="w-24 h-24 mx-auto mb-6 bg-gradient-to-br from-blue-500 to-purple-600 rounded-3xl flex items-center justify-center shadow-2xl shadow-purple-500/30"
+                >
+                  <Sparkles className="w-12 h-12 text-white" />
+                </motion.div>
+                <h2 className="text-2xl font-bold text-white mb-3">Welcome to ayoAI</h2>
+                <p className="text-gray-400 mb-8">
                   Start a conversation with your AI assistant. Ask questions, upload files, or generate images.
                 </p>
-                <div className="grid grid-cols-3 gap-3 mb-6">
-                  <Card className="p-3 text-center hover:shadow-md transition-shadow cursor-pointer">
-                    <MessageCircle className="w-6 h-6 mx-auto mb-2 text-blue-500" />
-                    <div className="text-xs font-medium">Ask Anything</div>
+                <div className="grid grid-cols-3 gap-4">
+                  <Card className="p-4 bg-white/5 border-white/10 hover:bg-white/10 transition-all cursor-pointer group">
+                    <MessageCircle className="w-8 h-8 mx-auto mb-3 text-blue-400 group-hover:scale-110 transition-transform" />
+                    <div className="text-sm font-medium text-gray-200">Ask Anything</div>
                   </Card>
-                  <Card className="p-3 text-center hover:shadow-md transition-shadow cursor-pointer">
-                    <Image className="w-6 h-6 mx-auto mb-2 text-purple-500" />
-                    <div className="text-xs font-medium">Generate Images</div>
+                  <Card className="p-4 bg-white/5 border-white/10 hover:bg-white/10 transition-all cursor-pointer group">
+                    <Image className="w-8 h-8 mx-auto mb-3 text-purple-400 group-hover:scale-110 transition-transform" />
+                    <div className="text-sm font-medium text-gray-200">Generate Images</div>
                   </Card>
-                  <Card className="p-3 text-center hover:shadow-md transition-shadow cursor-pointer">
-                    <FileText className="w-6 h-6 mx-auto mb-2 text-green-500" />
-                    <div className="text-xs font-medium">Analyze Files</div>
+                  <Card className="p-4 bg-white/5 border-white/10 hover:bg-white/10 transition-all cursor-pointer group">
+                    <FileText className="w-8 h-8 mx-auto mb-3 text-green-400 group-hover:scale-110 transition-transform" />
+                    <div className="text-sm font-medium text-gray-200">Analyze Files</div>
                   </Card>
                 </div>
               </div>
@@ -542,18 +686,19 @@ export default function ChatPage() {
         </ScrollArea>
 
         {/* Input Area */}
-        <div className="p-4 border-t bg-background/80 backdrop-blur-sm">
+        <div className="p-4 border-t border-white/5 bg-[#0f0f1a]">
           <div className="max-w-4xl mx-auto">
             {/* File Uploads Display */}
             {uploadedFiles.length > 0 && (
               <div className="mb-3 flex flex-wrap gap-2">
                 {uploadedFiles.map((file, index) => (
-                  <div key={index} className="flex items-center space-x-2 bg-muted rounded-lg p-2">
-                    <FileText className="w-4 h-4" />
-                    <span className="text-sm truncate max-w-32">{file.name}</span>
+                  <div key={index} className="flex items-center space-x-2 bg-white/5 border border-white/10 rounded-lg px-3 py-2">
+                    <FileText className="w-4 h-4 text-purple-400" />
+                    <span className="text-sm text-gray-300 truncate max-w-32">{file.name}</span>
                     <Button
                       variant="ghost"
                       size="sm"
+                      className="h-5 w-5 p-0 text-gray-400 hover:text-red-400"
                       onClick={() => removeFile(index)}
                     >
                       <X className="w-3 h-3" />
@@ -565,18 +710,20 @@ export default function ChatPage() {
 
             <div
               {...getRootProps()}
-              className={`border-2 border-dashed rounded-lg p-4 transition-colors ${isDragActive ? 'border-primary bg-primary/5' : 'border-muted'
+              className={`rounded-2xl p-4 transition-all ${isDragActive
+                  ? 'bg-purple-500/10 border-2 border-dashed border-purple-500/50'
+                  : 'bg-white/5 border border-white/10'
                 }`}
             >
               <input {...getInputProps()} />
               <div className="space-y-3">
-                <div className="flex items-end space-x-2">
+                <div className="flex items-end space-x-3">
                   <div className="flex-1">
                     <Textarea
-                      placeholder="Type your message here... (or drag and drop files)"
+                      placeholder="Message ayoAI..."
                       value={message}
                       onChange={(e) => setMessage(e.target.value)}
-                      className="min-h-[60px] resize-none"
+                      className="min-h-[60px] max-h-[200px] resize-none bg-transparent border-0 text-white placeholder:text-gray-500 focus-visible:ring-0 focus-visible:ring-offset-0 p-0"
                       onKeyDown={(e) => {
                         if (e.key === 'Enter' && !e.shiftKey) {
                           e.preventDefault();
@@ -587,23 +734,24 @@ export default function ChatPage() {
                   </div>
                   <div className="flex items-center space-x-2">
                     <Button
-                      variant="outline"
+                      variant="ghost"
                       size="sm"
+                      className="h-10 w-10 p-0 rounded-xl text-gray-400 hover:text-white hover:bg-white/10"
                       onClick={() => (document.querySelector('input[type="file"]') as HTMLInputElement)?.click()}
                       disabled={isUploading}
                     >
-                      {isUploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Paperclip className="w-4 h-4" />}
+                      {isUploading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Paperclip className="w-5 h-5" />}
                     </Button>
                     <Button
                       onClick={handleSendMessage}
                       disabled={(!message.trim() && uploadedFiles.length === 0) || isTyping || isUploading}
-                      className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700"
+                      className="h-10 w-10 p-0 rounded-xl bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 disabled:opacity-50"
                     >
-                      <Send className="w-4 h-4" />
+                      <Send className="w-5 h-5" />
                     </Button>
                   </div>
                 </div>
-                <div className="flex justify-between items-center text-xs text-muted-foreground">
+                <div className="flex justify-between items-center text-xs text-gray-500">
                   <div>
                     {isDragActive ? 'Drop files here...' : 'Drag & drop files or click to upload'}
                   </div>
