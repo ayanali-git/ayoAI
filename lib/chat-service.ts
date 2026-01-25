@@ -2,252 +2,98 @@ import { SupabaseClient } from '@supabase/supabase-js';
 
 export interface Chat {
   id: string;
-  userId: string;
   title: string;
   starred: boolean;
   createdAt: string;
   updatedAt: string;
+  userId: string;
   messages: Message[];
 }
 
 export interface Message {
   id: string;
-  chatId: string;
   role: 'user' | 'assistant';
   content: string;
-  metadata?: any;
   createdAt: string;
-  files?: FileAttachment[];
+  chatId: string;
+  files?: any[];
 }
 
-export interface FileAttachment {
-  id: string;
-  filename: string;
-  fileType: string;
-  fileSize: number;
-  storagePath: string;
-}
-
-class ChatService {
-  // ✅ Fixed: Accept userId directly instead of trying to extract from token
-  async createChat(supabase: SupabaseClient, userId: string, title: string): Promise<Chat> {
-    try {
-      const { data, error } = await supabase
-        .from('chats')
-        .insert({
-          user_id: userId,
-          title: title.slice(0, 100),
-        })
-        .select()
-        .single();
-
-      if (error) {
-        throw new Error(`Failed to create chat: ${error.message}`);
-      }
-
-      return {
-        id: data.id,
-        userId: data.user_id,
-        title: data.title,
-        starred: data.starred,
-        createdAt: data.created_at,
-        updatedAt: data.updated_at,
-        messages: [],
-      };
-    } catch (error) {
-      console.error('Create chat error:', error);
-      throw error;
-    }
-  }
-
+export const chatService = {
+  // Fetch chats WITHOUT messages for the sidebar list to be lightweight
   async getUserChats(supabase: SupabaseClient, userId: string): Promise<Chat[]> {
-    try {
-      const { data, error } = await supabase
-        .from('chats')
-        .select(`
-          *,
-          messages (
-            id,
-            role,
-            content,
-            metadata,
-            created_at,
-            file_uploads (
-              id,
-              filename,
-              file_type,
-              file_size,
-              storage_path
-            )
-          )
-        `)
-        .eq('user_id', userId)
-        .order('updated_at', { ascending: false });
+    const { data, error } = await supabase
+      .from('chats')
+      .select('*')
+      .eq('user_id', userId)
+      .order('updated_at', { ascending: false });
 
-      if (error) {
-        throw new Error(`Failed to get chats: ${error.message}`);
-      }
+    if (error) throw error;
 
-      return data.map(chat => ({
-        id: chat.id,
-        userId: chat.user_id,
-        title: chat.title,
-        starred: chat.starred,
-        createdAt: chat.created_at,
-        updatedAt: chat.updated_at,
-        messages: chat.messages.map((msg: any) => ({
-          id: msg.id,
-          chatId: chat.id,
-          role: msg.role,
-          content: msg.content,
-          metadata: msg.metadata,
-          createdAt: msg.created_at,
-          files: msg.file_uploads?.map((file: any) => ({
-            id: file.id,
-            filename: file.filename,
-            fileType: file.file_type,
-            fileSize: file.file_size,
-            storagePath: file.storage_path,
-          })) || [],
-        })),
-      }));
-    } catch (error) {
-      console.error('Get user chats error:', error);
-      throw error;
-    }
+    return data.map((chat: any) => ({
+      id: chat.id,
+      title: chat.title,
+      starred: chat.starred || false,
+      createdAt: chat.created_at,
+      updatedAt: chat.updated_at,
+      userId: chat.user_id,
+      messages: [] // Empty messages for list view
+    }));
+  },
+
+  // Fetch full details (messages) for a single chat
+  async getChatDetails(supabase: SupabaseClient, chatId: string): Promise<Chat | null> {
+    // 1. Get Chat Metadata
+    const { data: chat, error: chatError } = await supabase
+      .from('chats')
+      .select('*')
+      .eq('id', chatId)
+      .single();
+
+    if (chatError) throw chatError;
+
+    // 2. Get Messages for this chat
+    const { data: messages, error: msgError } = await supabase
+      .from('messages')
+      .select('*, file_uploads(*)')
+      .eq('chat_id', chatId)
+      .order('created_at', { ascending: true });
+
+    if (msgError) throw msgError;
+
+    return {
+      id: chat.id,
+      title: chat.title,
+      starred: chat.starred || false,
+      createdAt: chat.created_at,
+      updatedAt: chat.updated_at,
+      userId: chat.user_id,
+      messages: messages.map((msg: any) => ({
+        id: msg.id,
+        role: msg.role,
+        content: msg.content,
+        createdAt: msg.created_at,
+        chatId: msg.chat_id,
+        files: msg.file_uploads || []
+      }))
+    };
+  },
+
+  async deleteChat(supabase: SupabaseClient, chatId: string) {
+    const { error } = await supabase
+      .from('chats')
+      .delete()
+      .eq('id', chatId);
+
+    if (error) throw error;
+  },
+
+  async toggleChatStar(supabase: SupabaseClient, chatId: string, starred: boolean) {
+    const { error } = await supabase
+      .from('chats')
+      .update({ starred })
+      .eq('id', chatId);
+
+    if (error) throw error;
   }
-
-  async addMessage(supabase: SupabaseClient, chatId: string, role: 'user' | 'assistant', content: string, metadata?: any): Promise<Message> {
-    try {
-      const { data, error } = await supabase
-        .from('messages')
-        .insert({
-          chat_id: chatId,
-          role,
-          content,
-          metadata: metadata || {},
-        })
-        .select()
-        .single();
-
-      if (error) {
-        throw new Error(`Failed to add message: ${error.message}`);
-      }
-
-      // Update chat's updated_at timestamp
-      await supabase
-        .from('chats')
-        .update({ updated_at: new Date().toISOString() })
-        .eq('id', chatId);
-
-      return {
-        id: data.id,
-        chatId: data.chat_id,
-        role: data.role,
-        content: data.content,
-        metadata: data.metadata,
-        createdAt: data.created_at,
-        files: [],
-      };
-    } catch (error) {
-      console.error('Add message error:', error);
-      throw error;
-    }
-  }
-
-  async updateChatTitle(supabase: SupabaseClient, chatId: string, title: string): Promise<void> {
-    try {
-      const { error } = await supabase
-        .from('chats')
-        .update({ title: title.slice(0, 100) })
-        .eq('id', chatId);
-
-      if (error) {
-        throw new Error(`Failed to update chat title: ${error.message}`);
-      }
-    } catch (error) {
-      console.error('Update chat title error:', error);
-      throw error;
-    }
-  }
-
-  async toggleChatStar(supabase: SupabaseClient, chatId: string, starred: boolean): Promise<void> {
-    try {
-      const { error } = await supabase
-        .from('chats')
-        .update({ starred })
-        .eq('id', chatId);
-
-      if (error) {
-        throw new Error(`Failed to update chat star: ${error.message}`);
-      }
-    } catch (error) {
-      console.error('Toggle chat star error:', error);
-      throw error;
-    }
-  }
-
-  async deleteChat(supabase: SupabaseClient, chatId: string): Promise<void> {
-    try {
-      // Messages and file uploads will be deleted automatically due to CASCADE
-      const { error } = await supabase
-        .from('chats')
-        .delete()
-        .eq('id', chatId);
-
-      if (error) {
-        throw new Error(`Failed to delete chat: ${error.message}`);
-      }
-    } catch (error) {
-      console.error('Delete chat error:', error);
-      throw error;
-    }
-  }
-
-  async searchChats(supabase: SupabaseClient, userId: string, query: string): Promise<Chat[]> {
-    try {
-      const { data, error } = await supabase
-        .from('chats')
-        .select(`
-          *,
-          messages (
-            id,
-            role,
-            content,
-            metadata,
-            created_at
-          )
-        `)
-        .eq('user_id', userId)
-        .or(`title.ilike.%${query}%,messages.content.ilike.%${query}%`)
-        .order('updated_at', { ascending: false });
-
-      if (error) {
-        throw new Error(`Failed to search chats: ${error.message}`);
-      }
-
-      return data.map(chat => ({
-        id: chat.id,
-        userId: chat.user_id,
-        title: chat.title,
-        starred: chat.starred,
-        createdAt: chat.created_at,
-        updatedAt: chat.updated_at,
-        messages: chat.messages.map((msg: any) => ({
-          id: msg.id,
-          chatId: chat.id,
-          role: msg.role,
-          content: msg.content,
-          metadata: msg.metadata,
-          createdAt: msg.created_at,
-          files: [],
-        })),
-      }));
-    } catch (error) {
-      console.error('Search chats error:', error);
-      throw error;
-    }
-  }
-}
-
-export const chatService = new ChatService();
+};

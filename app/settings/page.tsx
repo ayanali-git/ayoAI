@@ -190,20 +190,20 @@ export default function SettingsPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-[#0a0a12]">
+      <div className="flex items-center justify-center min-h-screen bg-background">
         <Loader2 className="w-8 h-8 animate-spin text-purple-500" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#0a0a12]">
+    <div className="min-h-screen bg-background">
       {/* Header */}
-      <div className="border-b border-white/5 bg-[#0a0a12]/80 backdrop-blur-xl sticky top-0 z-10">
+      <div className="border-b border-border bg-background/80 backdrop-blur-xl sticky top-0 z-10">
         <div className="max-w-4xl mx-auto px-4 py-4">
           <Button
             variant="ghost"
-            className="text-gray-400 hover:text-white hover:bg-white/5"
+            className="text-muted-foreground hover:text-foreground hover:bg-secondary"
             onClick={() => router.back()}
           >
             <ChevronLeft className="w-4 h-4 mr-1" />
@@ -220,21 +220,21 @@ export default function SettingsPage() {
         >
           {/* Page Header */}
           <div className="text-center mb-8">
-            <h1 className="text-3xl font-bold text-white mb-2">Settings</h1>
-            <p className="text-gray-400">Manage your profile and account settings</p>
+            <h1 className="text-3xl font-bold text-foreground mb-2">Settings</h1>
+            <p className="text-muted-foreground">Manage your profile and account settings</p>
           </div>
 
           <div className="grid gap-6">
             {/* Profile Section */}
-            <Card className="bg-[#12121a] border-white/5">
+            <Card className="bg-card border-border">
               <CardHeader>
                 <div className="flex items-center gap-3">
                   <div className="p-2 rounded-lg bg-purple-500/10">
-                    <User className="w-5 h-5 text-purple-400" />
+                    <User className="w-5 h-5 text-purple-600 dark:text-purple-400" />
                   </div>
                   <div>
-                    <CardTitle className="text-white">Profile Information</CardTitle>
-                    <CardDescription className="text-gray-500">Update your personal details</CardDescription>
+                    <CardTitle className="text-foreground">Profile Information</CardTitle>
+                    <CardDescription className="text-muted-foreground">Update your personal details</CardDescription>
                   </div>
                 </div>
               </CardHeader>
@@ -270,13 +270,13 @@ export default function SettingsPage() {
                       />
                     </div>
                     <div>
-                      <h3 className="text-white font-medium mb-1">Profile Picture</h3>
-                      <p className="text-sm text-gray-500 mb-3">Click on the avatar to upload a new photo</p>
+                      <h3 className="text-foreground font-medium mb-1">Profile Picture</h3>
+                      <p className="text-sm text-muted-foreground mb-3">Click on the avatar to upload a new photo</p>
                       <Button
                         type="button"
                         variant="outline"
                         size="sm"
-                        className="border-white/10 text-gray-400 hover:text-white hover:bg-white/5"
+                        className="border-border text-muted-foreground hover:text-foreground hover:bg-secondary"
                         onClick={() => fileInputRef.current?.click()}
                         disabled={uploading}
                       >
@@ -286,30 +286,30 @@ export default function SettingsPage() {
                     </div>
                   </div>
 
-                  <Separator className="bg-white/5" />
+                  <Separator className="bg-border" />
 
                   {/* Name Field */}
                   <div className="space-y-2">
-                    <Label htmlFor="name" className="text-gray-300">Full Name</Label>
+                    <Label htmlFor="name" className="text-foreground">Full Name</Label>
                     <Input
                       id="name"
                       value={profile.name}
                       onChange={e => setProfile({ ...profile, name: e.target.value })}
-                      className="bg-white/5 border-white/10 text-white placeholder:text-gray-500 focus:border-purple-500/50"
+                      className="bg-secondary border-border text-foreground placeholder:text-muted-foreground focus:border-purple-500/50"
                       placeholder="Enter your name"
                     />
                   </div>
 
                   {/* Email Field */}
                   <div className="space-y-2">
-                    <Label htmlFor="email" className="text-gray-300">Email Address</Label>
+                    <Label htmlFor="email" className="text-foreground">Email Address</Label>
                     <Input
                       id="email"
                       value={profile.email}
                       disabled
-                      className="bg-white/5 border-white/10 text-gray-400"
+                      className="bg-secondary border-border text-muted-foreground"
                     />
-                    <p className="text-xs text-gray-500">Email cannot be changed</p>
+                    <p className="text-xs text-muted-foreground">Email cannot be changed</p>
                   </div>
 
                   <Button
@@ -334,33 +334,33 @@ export default function SettingsPage() {
             </Card>
 
             {/* Subscription Section */}
-            <Card className="bg-[#12121a] border-white/5">
+            <Card className="bg-card border-border">
               <CardHeader>
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <div className="p-2 rounded-lg bg-yellow-500/10">
-                      <Crown className="w-5 h-5 text-yellow-400" />
+                      <Crown className="w-5 h-5 text-yellow-500" />
                     </div>
                     <div>
-                      <CardTitle className="text-white">Subscription</CardTitle>
-                      <CardDescription className="text-gray-500">Manage your plan</CardDescription>
+                      <CardTitle className="text-foreground">Subscription</CardTitle>
+                      <CardDescription className="text-muted-foreground">Manage your plan</CardDescription>
                     </div>
                   </div>
                   <Badge className={`${userPlan === 'pro'
-                      ? 'bg-blue-500/20 text-blue-400 border-blue-500/30'
-                      : userPlan === 'ultra'
-                        ? 'bg-purple-500/20 text-purple-400 border-purple-500/30'
-                        : 'bg-white/5 text-gray-400 border-white/10'
+                    ? 'bg-blue-500/20 text-blue-600 dark:text-blue-400 border-blue-500/30'
+                    : userPlan === 'ultra'
+                      ? 'bg-purple-500/20 text-purple-600 dark:text-purple-400 border-purple-500/30'
+                      : 'bg-secondary text-muted-foreground border-border'
                     }`}>
                     {planLabels[userPlan]}
                   </Badge>
                 </div>
               </CardHeader>
               <CardContent>
-                <div className="flex items-center justify-between p-4 rounded-lg bg-white/5 border border-white/5">
+                <div className="flex items-center justify-between p-4 rounded-lg bg-secondary border border-border">
                   <div>
-                    <h3 className="text-white font-medium mb-1">Current Plan: {planLabels[userPlan]}</h3>
-                    <p className="text-sm text-gray-500">
+                    <h3 className="text-foreground font-medium mb-1">Current Plan: {planLabels[userPlan]}</h3>
+                    <p className="text-sm text-muted-foreground">
                       {userPlan === 'free'
                         ? 'Upgrade to unlock more features'
                         : 'You have access to all premium features'
@@ -371,7 +371,7 @@ export default function SettingsPage() {
                     variant={userPlan === 'free' ? 'default' : 'outline'}
                     className={userPlan === 'free'
                       ? 'bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white'
-                      : 'border-white/10 text-gray-400 hover:text-white hover:bg-white/5'
+                      : 'border-border text-muted-foreground hover:text-foreground hover:bg-secondary'
                     }
                     onClick={() => router.push('/upgrade')}
                   >
@@ -382,46 +382,46 @@ export default function SettingsPage() {
             </Card>
 
             {/* Security Section */}
-            <Card className="bg-[#12121a] border-white/5">
+            <Card className="bg-card border-border">
               <CardHeader>
                 <div className="flex items-center gap-3">
                   <div className="p-2 rounded-lg bg-red-500/10">
-                    <Shield className="w-5 h-5 text-red-400" />
+                    <Shield className="w-5 h-5 text-red-500" />
                   </div>
                   <div>
-                    <CardTitle className="text-white">Security</CardTitle>
-                    <CardDescription className="text-gray-500">Update your password</CardDescription>
+                    <CardTitle className="text-foreground">Security</CardTitle>
+                    <CardDescription className="text-muted-foreground">Update your password</CardDescription>
                   </div>
                 </div>
               </CardHeader>
               <CardContent>
                 <form onSubmit={handlePasswordChange} className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="newPassword" className="text-gray-300">New Password</Label>
+                    <Label htmlFor="newPassword" className="text-foreground">New Password</Label>
                     <Input
                       id="newPassword"
                       type="password"
                       value={newPassword}
                       onChange={e => setNewPassword(e.target.value)}
                       placeholder="Enter new password"
-                      className="bg-white/5 border-white/10 text-white placeholder:text-gray-500 focus:border-purple-500/50"
+                      className="bg-secondary border-border text-foreground placeholder:text-muted-foreground focus:border-purple-500/50"
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="confirmPassword" className="text-gray-300">Confirm Password</Label>
+                    <Label htmlFor="confirmPassword" className="text-foreground">Confirm Password</Label>
                     <Input
                       id="confirmPassword"
                       type="password"
                       value={confirmPassword}
                       onChange={e => setConfirmPassword(e.target.value)}
                       placeholder="Confirm new password"
-                      className="bg-white/5 border-white/10 text-white placeholder:text-gray-500 focus:border-purple-500/50"
+                      className="bg-secondary border-border text-foreground placeholder:text-muted-foreground focus:border-purple-500/50"
                     />
                   </div>
                   <Button
                     type="submit"
                     variant="outline"
-                    className="w-full border-white/10 text-white hover:bg-white/5"
+                    className="w-full border-border text-foreground hover:bg-secondary"
                     disabled={saving || !newPassword || !confirmPassword}
                   >
                     {saving ? 'Updating...' : 'Update Password'}
@@ -431,33 +431,33 @@ export default function SettingsPage() {
             </Card>
 
             {/* Notifications Section */}
-            <Card className="bg-[#12121a] border-white/5">
+            <Card className="bg-card border-border">
               <CardHeader>
                 <div className="flex items-center gap-3">
                   <div className="p-2 rounded-lg bg-blue-500/10">
-                    <Bell className="w-5 h-5 text-blue-400" />
+                    <Bell className="w-5 h-5 text-blue-500" />
                   </div>
                   <div>
-                    <CardTitle className="text-white">Notifications</CardTitle>
-                    <CardDescription className="text-gray-500">Manage your notification preferences</CardDescription>
+                    <CardTitle className="text-foreground">Notifications</CardTitle>
+                    <CardDescription className="text-muted-foreground">Manage your notification preferences</CardDescription>
                   </div>
                 </div>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="flex items-center justify-between p-4 rounded-lg bg-white/5">
+                <div className="flex items-center justify-between p-4 rounded-lg bg-secondary">
                   <div>
-                    <h3 className="text-white font-medium">Email Notifications</h3>
-                    <p className="text-sm text-gray-500">Receive updates about your conversations</p>
+                    <h3 className="text-foreground font-medium">Email Notifications</h3>
+                    <p className="text-sm text-muted-foreground">Receive updates about your conversations</p>
                   </div>
                   <Switch
                     checked={emailNotifications}
                     onCheckedChange={setEmailNotifications}
                   />
                 </div>
-                <div className="flex items-center justify-between p-4 rounded-lg bg-white/5">
+                <div className="flex items-center justify-between p-4 rounded-lg bg-secondary">
                   <div>
-                    <h3 className="text-white font-medium">Marketing Emails</h3>
-                    <p className="text-sm text-gray-500">Receive news and promotional content</p>
+                    <h3 className="text-foreground font-medium">Marketing Emails</h3>
+                    <p className="text-sm text-muted-foreground">Receive news and promotional content</p>
                   </div>
                   <Switch
                     checked={marketingEmails}

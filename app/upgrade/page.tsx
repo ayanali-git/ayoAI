@@ -118,13 +118,13 @@ export default function UpgradePage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0a0a12]">
+    <div className="min-h-screen bg-background">
       {/* Header */}
-      <div className="border-b border-white/5 bg-[#0a0a12]/80 backdrop-blur-xl sticky top-0 z-10">
+      <div className="border-b border-border bg-background/80 backdrop-blur-xl sticky top-0 z-10">
         <div className="max-w-6xl mx-auto px-4 py-4">
           <Button
             variant="ghost"
-            className="text-gray-400 hover:text-white hover:bg-white/5"
+            className="text-muted-foreground hover:text-foreground hover:bg-secondary"
             onClick={() => router.back()}
           >
             <ChevronLeft className="w-4 h-4 mr-1" />
@@ -144,27 +144,27 @@ export default function UpgradePage() {
             <Crown className="w-4 h-4 mr-2" />
             Upgrade Your Plan
           </Badge>
-          <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">
+          <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-4">
             Unlock More with{' '}
             <span className="bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
               ayoAI Pro
             </span>
           </h1>
-          <p className="text-xl text-gray-400 max-w-2xl mx-auto mb-8">
+          <p className="text-xl text-muted-foreground max-w-2xl mx-auto mb-8">
             Choose the plan that fits your needs and boost your productivity with advanced AI capabilities.
           </p>
 
           {/* Billing Toggle */}
           <div className="flex items-center justify-center gap-4 mb-8">
-            <span className={`text-sm ${!isYearly ? 'text-white' : 'text-gray-500'}`}>Monthly</span>
+            <span className={`text-sm ${!isYearly ? 'text-foreground' : 'text-muted-foreground'}`}>Monthly</span>
             <Switch
               checked={isYearly}
               onCheckedChange={setIsYearly}
               className="data-[state=checked]:bg-purple-600"
             />
-            <span className={`text-sm ${isYearly ? 'text-white' : 'text-gray-500'}`}>
+            <span className={`text-sm ${isYearly ? 'text-foreground' : 'text-muted-foreground'}`}>
               Yearly
-              <Badge className="ml-2 bg-green-500/20 text-green-400 border-green-500/30">
+              <Badge className="ml-2 bg-green-500/20 text-green-600 dark:text-green-400 border-green-500/30">
                 Save 15%
               </Badge>
             </span>
@@ -185,9 +185,9 @@ export default function UpgradePage() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.1 }}
               >
-                <Card className={`relative h-full bg-[#12121a] border-white/5 overflow-hidden transition-all duration-300 hover:scale-[1.02] hover:shadow-2xl ${plan.popular
+                <Card className={`relative h-full bg-card border-border overflow-hidden transition-all duration-300 hover:scale-[1.02] hover:shadow-2xl ${plan.popular
                   ? 'border-purple-500/50 shadow-lg shadow-purple-500/10'
-                  : 'hover:border-white/10'
+                  : 'hover:border-muted-foreground/20'
                   }`}>
                   {/* Popular Badge */}
                   {plan.popular && (
@@ -202,32 +202,32 @@ export default function UpgradePage() {
                   <CardHeader className={`${plan.popular ? 'pt-10' : 'pt-6'}`}>
                     <div className="flex items-center gap-3 mb-2">
                       <div className={`p-2.5 rounded-xl ${plan.id === 'free'
-                        ? 'bg-gray-500/10'
+                        ? 'bg-muted'
                         : plan.id === 'pro'
                           ? 'bg-blue-500/10'
                           : 'bg-purple-500/10'
                         }`}>
                         <Icon className={`w-5 h-5 ${plan.id === 'free'
-                          ? 'text-gray-400'
+                          ? 'text-muted-foreground'
                           : plan.id === 'pro'
-                            ? 'text-blue-400'
-                            : 'text-purple-400'
+                            ? 'text-blue-500'
+                            : 'text-purple-500'
                           }`} />
                       </div>
-                      <CardTitle className="text-xl text-white">{plan.name}</CardTitle>
+                      <CardTitle className="text-xl text-foreground">{plan.name}</CardTitle>
                     </div>
-                    <CardDescription className="text-gray-500">{plan.description}</CardDescription>
+                    <CardDescription className="text-muted-foreground">{plan.description}</CardDescription>
 
                     {/* Price */}
                     <div className="mt-6">
                       <div className="flex items-baseline gap-1">
-                        <span className="text-4xl font-bold text-white">₹{price}</span>
-                        <span className="text-gray-500">
+                        <span className="text-4xl font-bold text-foreground">₹{price}</span>
+                        <span className="text-muted-foreground">
                           /{isYearly ? 'year' : 'month'}
                         </span>
                       </div>
                       {isYearly && price > 0 && (
-                        <p className="text-sm text-green-400 mt-1">
+                        <p className="text-sm text-green-600 dark:text-green-400 mt-1">
                           Save ₹{(plan.monthlyPrice * 12) - plan.yearlyPrice} yearly
                         </p>
                       )}
@@ -241,16 +241,16 @@ export default function UpgradePage() {
                         <div key={idx} className="flex items-center gap-3">
                           <div className={`flex-shrink-0 w-5 h-5 rounded-full flex items-center justify-center ${feature.included
                             ? 'bg-green-500/20'
-                            : 'bg-gray-500/10'
+                            : 'bg-muted'
                             }`}>
                             <Check className={`w-3 h-3 ${feature.included
-                              ? 'text-green-400'
-                              : 'text-gray-600'
+                              ? 'text-green-600 dark:text-green-400'
+                              : 'text-muted-foreground'
                               }`} />
                           </div>
                           <span className={`text-sm ${feature.included
-                            ? 'text-gray-300'
-                            : 'text-gray-600'
+                            ? 'text-foreground'
+                            : 'text-muted-foreground'
                             }`}>
                             {feature.text}
                           </span>
@@ -261,7 +261,7 @@ export default function UpgradePage() {
                     {/* CTA Button */}
                     {isCurrentPlan ? (
                       <Button
-                        className="w-full bg-white/5 text-gray-400 cursor-default"
+                        className="w-full bg-secondary text-muted-foreground cursor-default"
                         disabled
                       >
                         Current Plan
@@ -269,7 +269,7 @@ export default function UpgradePage() {
                     ) : plan.id === 'free' ? (
                       <Button
                         variant="outline"
-                        className="w-full border-white/10 text-gray-400 hover:text-white hover:bg-white/5"
+                        className="w-full border-border text-muted-foreground hover:text-foreground hover:bg-secondary"
                         disabled
                       >
                         Free Forever
@@ -278,7 +278,7 @@ export default function UpgradePage() {
                       <Button
                         className={`w-full ${plan.popular
                           ? 'bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white shadow-lg shadow-purple-500/25'
-                          : 'bg-white/10 text-white hover:bg-white/20'
+                          : 'bg-secondary text-foreground hover:bg-muted'
                           }`}
                         onClick={() => handleUpgrade(plan.id)}
                       >
@@ -299,7 +299,7 @@ export default function UpgradePage() {
           transition={{ delay: 0.3 }}
           className="mb-16"
         >
-          <h2 className="text-2xl font-bold text-white text-center mb-8">
+          <h2 className="text-2xl font-bold text-foreground text-center mb-8">
             Why Upgrade to Pro?
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
@@ -309,13 +309,13 @@ export default function UpgradePage() {
               { icon: Zap, title: 'Faster Response', desc: 'Priority processing for your requests' },
               { icon: Headphones, title: 'Priority Support', desc: 'Get help when you need it' },
             ].map((item, index) => (
-              <Card key={index} className="bg-[#12121a] border-white/5 hover:border-purple-500/30 transition-all">
+              <Card key={index} className="bg-card border-border hover:border-purple-500/30 transition-all">
                 <CardContent className="pt-6 text-center">
                   <div className="w-12 h-12 mx-auto mb-4 rounded-xl bg-gradient-to-br from-blue-500/10 to-purple-500/10 flex items-center justify-center">
-                    <item.icon className="w-6 h-6 text-purple-400" />
+                    <item.icon className="w-6 h-6 text-purple-600 dark:text-purple-400" />
                   </div>
-                  <h3 className="text-white font-medium mb-2">{item.title}</h3>
-                  <p className="text-sm text-gray-500">{item.desc}</p>
+                  <h3 className="text-foreground font-medium mb-2">{item.title}</h3>
+                  <p className="text-sm text-muted-foreground">{item.desc}</p>
                 </CardContent>
               </Card>
             ))}
@@ -328,15 +328,15 @@ export default function UpgradePage() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4 }}
         >
-          <h2 className="text-2xl font-bold text-white text-center mb-8">
+          <h2 className="text-2xl font-bold text-foreground text-center mb-8">
             Frequently Asked Questions
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-4xl mx-auto">
             {faqs.map((faq, index) => (
-              <Card key={index} className="bg-[#12121a] border-white/5">
+              <Card key={index} className="bg-card border-border">
                 <CardContent className="pt-6">
-                  <h3 className="text-white font-medium mb-2">{faq.question}</h3>
-                  <p className="text-sm text-gray-500">{faq.answer}</p>
+                  <h3 className="text-foreground font-medium mb-2">{faq.question}</h3>
+                  <p className="text-sm text-muted-foreground">{faq.answer}</p>
                 </CardContent>
               </Card>
             ))}
@@ -345,7 +345,7 @@ export default function UpgradePage() {
 
         {/* Trust Badges */}
         <div className="mt-16 text-center">
-          <div className="flex items-center justify-center gap-8 text-gray-500">
+          <div className="flex items-center justify-center gap-8 text-muted-foreground">
             <div className="flex items-center gap-2">
               <Shield className="w-5 h-5" />
               <span className="text-sm">Secure Payment</span>

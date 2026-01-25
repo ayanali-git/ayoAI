@@ -137,8 +137,37 @@ export default function ChatPage() {
     try {
       const userChats = await chatService.getUserChats(supabase, user!.id);
       setChats(userChats);
+    } catch (error: any) {
+      console.error('Failed to load chats:', error);
+      // Check if it's a network error
+      if (error.message?.includes('fetch') || error.message?.includes('network') || error.code === 'NETWORK_ERROR') {
+        toast.error('Network error - please check your internet connection');
+      } else {
+        toast.error('Failed to load chat history');
+      }
+    }
+  };
+
+  const handleChatSelect = async (chatId: string) => {
+    // Optimistic update for UI selection
+    const selectedChat = chats.find(c => c.id === chatId);
+    if (!selectedChat) return;
+
+    // If we already have the full messages for this chat (e.g. from current session), don't refetch
+    // This is a simple caching strategy. In a real app we might want more complex invalidation.
+    // For now, since getUserChats returns empty messages, checking if messages.length > 0 is a proxy.
+    // But better to always fetch to get latest.
+
+    // Set simplified chat first (to partial load)
+    setCurrentChat(selectedChat);
+
+    try {
+      const fullChat = await chatService.getChatDetails(supabase, chatId);
+      if (fullChat) {
+        setCurrentChat(fullChat);
+      }
     } catch (error) {
-      toast.error('Failed to load chat history');
+      toast.error('Failed to load chat messages');
     }
   };
 
@@ -214,9 +243,8 @@ export default function ChatPage() {
         } : null);
       } else {
         await loadChats();
-        const newChat = await chatService.getUserChats(supabase, user!.id);
-        const chat = newChat.find(c => c.id === result.chatId);
-        if (chat) setCurrentChat(chat);
+        const fullChat = await chatService.getChatDetails(supabase, result.chatId);
+        if (fullChat) setCurrentChat(fullChat);
       }
 
     } catch (error: any) {
@@ -294,17 +322,17 @@ export default function ChatPage() {
             animate={{ width: sidebarCollapsed ? 72 : 320, opacity: 1 }}
             exit={{ width: 0, opacity: 0 }}
             transition={{ duration: 0.2, ease: 'easeInOut' }}
-            className="border-r bg-[#0a0a12] flex flex-col relative overflow-hidden"
+            className="border-r border-border bg-card flex flex-col relative overflow-hidden"
           >
             {/* Sidebar Header */}
-            <div className={`p-3 border-b border-white/5 ${sidebarCollapsed ? 'px-2' : ''}`}>
+            <div className={`p-3 border-b border-border ${sidebarCollapsed ? 'px-2' : ''}`}>
               <div className={`flex items-center ${sidebarCollapsed ? 'justify-center' : 'justify-between'} mb-3`}>
                 {!sidebarCollapsed && (
                   <div className="flex items-center space-x-2">
                     <div className="flex items-center justify-center w-9 h-9 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl shadow-lg shadow-purple-500/20">
                       <Sparkles className="w-5 h-5 text-white" />
                     </div>
-                    <span className="font-bold text-lg bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent">ayoAI</span>
+                    <span className="font-bold text-lg bg-gradient-to-r from-foreground to-muted-foreground bg-clip-text text-transparent">ayoAI</span>
                   </div>
                 )}
                 <div className="flex items-center gap-1">
@@ -312,7 +340,7 @@ export default function ChatPage() {
                   <Button
                     variant="ghost"
                     size="sm"
-                    className="h-8 w-8 p-0 text-gray-400 hover:text-white hover:bg-white/5"
+                    className="h-8 w-8 p-0 text-muted-foreground hover:text-foreground hover:bg-secondary"
                     onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
                   >
                     {sidebarCollapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
@@ -322,7 +350,7 @@ export default function ChatPage() {
 
               <Button
                 onClick={startNewChat}
-                className={`w-full bg-white/5 hover:bg-white/10 border border-white/10 text-white ${sidebarCollapsed ? 'px-2' : ''}`}
+                className={`w-full bg-secondary hover:bg-muted border border-border text-foreground ${sidebarCollapsed ? 'px-2' : ''}`}
               >
                 <Plus className="w-4 h-4" />
                 {!sidebarCollapsed && <span className="ml-2">New Chat</span>}
@@ -330,12 +358,12 @@ export default function ChatPage() {
 
               {!sidebarCollapsed && (
                 <div className="relative mt-3">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-500" />
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input
                     placeholder="Search chats..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="pl-10 bg-white/5 border-white/10 text-white placeholder:text-gray-500 focus:border-purple-500/50"
+                    className="pl-10 bg-secondary border-border text-foreground placeholder:text-muted-foreground focus:border-purple-500/50"
                   />
                 </div>
               )}
@@ -352,7 +380,7 @@ export default function ChatPage() {
                       {!sidebarCollapsed && (
                         <div className="flex items-center gap-2 px-2 mb-2">
                           {groupName === 'Pinned' && <Pin className="w-3 h-3 text-yellow-500" />}
-                          <span className="text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
                             {groupName}
                           </span>
                         </div>
@@ -364,21 +392,21 @@ export default function ChatPage() {
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
                             className={`group relative rounded-lg cursor-pointer transition-all duration-150 ${currentChat?.id === chat.id
-                                ? 'bg-white/10'
-                                : 'hover:bg-white/5'
+                              ? 'bg-secondary'
+                              : 'hover:bg-secondary/50'
                               } ${sidebarCollapsed ? 'p-2 flex justify-center' : 'p-3'}`}
-                            onClick={() => setCurrentChat(chat)}
+                            onClick={() => handleChatSelect(chat.id)}
                             onMouseEnter={() => setHoveredChatId(chat.id)}
                             onMouseLeave={() => setHoveredChatId(null)}
                           >
                             {sidebarCollapsed ? (
-                              <MessageCircle className="w-5 h-5 text-gray-400" />
+                              <MessageCircle className="w-5 h-5 text-muted-foreground" />
                             ) : (
                               <>
                                 <div className="flex items-center gap-3">
-                                  <MessageCircle className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                                  <MessageCircle className="w-4 h-4 text-muted-foreground flex-shrink-0" />
                                   <div className="flex-1 min-w-0">
-                                    <div className="text-sm font-medium text-gray-200 truncate pr-16">
+                                    <div className="text-sm font-medium text-foreground truncate pr-16">
                                       {chat.title}
                                     </div>
                                   </div>
@@ -391,12 +419,12 @@ export default function ChatPage() {
                                       initial={{ opacity: 0 }}
                                       animate={{ opacity: 1 }}
                                       exit={{ opacity: 0 }}
-                                      className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1 bg-[#0a0a12]/90 rounded-md p-1"
+                                      className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1 bg-card/90 rounded-md p-1"
                                     >
                                       <Button
                                         variant="ghost"
                                         size="sm"
-                                        className="h-7 w-7 p-0 text-gray-400 hover:text-yellow-500 hover:bg-white/10"
+                                        className="h-7 w-7 p-0 text-muted-foreground hover:text-yellow-500 hover:bg-secondary"
                                         onClick={(e) => {
                                           e.stopPropagation();
                                           toggleStar(chat.id, chat.starred);
@@ -407,7 +435,7 @@ export default function ChatPage() {
                                       <Button
                                         variant="ghost"
                                         size="sm"
-                                        className="h-7 w-7 p-0 text-gray-400 hover:text-red-500 hover:bg-white/10"
+                                        className="h-7 w-7 p-0 text-muted-foreground hover:text-red-500 hover:bg-secondary"
                                         onClick={(e) => {
                                           e.stopPropagation();
                                           deleteChat(chat.id);
@@ -430,7 +458,7 @@ export default function ChatPage() {
             </ScrollArea>
 
             {/* User Profile Section */}
-            <div className={`border-t border-white/5 ${sidebarCollapsed ? 'p-2' : 'p-3'}`}>
+            <div className={`border-t border-border ${sidebarCollapsed ? 'p-2' : 'p-3'}`}>
               {sidebarCollapsed ? (
                 <div className="flex flex-col items-center gap-2">
                   <Avatar className="w-10 h-10 ring-2 ring-purple-500/30">
@@ -442,7 +470,7 @@ export default function ChatPage() {
                 </div>
               ) : (
                 <>
-                  <div className="flex items-center gap-3 p-2 rounded-lg hover:bg-white/5 transition-colors mb-2">
+                  <div className="flex items-center gap-3 p-2 rounded-lg hover:bg-secondary transition-colors mb-2">
                     <Avatar className="w-10 h-10 ring-2 ring-purple-500/30">
                       <AvatarImage src={user.user_metadata?.avatar_url} />
                       <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white font-medium">
@@ -450,12 +478,12 @@ export default function ChatPage() {
                       </AvatarFallback>
                     </Avatar>
                     <div className="flex-1 min-w-0">
-                      <div className="text-sm font-medium text-white truncate">
+                      <div className="text-sm font-medium text-foreground truncate">
                         {user.user_metadata?.name || user.email?.split('@')[0]}
                       </div>
                       <div className="flex items-center gap-1">
-                        <div className={`w-1.5 h-1.5 rounded-full ${userPlan === 'pro' ? 'bg-blue-500' : userPlan === 'ultra' ? 'bg-purple-500' : 'bg-gray-500'}`} />
-                        <span className="text-xs text-gray-400">{planLabel}</span>
+                        <div className={`w-1.5 h-1.5 rounded-full ${userPlan === 'pro' ? 'bg-blue-500' : userPlan === 'ultra' ? 'bg-purple-500' : 'bg-muted-foreground'}`} />
+                        <span className="text-xs text-muted-foreground">{planLabel}</span>
                       </div>
                     </div>
                   </div>
@@ -464,7 +492,7 @@ export default function ChatPage() {
                     <Button
                       variant="ghost"
                       size="sm"
-                      className="text-gray-400 hover:text-white hover:bg-white/5 justify-start"
+                      className="text-muted-foreground hover:text-foreground hover:bg-secondary justify-start"
                       onClick={() => router.push('/settings')}
                     >
                       <Settings className="w-4 h-4 mr-2" />
@@ -473,7 +501,7 @@ export default function ChatPage() {
                     <Button
                       variant="ghost"
                       size="sm"
-                      className="text-purple-400 hover:text-purple-300 hover:bg-purple-500/10 justify-start"
+                      className="text-purple-600 dark:text-purple-400 hover:text-purple-700 dark:hover:text-purple-300 hover:bg-purple-500/10 justify-start"
                       onClick={() => router.push('/upgrade')}
                     >
                       <Crown className="w-4 h-4 mr-2" />
@@ -483,7 +511,7 @@ export default function ChatPage() {
                   <Button
                     variant="ghost"
                     size="sm"
-                    className="w-full text-gray-400 hover:text-red-400 hover:bg-red-500/10 justify-start mt-1"
+                    className="w-full text-muted-foreground hover:text-red-500 hover:bg-red-500/10 justify-start mt-1"
                     onClick={signOut}
                   >
                     <LogOut className="w-4 h-4 mr-2" />
@@ -497,30 +525,30 @@ export default function ChatPage() {
       </AnimatePresence>
 
       {/* Main Chat Area */}
-      <div className="flex-1 flex flex-col bg-[#0f0f1a]">
+      <div className="flex-1 flex flex-col bg-background">
         {/* Chat Header */}
-        <div className="p-4 border-b border-white/5 bg-[#0f0f1a]/80 backdrop-blur-xl">
+        <div className="p-4 border-b border-border bg-background/80 backdrop-blur-xl">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={() => setSidebarOpen(!sidebarOpen)}
-                className="text-gray-400 hover:text-white hover:bg-white/5"
+                className="text-muted-foreground hover:text-foreground hover:bg-secondary"
               >
                 <MessageCircle className="w-5 h-5" />
               </Button>
               <div>
-                <h1 className="text-lg font-semibold text-white">
+                <h1 className="text-lg font-semibold text-foreground">
                   {currentChat?.title || 'New Chat'}
                 </h1>
-                <p className="text-xs text-gray-500">
+                <p className="text-xs text-muted-foreground">
                   AI Assistant powered by advanced language models
                 </p>
               </div>
             </div>
             <div className="flex items-center space-x-3">
-              <Badge className={`${userPlan === 'pro' ? 'bg-blue-500/20 text-blue-400 border-blue-500/30' : userPlan === 'ultra' ? 'bg-purple-500/20 text-purple-400 border-purple-500/30' : 'bg-white/5 text-gray-400 border-white/10'}`}>
+              <Badge className={`${userPlan === 'pro' ? 'bg-blue-500/20 text-blue-600 dark:text-blue-400 border-blue-500/30' : userPlan === 'ultra' ? 'bg-purple-500/20 text-purple-600 dark:text-purple-400 border-purple-500/30' : 'bg-secondary text-muted-foreground border-border'}`}>
                 <Crown className="w-3 h-3 mr-1" />
                 {planLabel}
               </Badge>
@@ -564,15 +592,15 @@ export default function ChatPage() {
                       )}
                     </Avatar>
                     <div className={`p-4 rounded-2xl ${msg.role === 'user'
-                        ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white'
-                        : (msg.content.startsWith('I encountered an issue') || msg.content.startsWith('Gemini Error') || msg.content.startsWith('AI Service'))
-                          ? 'bg-red-500/10 text-red-400 border border-red-500/20'
-                          : 'bg-white/5 text-gray-200 border border-white/5'
+                      ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white'
+                      : (msg.content.startsWith('I encountered an issue') || msg.content.startsWith('Gemini Error') || msg.content.startsWith('AI Service'))
+                        ? 'bg-red-500/10 text-red-600 dark:text-red-400 border border-red-500/20'
+                        : 'bg-secondary text-foreground border border-border'
                       }`}>
                       {msg.role === 'user' ? (
                         <p className="text-sm whitespace-pre-wrap">{msg.content}</p>
                       ) : (
-                        <div className="text-sm prose prose-sm dark:prose-invert max-w-none prose-p:my-1 prose-ul:my-1 prose-ol:my-1 prose-li:my-0 prose-headings:my-2 prose-code:text-purple-400 prose-code:bg-purple-500/10 prose-code:px-1 prose-code:py-0.5 prose-code:rounded">
+                        <div className="text-sm prose prose-sm dark:prose-invert max-w-none prose-p:my-1 prose-ul:my-1 prose-ol:my-1 prose-li:my-0 prose-headings:my-2 prose-code:text-purple-600 dark:prose-code:text-purple-400 prose-code:bg-purple-500/10 prose-code:px-1 prose-code:py-0.5 prose-code:rounded">
                           <ReactMarkdown>{msg.content}</ReactMarkdown>
                         </div>
                       )}
@@ -638,14 +666,14 @@ export default function ChatPage() {
                         <Sparkles className="w-4 h-4 text-white" />
                       </div>
                     </Avatar>
-                    <div className="p-4 rounded-2xl bg-white/5 border border-white/5">
+                    <div className="p-4 rounded-2xl bg-secondary border border-border">
                       <div className="flex items-center space-x-2">
                         <div className="flex space-x-1">
                           <div className="w-2 h-2 bg-purple-500 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
                           <div className="w-2 h-2 bg-purple-500 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
                           <div className="w-2 h-2 bg-purple-500 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
                         </div>
-                        <span className="text-sm text-gray-400">AI is thinking...</span>
+                        <span className="text-sm text-muted-foreground">AI is thinking...</span>
                       </div>
                     </div>
                   </div>
@@ -662,22 +690,22 @@ export default function ChatPage() {
                 >
                   <Sparkles className="w-12 h-12 text-white" />
                 </motion.div>
-                <h2 className="text-2xl font-bold text-white mb-3">Welcome to ayoAI</h2>
-                <p className="text-gray-400 mb-8">
+                <h2 className="text-2xl font-bold text-foreground mb-3">Welcome to ayoAI</h2>
+                <p className="text-muted-foreground mb-8">
                   Start a conversation with your AI assistant. Ask questions, upload files, or generate images.
                 </p>
                 <div className="grid grid-cols-3 gap-4">
-                  <Card className="p-4 bg-white/5 border-white/10 hover:bg-white/10 transition-all cursor-pointer group">
-                    <MessageCircle className="w-8 h-8 mx-auto mb-3 text-blue-400 group-hover:scale-110 transition-transform" />
-                    <div className="text-sm font-medium text-gray-200">Ask Anything</div>
+                  <Card className="p-4 bg-card border-border hover:bg-secondary transition-all cursor-pointer group">
+                    <MessageCircle className="w-8 h-8 mx-auto mb-3 text-blue-500 group-hover:scale-110 transition-transform" />
+                    <div className="text-sm font-medium text-foreground">Ask Anything</div>
                   </Card>
-                  <Card className="p-4 bg-white/5 border-white/10 hover:bg-white/10 transition-all cursor-pointer group">
-                    <Image className="w-8 h-8 mx-auto mb-3 text-purple-400 group-hover:scale-110 transition-transform" />
-                    <div className="text-sm font-medium text-gray-200">Generate Images</div>
+                  <Card className="p-4 bg-card border-border hover:bg-secondary transition-all cursor-pointer group">
+                    <Image className="w-8 h-8 mx-auto mb-3 text-purple-500 group-hover:scale-110 transition-transform" />
+                    <div className="text-sm font-medium text-foreground">Generate Images</div>
                   </Card>
-                  <Card className="p-4 bg-white/5 border-white/10 hover:bg-white/10 transition-all cursor-pointer group">
-                    <FileText className="w-8 h-8 mx-auto mb-3 text-green-400 group-hover:scale-110 transition-transform" />
-                    <div className="text-sm font-medium text-gray-200">Analyze Files</div>
+                  <Card className="p-4 bg-card border-border hover:bg-secondary transition-all cursor-pointer group">
+                    <FileText className="w-8 h-8 mx-auto mb-3 text-green-500 group-hover:scale-110 transition-transform" />
+                    <div className="text-sm font-medium text-foreground">Analyze Files</div>
                   </Card>
                 </div>
               </div>
@@ -686,19 +714,19 @@ export default function ChatPage() {
         </ScrollArea>
 
         {/* Input Area */}
-        <div className="p-4 border-t border-white/5 bg-[#0f0f1a]">
+        <div className="p-4 border-t border-border bg-background">
           <div className="max-w-4xl mx-auto">
             {/* File Uploads Display */}
             {uploadedFiles.length > 0 && (
               <div className="mb-3 flex flex-wrap gap-2">
                 {uploadedFiles.map((file, index) => (
-                  <div key={index} className="flex items-center space-x-2 bg-white/5 border border-white/10 rounded-lg px-3 py-2">
-                    <FileText className="w-4 h-4 text-purple-400" />
-                    <span className="text-sm text-gray-300 truncate max-w-32">{file.name}</span>
+                  <div key={index} className="flex items-center space-x-2 bg-secondary border border-border rounded-lg px-3 py-2">
+                    <FileText className="w-4 h-4 text-purple-600 dark:text-purple-400" />
+                    <span className="text-sm text-foreground truncate max-w-32">{file.name}</span>
                     <Button
                       variant="ghost"
                       size="sm"
-                      className="h-5 w-5 p-0 text-gray-400 hover:text-red-400"
+                      className="h-5 w-5 p-0 text-muted-foreground hover:text-red-500"
                       onClick={() => removeFile(index)}
                     >
                       <X className="w-3 h-3" />
@@ -711,8 +739,8 @@ export default function ChatPage() {
             <div
               {...getRootProps()}
               className={`rounded-2xl p-4 transition-all ${isDragActive
-                  ? 'bg-purple-500/10 border-2 border-dashed border-purple-500/50'
-                  : 'bg-white/5 border border-white/10'
+                ? 'bg-purple-500/10 border-2 border-dashed border-purple-500/50'
+                : 'bg-secondary border border-border'
                 }`}
             >
               <input {...getInputProps()} />
@@ -723,7 +751,7 @@ export default function ChatPage() {
                       placeholder="Message ayoAI..."
                       value={message}
                       onChange={(e) => setMessage(e.target.value)}
-                      className="min-h-[60px] max-h-[200px] resize-none bg-transparent border-0 text-white placeholder:text-gray-500 focus-visible:ring-0 focus-visible:ring-offset-0 p-0"
+                      className="min-h-[60px] max-h-[200px] resize-none bg-transparent border-0 text-foreground placeholder:text-muted-foreground focus-visible:ring-0 focus-visible:ring-offset-0 p-0"
                       onKeyDown={(e) => {
                         if (e.key === 'Enter' && !e.shiftKey) {
                           e.preventDefault();
@@ -736,7 +764,7 @@ export default function ChatPage() {
                     <Button
                       variant="ghost"
                       size="sm"
-                      className="h-10 w-10 p-0 rounded-xl text-gray-400 hover:text-white hover:bg-white/10"
+                      className="h-10 w-10 p-0 rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted"
                       onClick={() => (document.querySelector('input[type="file"]') as HTMLInputElement)?.click()}
                       disabled={isUploading}
                     >
@@ -751,7 +779,7 @@ export default function ChatPage() {
                     </Button>
                   </div>
                 </div>
-                <div className="flex justify-between items-center text-xs text-gray-500">
+                <div className="flex justify-between items-center text-xs text-muted-foreground">
                   <div>
                     {isDragActive ? 'Drop files here...' : 'Drag & drop files or click to upload'}
                   </div>
