@@ -106,13 +106,13 @@ export default function ContactPage() {
                         <Mail className="w-4 h-4 mr-2" />
                         Contact Us
                     </Badge>
-                    <h1 className="text-4xl md:text-5xl font-bold text-white mb-6">
+                    <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-6">
                         Get in{' '}
                         <span className="bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
                             Touch
                         </span>
                     </h1>
-                    <p className="text-xl text-gray-400 max-w-2xl mx-auto">
+                    <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
                         Have questions, feedback, or need assistance? We'd love to hear from you.
                     </p>
                 </motion.div>
@@ -133,14 +133,14 @@ export default function ContactPage() {
                             transition={{ delay: 0.2 + index * 0.1 }}
                             className="block"
                         >
-                            <Card className="h-full bg-[#12121a] border-white/5 hover:border-purple-500/30 transition-all cursor-pointer group">
+                            <Card className="h-full bg-card border-border hover:border-purple-500/30 transition-all cursor-pointer group">
                                 <CardContent className="pt-6 text-center">
                                     <div className="w-14 h-14 mx-auto mb-4 rounded-xl bg-gradient-to-br from-blue-500/10 to-purple-500/10 flex items-center justify-center group-hover:from-blue-500/20 group-hover:to-purple-500/20 transition-colors">
-                                        <method.icon className="w-7 h-7 text-purple-400" />
+                                        <method.icon className="w-7 h-7 text-purple-600 dark:text-purple-400" />
                                     </div>
-                                    <h3 className="text-lg font-semibold text-white mb-1">{method.title}</h3>
-                                    <p className="text-sm text-gray-500 mb-2">{method.description}</p>
-                                    <p className="text-sm text-purple-400 font-medium">{method.value}</p>
+                                    <h3 className="text-lg font-semibold text-foreground mb-1">{method.title}</h3>
+                                    <p className="text-sm text-muted-foreground mb-2">{method.description}</p>
+                                    <p className="text-sm text-purple-600 dark:text-purple-400 font-medium">{method.value}</p>
                                 </CardContent>
                             </Card>
                         </motion.a>
@@ -155,13 +155,13 @@ export default function ContactPage() {
                         animate={{ opacity: 1, x: 0 }}
                         transition={{ delay: 0.3 }}
                     >
-                        <Card className="bg-[#12121a] border-white/5">
+                        <Card className="bg-card border-border">
                             <CardContent className="p-8">
-                                <h2 className="text-2xl font-bold text-white mb-6">Send us a Message</h2>
+                                <h2 className="text-2xl font-bold text-foreground mb-6">Send us a Message</h2>
                                 <form onSubmit={handleSubmit} className="space-y-6">
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                         <div>
-                                            <label className="block text-sm font-medium text-gray-400 mb-2">
+                                            <label className="block text-sm font-medium text-muted-foreground mb-2">
                                                 Your Name
                                             </label>
                                             <Input
@@ -169,12 +169,12 @@ export default function ContactPage() {
                                                 placeholder="John Doe"
                                                 value={formData.name}
                                                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                                                className="bg-white/5 border-white/10 text-white placeholder:text-gray-500 focus:border-purple-500/50"
+                                                className="bg-secondary border-border text-foreground placeholder:text-muted-foreground focus:border-purple-500/50"
                                                 required
                                             />
                                         </div>
                                         <div>
-                                            <label className="block text-sm font-medium text-gray-400 mb-2">
+                                            <label className="block text-sm font-medium text-muted-foreground mb-2">
                                                 Your Email
                                             </label>
                                             <Input
@@ -182,13 +182,13 @@ export default function ContactPage() {
                                                 placeholder="john@example.com"
                                                 value={formData.email}
                                                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                                                className="bg-white/5 border-white/10 text-white placeholder:text-gray-500 focus:border-purple-500/50"
+                                                className="bg-secondary border-border text-foreground placeholder:text-muted-foreground focus:border-purple-500/50"
                                                 required
                                             />
                                         </div>
                                     </div>
                                     <div>
-                                        <label className="block text-sm font-medium text-gray-400 mb-2">
+                                        <label className="block text-sm font-medium text-muted-foreground mb-2">
                                             Subject
                                         </label>
                                         <Input
@@ -196,19 +196,19 @@ export default function ContactPage() {
                                             placeholder="How can we help?"
                                             value={formData.subject}
                                             onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
-                                            className="bg-white/5 border-white/10 text-white placeholder:text-gray-500 focus:border-purple-500/50"
+                                            className="bg-secondary border-border text-foreground placeholder:text-muted-foreground focus:border-purple-500/50"
                                             required
                                         />
                                     </div>
                                     <div>
-                                        <label className="block text-sm font-medium text-gray-400 mb-2">
+                                        <label className="block text-sm font-medium text-muted-foreground mb-2">
                                             Message
                                         </label>
                                         <Textarea
                                             placeholder="Tell us more about your inquiry..."
                                             value={formData.message}
                                             onChange={(e) => setFormData({ ...formData, message: e.target.value })}
-                                            className="bg-white/5 border-white/10 text-white placeholder:text-gray-500 focus:border-purple-500/50 min-h-[150px]"
+                                            className="bg-secondary border-border text-foreground placeholder:text-muted-foreground focus:border-purple-500/50 min-h-[150px]"
                                             required
                                         />
                                     </div>
@@ -239,24 +239,24 @@ export default function ContactPage() {
                         className="space-y-8"
                     >
                         {/* Office Hours */}
-                        <Card className="bg-[#12121a] border-white/5">
+                        <Card className="bg-card border-border">
                             <CardContent className="p-8">
                                 <div className="flex items-center gap-3 mb-4">
                                     <div className="p-2 rounded-lg bg-gradient-to-br from-blue-500/10 to-purple-500/10">
-                                        <Clock className="w-5 h-5 text-purple-400" />
+                                        <Clock className="w-5 h-5 text-purple-600 dark:text-purple-400" />
                                     </div>
-                                    <h3 className="text-lg font-semibold text-white">Office Hours</h3>
+                                    <h3 className="text-lg font-semibold text-foreground">Office Hours</h3>
                                 </div>
                                 <div className="space-y-2 text-sm">
-                                    <div className="flex justify-between text-gray-400">
+                                    <div className="flex justify-between text-muted-foreground">
                                         <span>Monday - Friday</span>
-                                        <span className="text-white">9:00 AM - 6:00 PM IST</span>
+                                        <span className="text-foreground">9:00 AM - 6:00 PM IST</span>
                                     </div>
-                                    <div className="flex justify-between text-gray-400">
+                                    <div className="flex justify-between text-muted-foreground">
                                         <span>Saturday</span>
-                                        <span className="text-white">10:00 AM - 4:00 PM IST</span>
+                                        <span className="text-foreground">10:00 AM - 4:00 PM IST</span>
                                     </div>
-                                    <div className="flex justify-between text-gray-400">
+                                    <div className="flex justify-between text-muted-foreground">
                                         <span>Sunday</span>
                                         <span className="text-gray-500">Closed</span>
                                     </div>
@@ -265,9 +265,9 @@ export default function ContactPage() {
                         </Card>
 
                         {/* Social Links */}
-                        <Card className="bg-[#12121a] border-white/5">
+                        <Card className="bg-card border-border">
                             <CardContent className="p-8">
-                                <h3 className="text-lg font-semibold text-white mb-4">Follow Us</h3>
+                                <h3 className="text-lg font-semibold text-foreground mb-4">Follow Us</h3>
                                 <div className="flex gap-4">
                                     {socialLinks.map((social) => (
                                         <a
@@ -275,7 +275,7 @@ export default function ContactPage() {
                                             href={social.href}
                                             target="_blank"
                                             rel="noopener noreferrer"
-                                            className="w-12 h-12 rounded-xl bg-white/5 hover:bg-white/10 flex items-center justify-center text-gray-400 hover:text-white transition-all"
+                                            className="w-12 h-12 rounded-xl bg-secondary hover:bg-secondary/80 flex items-center justify-center text-muted-foreground hover:text-foreground transition-all"
                                         >
                                             <social.icon className="w-5 h-5" />
                                         </a>
@@ -285,14 +285,14 @@ export default function ContactPage() {
                         </Card>
 
                         {/* Quick FAQs */}
-                        <Card className="bg-[#12121a] border-white/5">
+                        <Card className="bg-card border-border">
                             <CardContent className="p-8">
-                                <h3 className="text-lg font-semibold text-white mb-4">Quick FAQs</h3>
+                                <h3 className="text-lg font-semibold text-foreground mb-4">Quick FAQs</h3>
                                 <div className="space-y-4">
                                     {faqs.map((faq, index) => (
                                         <div key={index}>
-                                            <h4 className="text-sm font-medium text-white mb-1">{faq.question}</h4>
-                                            <p className="text-sm text-gray-500">{faq.answer}</p>
+                                            <h4 className="text-sm font-medium text-foreground mb-1">{faq.question}</h4>
+                                            <p className="text-sm text-muted-foreground">{faq.answer}</p>
                                         </div>
                                     ))}
                                 </div>

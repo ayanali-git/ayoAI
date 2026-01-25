@@ -61,10 +61,10 @@ export default function FeaturesPage() {
                     <Badge className="bg-gradient-to-r from-blue-500 to-purple-600 text-white border-0 mb-4 px-4 py-1">
                         <Sparkles className="w-4 h-4 mr-2" />Features
                     </Badge>
-                    <h1 className="text-4xl md:text-5xl font-bold text-white mb-6">
+                    <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-6">
                         Powerful AI,{' '}<span className="bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">Simple to Use</span>
                     </h1>
-                    <p className="text-xl text-gray-400 max-w-3xl mx-auto">
+                    <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
                         Everything you need to supercharge your productivity with cutting-edge AI capabilities.
                     </p>
                 </motion.div>
@@ -72,27 +72,27 @@ export default function FeaturesPage() {
                 <div className="space-y-8 mb-16">
                     {mainFeatures.map((feature, index) => (
                         <motion.div key={feature.title} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 + index * 0.05 }}>
-                            <Card className="bg-[#12121a] border-white/5 hover:border-purple-500/30 transition-all overflow-hidden">
+                            <Card className="bg-card border-border hover:border-purple-500/30 transition-all overflow-hidden">
                                 <CardContent className="p-8">
                                     <div className="grid md:grid-cols-2 gap-8 items-center">
                                         <div className={index % 2 === 1 ? 'md:order-2' : ''}>
                                             <div className="flex items-center gap-3 mb-4">
                                                 <div className="p-3 rounded-xl bg-gradient-to-br from-blue-500/20 to-purple-500/20">
-                                                    <feature.icon className="w-6 h-6 text-purple-400" />
+                                                    <feature.icon className="w-6 h-6 text-purple-600 dark:text-purple-400" />
                                                 </div>
-                                                <h2 className="text-2xl font-bold text-white">{feature.title}</h2>
+                                                <h2 className="text-2xl font-bold text-foreground">{feature.title}</h2>
                                             </div>
-                                            <p className="text-gray-400 mb-6">{feature.description}</p>
+                                            <p className="text-muted-foreground mb-6">{feature.description}</p>
                                             <div className="grid grid-cols-2 gap-3">
                                                 {feature.highlights.map((h, i) => (
-                                                    <div key={i} className="flex items-center gap-2 text-sm text-gray-300">
-                                                        <Check className="w-4 h-4 text-green-400 flex-shrink-0" />{h}
+                                                    <div key={i} className="flex items-center gap-2 text-sm text-muted-foreground">
+                                                        <Check className="w-4 h-4 text-green-500 flex-shrink-0" />{h}
                                                     </div>
                                                 ))}
                                             </div>
                                         </div>
                                         <div className={`h-48 rounded-xl bg-gradient-to-br from-blue-500/10 via-purple-500/10 to-pink-500/10 flex items-center justify-center ${index % 2 === 1 ? 'md:order-1' : ''}`}>
-                                            <feature.icon className="w-20 h-20 text-purple-400/50" />
+                                            <feature.icon className="w-20 h-20 text-purple-600/50 dark:text-purple-400/50" />
                                         </div>
                                     </div>
                                 </CardContent>
@@ -102,16 +102,16 @@ export default function FeaturesPage() {
                 </div>
 
                 <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }} className="mb-16">
-                    <h2 className="text-2xl font-bold text-white text-center mb-8">And Much More</h2>
+                    <h2 className="text-2xl font-bold text-foreground text-center mb-8">And Much More</h2>
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
                         {additionalFeatures.map((f, i) => (
-                            <Card key={i} className="bg-[#12121a] border-white/5 hover:border-purple-500/30 transition-all text-center">
+                            <Card key={i} className="bg-card border-border hover:border-purple-500/30 transition-all text-center">
                                 <CardContent className="pt-6">
                                     <div className="w-12 h-12 mx-auto mb-4 rounded-xl bg-gradient-to-br from-blue-500/10 to-purple-500/10 flex items-center justify-center">
-                                        <f.icon className="w-6 h-6 text-purple-400" />
+                                        <f.icon className="w-6 h-6 text-purple-600 dark:text-purple-400" />
                                     </div>
-                                    <h3 className="text-white font-medium mb-1">{f.title}</h3>
-                                    <p className="text-sm text-gray-500">{f.description}</p>
+                                    <h3 className="text-foreground font-medium mb-1">{f.title}</h3>
+                                    <p className="text-sm text-muted-foreground">{f.description}</p>
                                 </CardContent>
                             </Card>
                         ))}
@@ -119,15 +119,15 @@ export default function FeaturesPage() {
                 </motion.div>
 
                 <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }}>
-                    <Card className="bg-gradient-to-br from-[#12121a] to-[#1a1a2e] border-purple-500/20">
+                    <Card className="bg-gradient-to-br from-card to-muted border-purple-500/20">
                         <CardContent className="py-12 text-center">
-                            <h2 className="text-2xl font-bold text-white mb-4">Ready to Get Started?</h2>
-                            <p className="text-gray-400 mb-6 max-w-lg mx-auto">Join thousands of users already using ayoAI to boost productivity.</p>
+                            <h2 className="text-2xl font-bold text-foreground mb-4">Ready to Get Started?</h2>
+                            <p className="text-muted-foreground mb-6 max-w-lg mx-auto">Join thousands of users already using ayoAI to boost productivity.</p>
                             <div className="flex flex-col sm:flex-row gap-4 justify-center">
                                 <Button asChild className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700">
                                     <Link href="/auth/signup">Start Free<ChevronRight className="w-4 h-4 ml-1" /></Link>
                                 </Button>
-                                <Button asChild variant="outline" className="border-white/10 text-gray-300 hover:text-white hover:bg-white/5">
+                                <Button asChild variant="outline" className="border-border text-muted-foreground hover:text-foreground hover:bg-secondary">
                                     <Link href="/upgrade">View Pricing</Link>
                                 </Button>
                             </div>

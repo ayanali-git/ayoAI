@@ -121,25 +121,25 @@ export default function HelpPage() {
                         <HelpCircle className="w-4 h-4 mr-2" />
                         Help Center
                     </Badge>
-                    <h1 className="text-4xl md:text-5xl font-bold text-white mb-6">
+                    <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-6">
                         How Can We{' '}
                         <span className="bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
                             Help You?
                         </span>
                     </h1>
-                    <p className="text-xl text-gray-400 max-w-2xl mx-auto mb-8">
+                    <p className="text-xl text-muted-foreground max-w-2xl mx-auto mb-8">
                         Find answers, guides, and resources to help you get the most out of ayoAI.
                     </p>
 
                     {/* Search Bar */}
                     <div className="max-w-xl mx-auto relative">
-                        <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-500" />
+                        <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                         <Input
                             type="text"
                             placeholder="Search for help articles..."
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
-                            className="pl-12 py-6 bg-white/5 border-white/10 text-white placeholder:text-gray-500 focus:border-purple-500/50 text-lg"
+                            className="pl-12 py-6 bg-secondary border-border text-foreground placeholder:text-muted-foreground focus:border-purple-500/50 text-lg"
                         />
                     </div>
                 </motion.div>
@@ -151,7 +151,7 @@ export default function HelpPage() {
                     transition={{ delay: 0.1 }}
                     className="mb-16"
                 >
-                    <h2 className="text-2xl font-bold text-white mb-8 text-center">Browse by Category</h2>
+                    <h2 className="text-2xl font-bold text-foreground mb-8 text-center">Browse by Category</h2>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                         {categories.map((category, index) => (
                             <motion.div
@@ -160,20 +160,20 @@ export default function HelpPage() {
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ delay: 0.2 + index * 0.05 }}
                             >
-                                <Card className="h-full bg-[#12121a] border-white/5 hover:border-purple-500/30 transition-all cursor-pointer group">
+                                <Card className="h-full bg-card border-border hover:border-purple-500/30 transition-all cursor-pointer group">
                                     <CardContent className="pt-6">
                                         <div className="flex items-start gap-4">
                                             <div className="p-3 rounded-xl bg-gradient-to-br from-blue-500/10 to-purple-500/10 group-hover:from-blue-500/20 group-hover:to-purple-500/20 transition-colors">
-                                                <category.icon className="w-6 h-6 text-purple-400" />
+                                                <category.icon className="w-6 h-6 text-purple-600 dark:text-purple-400" />
                                             </div>
                                             <div className="flex-1">
-                                                <h3 className="text-lg font-semibold text-white mb-1 group-hover:text-purple-300 transition-colors">
+                                                <h3 className="text-lg font-semibold text-foreground mb-1 group-hover:text-purple-600 dark:group-hover:text-purple-300 transition-colors">
                                                     {category.title}
                                                 </h3>
-                                                <p className="text-sm text-gray-500 mb-2">{category.description}</p>
-                                                <span className="text-xs text-purple-400">{category.articles} articles</span>
+                                                <p className="text-sm text-muted-foreground mb-2">{category.description}</p>
+                                                <span className="text-xs text-purple-600 dark:text-purple-400">{category.articles} articles</span>
                                             </div>
-                                            <ChevronRight className="w-5 h-5 text-gray-600 group-hover:text-purple-400 transition-colors" />
+                                            <ChevronRight className="w-5 h-5 text-muted-foreground group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors" />
                                         </div>
                                     </CardContent>
                                 </Card>
@@ -189,7 +189,7 @@ export default function HelpPage() {
                     transition={{ delay: 0.3 }}
                     className="mb-16"
                 >
-                    <h2 className="text-2xl font-bold text-white mb-8 text-center">Frequently Asked Questions</h2>
+                    <h2 className="text-2xl font-bold text-foreground mb-8 text-center">Frequently Asked Questions</h2>
                     <div className="max-w-3xl mx-auto space-y-4">
                         {faqs.map((faq, index) => (
                             <motion.div
@@ -199,14 +199,14 @@ export default function HelpPage() {
                                 transition={{ delay: 0.4 + index * 0.03 }}
                             >
                                 <Card
-                                    className="bg-[#12121a] border-white/5 hover:border-purple-500/30 transition-all cursor-pointer"
+                                    className="bg-card border-border hover:border-purple-500/30 transition-all cursor-pointer"
                                     onClick={() => setExpandedFaq(expandedFaq === index ? null : index)}
                                 >
                                     <CardContent className="p-6">
                                         <div className="flex items-center justify-between">
-                                            <h3 className="text-white font-medium pr-4">{faq.question}</h3>
+                                            <h3 className="text-foreground font-medium pr-4">{faq.question}</h3>
                                             <ChevronDown
-                                                className={`w-5 h-5 text-gray-500 transition-transform flex-shrink-0 ${expandedFaq === index ? 'rotate-180' : ''
+                                                className={`w-5 h-5 text-muted-foreground transition-transform flex-shrink-0 ${expandedFaq === index ? 'rotate-180' : ''
                                                     }`}
                                             />
                                         </div>
@@ -214,7 +214,7 @@ export default function HelpPage() {
                                             <motion.p
                                                 initial={{ opacity: 0, height: 0 }}
                                                 animate={{ opacity: 1, height: 'auto' }}
-                                                className="text-gray-400 text-sm mt-4 pt-4 border-t border-white/5"
+                                                className="text-muted-foreground text-sm mt-4 pt-4 border-t border-border"
                                             >
                                                 {faq.answer}
                                             </motion.p>
@@ -233,9 +233,9 @@ export default function HelpPage() {
                     transition={{ delay: 0.5 }}
                     className="mb-16"
                 >
-                    <Card className="bg-[#12121a] border-white/5">
+                    <Card className="bg-card border-border">
                         <CardHeader>
-                            <CardTitle className="text-white">Popular Articles</CardTitle>
+                            <CardTitle className="text-foreground">Popular Articles</CardTitle>
                         </CardHeader>
                         <CardContent>
                             <ul className="space-y-3">
@@ -243,7 +243,7 @@ export default function HelpPage() {
                                     <li key={index}>
                                         <a
                                             href="#"
-                                            className="flex items-center gap-3 text-gray-400 hover:text-purple-400 transition-colors group"
+                                            className="flex items-center gap-3 text-muted-foreground hover:text-purple-600 dark:hover:text-purple-400 transition-colors group"
                                         >
                                             <FileText className="w-4 h-4 flex-shrink-0" />
                                             <span className="flex-1">{article}</span>
@@ -262,11 +262,11 @@ export default function HelpPage() {
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.6 }}
                 >
-                    <Card className="bg-gradient-to-br from-[#12121a] to-[#1a1a2e] border-purple-500/20">
+                    <Card className="bg-gradient-to-br from-card to-muted border-purple-500/20">
                         <CardContent className="py-12 text-center">
-                            <MessageCircle className="w-12 h-12 text-purple-400 mx-auto mb-4" />
-                            <h2 className="text-2xl font-bold text-white mb-4">Still Need Help?</h2>
-                            <p className="text-gray-400 mb-6 max-w-lg mx-auto">
+                            <MessageCircle className="w-12 h-12 text-purple-600 dark:text-purple-400 mx-auto mb-4" />
+                            <h2 className="text-2xl font-bold text-foreground mb-4">Still Need Help?</h2>
+                            <p className="text-muted-foreground mb-6 max-w-lg mx-auto">
                                 Our support team is ready to assist you with any questions or issues.
                             </p>
                             <div className="flex flex-col sm:flex-row gap-4 justify-center">
@@ -276,7 +276,7 @@ export default function HelpPage() {
                                         <Mail className="w-4 h-4 ml-2" />
                                     </Link>
                                 </Button>
-                                <Button variant="outline" className="border-white/10 text-gray-300 hover:text-white hover:bg-white/5">
+                                <Button variant="outline" className="border-border text-muted-foreground hover:text-foreground hover:bg-secondary">
                                     <MessageCircle className="w-4 h-4 mr-2" />
                                     Start Live Chat
                                 </Button>

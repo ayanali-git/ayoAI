@@ -143,10 +143,10 @@ export default function PrivacyPage() {
                         <Shield className="w-4 h-4 mr-2" />
                         Legal
                     </Badge>
-                    <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">
+                    <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-4">
                         Privacy Policy
                     </h1>
-                    <div className="flex items-center justify-center gap-2 text-gray-400">
+                    <div className="flex items-center justify-center gap-2 text-muted-foreground">
                         <Calendar className="w-4 h-4" />
                         <span>Last Updated: January 1, 2026</span>
                     </div>
@@ -159,9 +159,9 @@ export default function PrivacyPage() {
                     transition={{ delay: 0.1 }}
                     className="mb-12"
                 >
-                    <Card className="bg-[#12121a] border-white/5">
+                    <Card className="bg-card border-border">
                         <CardContent className="p-8">
-                            <p className="text-gray-400 leading-relaxed">
+                            <p className="text-muted-foreground leading-relaxed">
                                 At ayoAI, we take your privacy seriously. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you use our AI-powered assistant platform. Please read this policy carefully to understand our practices regarding your personal data.
                             </p>
                         </CardContent>
@@ -177,17 +177,17 @@ export default function PrivacyPage() {
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ delay: 0.2 + index * 0.03 }}
                         >
-                            <Card className="bg-[#12121a] border-white/5">
+                            <Card className="bg-card border-border">
                                 <CardContent className="p-8">
-                                    <h2 className="text-xl font-bold text-white mb-4">{section.title}</h2>
-                                    <div className="text-gray-400 leading-relaxed whitespace-pre-line">
+                                    <h2 className="text-xl font-bold text-foreground mb-4">{section.title}</h2>
+                                    <div className="text-muted-foreground leading-relaxed whitespace-pre-line">
                                         {section.content.split('\n').map((paragraph, i) => {
                                             // Helper to format inline bold text
                                             const formatText = (text: string) => {
                                                 const parts = text.split(/(\*\*.*?\*\*)/g);
                                                 return parts.map((part, index) => {
                                                     if (part.startsWith('**') && part.endsWith('**')) {
-                                                        return <strong key={index} className="text-white font-semibold">{part.slice(2, -2)}</strong>;
+                                                        return <strong key={index} className="text-foreground font-semibold">{part.slice(2, -2)}</strong>;
                                                     }
                                                     return part;
                                                 });
@@ -195,7 +195,7 @@ export default function PrivacyPage() {
 
                                             if (paragraph.startsWith('**') && paragraph.endsWith('**')) {
                                                 return (
-                                                    <p key={i} className="font-semibold text-white mt-4 mb-2">
+                                                    <p key={i} className="font-semibold text-foreground mt-4 mb-2">
                                                         {paragraph.slice(2, -2)}
                                                     </p>
                                                 );
@@ -224,7 +224,7 @@ export default function PrivacyPage() {
                     className="mt-12 text-center"
                 >
                     <Separator className="bg-white/5 mb-8" />
-                    <p className="text-gray-500 text-sm">
+                    <p className="text-muted-foreground text-sm">
                         By using ayoAI, you acknowledge that you have read and understood this Privacy Policy.
                     </p>
                 </motion.div>

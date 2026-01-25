@@ -90,8 +90,8 @@ export default function DocsPage() {
                     <Badge className="bg-gradient-to-r from-blue-500 to-purple-600 text-white border-0 mb-4 px-4 py-1">
                         <BookOpen className="w-4 h-4 mr-2" />Documentation
                     </Badge>
-                    <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">ayoAI Docs</h1>
-                    <p className="text-xl text-gray-400 max-w-2xl mx-auto">
+                    <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-4">ayoAI Docs</h1>
+                    <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
                         Everything you need to know about using ayoAI effectively.
                     </p>
                 </motion.div>
@@ -100,16 +100,16 @@ export default function DocsPage() {
                 <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="grid md:grid-cols-3 gap-4 mb-12">
                     {quickLinks.map((link, i) => (
                         <Link key={i} href={link.href}>
-                            <Card className="bg-[#12121a] border-white/5 hover:border-purple-500/30 transition-all cursor-pointer group h-full">
+                            <Card className="bg-card border-border hover:border-purple-500/30 transition-all cursor-pointer group h-full">
                                 <CardContent className="p-6 flex items-center gap-4">
                                     <div className="p-3 rounded-xl bg-gradient-to-br from-blue-500/10 to-purple-500/10 group-hover:from-blue-500/20 group-hover:to-purple-500/20 transition-colors">
-                                        <link.icon className="w-6 h-6 text-purple-400" />
+                                        <link.icon className="w-6 h-6 text-purple-600 dark:text-purple-400" />
                                     </div>
                                     <div className="flex-1">
-                                        <h3 className="text-white font-medium group-hover:text-purple-300 transition-colors">{link.title}</h3>
-                                        <p className="text-sm text-gray-500">{link.description}</p>
+                                        <h3 className="text-foreground font-medium group-hover:text-purple-600 dark:group-hover:text-purple-300 transition-colors">{link.title}</h3>
+                                        <p className="text-sm text-muted-foreground">{link.description}</p>
                                     </div>
-                                    <ExternalLink className="w-4 h-4 text-gray-600 group-hover:text-purple-400 transition-colors" />
+                                    <ExternalLink className="w-4 h-4 text-muted-foreground group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors" />
                                 </CardContent>
                             </Card>
                         </Link>
@@ -118,25 +118,25 @@ export default function DocsPage() {
 
                 {/* Guides Grid */}
                 <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
-                    <h2 className="text-2xl font-bold text-white mb-6">Guides & Tutorials</h2>
+                    <h2 className="text-2xl font-bold text-foreground mb-6">Guides & Tutorials</h2>
                     <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
                         {guides.map((guide, i) => (
                             <motion.div key={i} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 + i * 0.05 }}>
-                                <Card className="h-full bg-[#12121a] border-white/5 hover:border-purple-500/30 transition-all">
+                                <Card className="h-full bg-card border-border hover:border-purple-500/30 transition-all">
                                     <CardHeader>
                                         <div className="flex items-center gap-3 mb-2">
                                             <div className="p-2 rounded-lg bg-gradient-to-br from-blue-500/10 to-purple-500/10">
-                                                <guide.icon className="w-5 h-5 text-purple-400" />
+                                                <guide.icon className="w-5 h-5 text-purple-600 dark:text-purple-400" />
                                             </div>
-                                            <CardTitle className="text-lg text-white">{guide.title}</CardTitle>
+                                            <CardTitle className="text-lg text-foreground">{guide.title}</CardTitle>
                                         </div>
-                                        <p className="text-sm text-gray-500">{guide.description}</p>
+                                        <p className="text-sm text-muted-foreground">{guide.description}</p>
                                     </CardHeader>
                                     <CardContent>
                                         <ul className="space-y-2">
                                             {guide.articles.map((article, j) => (
                                                 <li key={j}>
-                                                    <a href={article.href} className="flex items-center gap-2 text-sm text-gray-400 hover:text-purple-400 transition-colors group">
+                                                    <a href={article.href} className="flex items-center gap-2 text-sm text-muted-foreground hover:text-purple-600 dark:hover:text-purple-400 transition-colors group">
                                                         <ChevronRight className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />
                                                         <span>{article.title}</span>
                                                     </a>
@@ -152,10 +152,10 @@ export default function DocsPage() {
 
                 {/* CTA */}
                 <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }} className="mt-12">
-                    <Card className="bg-gradient-to-br from-[#12121a] to-[#1a1a2e] border-purple-500/20">
+                    <Card className="bg-gradient-to-br from-card to-muted border-purple-500/20">
                         <CardContent className="py-8 text-center">
-                            <h3 className="text-xl font-bold text-white mb-2">Can't Find What You're Looking For?</h3>
-                            <p className="text-gray-400 mb-4">Our support team is here to help you with any questions.</p>
+                            <h3 className="text-xl font-bold text-foreground mb-2">Can't Find What You're Looking For?</h3>
+                            <p className="text-muted-foreground mb-4">Our support team is here to help you with any questions.</p>
                             <Button asChild className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700">
                                 <Link href="/contact">Contact Support<ChevronRight className="w-4 h-4 ml-1" /></Link>
                             </Button>

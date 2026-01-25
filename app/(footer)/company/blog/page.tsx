@@ -101,10 +101,10 @@ export default function BlogPage() {
                         <BookOpen className="w-4 h-4 mr-2" />
                         ayoAI Blog
                     </Badge>
-                    <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">
+                    <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-4">
                         Insights & Updates
                     </h1>
-                    <p className="text-xl text-gray-400 max-w-2xl mx-auto">
+                    <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
                         Stay up to date with the latest AI trends, product updates, tutorials, and tips from the ayoAI team.
                     </p>
                 </motion.div>
@@ -123,7 +123,7 @@ export default function BlogPage() {
                             size="sm"
                             className={index === 0
                                 ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white'
-                                : 'border-white/10 text-gray-400 hover:text-white hover:bg-white/5'
+                                : 'border-border text-muted-foreground hover:text-foreground hover:bg-secondary'
                             }
                         >
                             {category}
@@ -138,20 +138,20 @@ export default function BlogPage() {
                     transition={{ delay: 0.2 }}
                     className="mb-12"
                 >
-                    <Card className="bg-gradient-to-br from-[#12121a] to-[#1a1a2e] border-white/5 overflow-hidden hover:border-purple-500/30 transition-all cursor-pointer group">
+                    <Card className="bg-gradient-to-br from-card to-muted border-border overflow-hidden hover:border-purple-500/30 transition-all cursor-pointer group">
                         <div className="grid md:grid-cols-2 gap-0">
                             <div className="h-64 md:h-auto bg-gradient-to-br from-blue-500/20 via-purple-500/20 to-pink-500/20 flex items-center justify-center">
-                                <Sparkles className="w-24 h-24 text-purple-400/50 group-hover:text-purple-400 transition-colors" />
+                                <Sparkles className="w-24 h-24 text-purple-600/50 dark:text-purple-400/50 group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors" />
                             </div>
                             <CardContent className="p-8 flex flex-col justify-center">
-                                <Badge className="w-fit bg-purple-500/20 text-purple-400 border-purple-500/30 mb-4">
+                                <Badge className="w-fit bg-purple-500/20 text-purple-600 dark:text-purple-400 border-purple-500/30 mb-4">
                                     {featuredPost.category}
                                 </Badge>
-                                <h2 className="text-2xl font-bold text-white mb-4 group-hover:text-purple-300 transition-colors">
+                                <h2 className="text-2xl font-bold text-foreground mb-4 group-hover:text-purple-600 dark:group-hover:text-purple-300 transition-colors">
                                     {featuredPost.title}
                                 </h2>
-                                <p className="text-gray-400 mb-6">{featuredPost.excerpt}</p>
-                                <div className="flex items-center gap-4 text-sm text-gray-500">
+                                <p className="text-muted-foreground mb-6">{featuredPost.excerpt}</p>
+                                <div className="flex items-center gap-4 text-sm text-muted-foreground">
                                     <div className="flex items-center gap-1">
                                         <Calendar className="w-4 h-4" />
                                         {featuredPost.date}
@@ -175,21 +175,21 @@ export default function BlogPage() {
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ delay: 0.3 + index * 0.05 }}
                         >
-                            <Card className="h-full bg-[#12121a] border-white/5 hover:border-purple-500/30 transition-all cursor-pointer group">
+                            <Card className="h-full bg-card border-border hover:border-purple-500/30 transition-all cursor-pointer group">
                                 <CardHeader>
                                     <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500/10 to-purple-500/10 flex items-center justify-center mb-4 group-hover:from-blue-500/20 group-hover:to-purple-500/20 transition-colors">
-                                        <post.icon className="w-6 h-6 text-purple-400" />
+                                        <post.icon className="w-6 h-6 text-purple-600 dark:text-purple-400" />
                                     </div>
-                                    <Badge className="w-fit bg-white/5 text-gray-400 border-white/10 mb-2">
+                                    <Badge className="w-fit bg-secondary text-muted-foreground border-border mb-2">
                                         {post.category}
                                     </Badge>
-                                    <CardTitle className="text-lg text-white group-hover:text-purple-300 transition-colors">
+                                    <CardTitle className="text-lg text-foreground group-hover:text-purple-600 dark:group-hover:text-purple-300 transition-colors">
                                         {post.title}
                                     </CardTitle>
                                 </CardHeader>
                                 <CardContent>
-                                    <p className="text-sm text-gray-500 mb-4">{post.excerpt}</p>
-                                    <div className="flex items-center gap-4 text-xs text-gray-600">
+                                    <p className="text-sm text-muted-foreground mb-4">{post.excerpt}</p>
+                                    <div className="flex items-center gap-4 text-xs text-muted-foreground">
                                         <div className="flex items-center gap-1">
                                             <Calendar className="w-3 h-3" />
                                             {post.date}
@@ -212,7 +212,7 @@ export default function BlogPage() {
                     transition={{ delay: 0.5 }}
                     className="text-center"
                 >
-                    <Button variant="outline" className="border-white/10 text-gray-400 hover:text-white hover:bg-white/5">
+                    <Button variant="outline" className="border-border text-muted-foreground hover:text-foreground hover:bg-secondary">
                         Load More Posts
                         <ChevronRight className="w-4 h-4 ml-1" />
                     </Button>
@@ -225,17 +225,17 @@ export default function BlogPage() {
                     transition={{ delay: 0.6 }}
                     className="mt-16"
                 >
-                    <Card className="bg-gradient-to-br from-[#12121a] to-[#1a1a2e] border-purple-500/20">
+                    <Card className="bg-gradient-to-br from-card via-muted to-card border-purple-500/20">
                         <CardContent className="py-12 text-center">
-                            <h2 className="text-2xl font-bold text-white mb-4">Subscribe to Our Newsletter</h2>
-                            <p className="text-gray-400 mb-6 max-w-lg mx-auto">
+                            <h2 className="text-2xl font-bold text-foreground mb-4">Subscribe to Our Newsletter</h2>
+                            <p className="text-muted-foreground mb-6 max-w-lg mx-auto">
                                 Get the latest updates, tips, and insights delivered straight to your inbox.
                             </p>
                             <div className="flex flex-col sm:flex-row gap-3 justify-center max-w-md mx-auto">
                                 <input
                                     type="email"
                                     placeholder="Enter your email"
-                                    className="flex-1 px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder:text-gray-500 focus:outline-none focus:border-purple-500/50"
+                                    className="flex-1 px-4 py-2 bg-secondary border border-border rounded-lg text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-purple-500/50"
                                 />
                                 <Button className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700">
                                     Subscribe

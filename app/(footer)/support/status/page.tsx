@@ -29,33 +29,33 @@ export default function StatusPage() {
                     <Badge className="bg-gradient-to-r from-blue-500 to-purple-600 text-white border-0 mb-4 px-4 py-1">
                         <Activity className="w-4 h-4 mr-2" />System Status
                     </Badge>
-                    <h1 className="text-4xl md:text-5xl font-bold text-white mb-6">ayoAI Status</h1>
+                    <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-6">ayoAI Status</h1>
                     <Card className="inline-block bg-green-500/10 border-green-500/30">
                         <CardContent className="py-4 px-8 flex items-center gap-3">
-                            <CheckCircle className="w-6 h-6 text-green-400" />
-                            <span className="text-lg font-semibold text-green-400">All Systems Operational</span>
+                            <CheckCircle className="w-6 h-6 text-green-600 dark:text-green-400" />
+                            <span className="text-lg font-semibold text-green-600 dark:text-green-400">All Systems Operational</span>
                         </CardContent>
                     </Card>
                 </motion.div>
 
                 <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="mb-12">
-                    <h2 className="text-2xl font-bold text-white mb-6">Services</h2>
+                    <h2 className="text-2xl font-bold text-foreground mb-6">Services</h2>
                     <div className="space-y-4">
                         {services.map((service, i) => (
-                            <Card key={i} className="bg-[#12121a] border-white/5">
+                            <Card key={i} className="bg-card border-border">
                                 <CardContent className="p-6 flex items-center justify-between">
                                     <div className="flex items-center gap-4">
                                         <div className="p-2 rounded-lg bg-gradient-to-br from-blue-500/10 to-purple-500/10">
-                                            <service.icon className="w-5 h-5 text-purple-400" />
+                                            <service.icon className="w-5 h-5 text-purple-600 dark:text-purple-400" />
                                         </div>
                                         <div>
-                                            <h3 className="text-white font-medium">{service.name}</h3>
-                                            <p className="text-sm text-gray-500">{service.description}</p>
+                                            <h3 className="text-foreground font-medium">{service.name}</h3>
+                                            <p className="text-sm text-muted-foreground">{service.description}</p>
                                         </div>
                                     </div>
                                     <div className="flex items-center gap-4">
-                                        <span className="text-sm text-gray-500 hidden sm:block">{service.uptime}</span>
-                                        <CheckCircle className="w-5 h-5 text-green-400" />
+                                        <span className="text-sm text-muted-foreground hidden sm:block">{service.uptime}</span>
+                                        <CheckCircle className="w-5 h-5 text-green-600 dark:text-green-400" />
                                     </div>
                                 </CardContent>
                             </Card>
@@ -64,19 +64,19 @@ export default function StatusPage() {
                 </motion.div>
 
                 <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
-                    <h2 className="text-2xl font-bold text-white mb-6">Recent Incidents</h2>
+                    <h2 className="text-2xl font-bold text-foreground mb-6">Recent Incidents</h2>
                     <div className="space-y-4">
                         {incidents.map((incident, i) => (
-                            <Card key={i} className="bg-[#12121a] border-white/5">
+                            <Card key={i} className="bg-card border-border">
                                 <CardContent className="p-6">
                                     <div className="flex justify-between items-start gap-4 mb-2">
                                         <div>
-                                            <h3 className="text-white font-medium">{incident.title}</h3>
-                                            <p className="text-sm text-gray-500">{incident.date} • {incident.time}</p>
+                                            <h3 className="text-foreground font-medium">{incident.title}</h3>
+                                            <p className="text-sm text-muted-foreground">{incident.date} • {incident.time}</p>
                                         </div>
-                                        <Badge className="bg-blue-500/20 text-blue-400 border-blue-500/30">Resolved</Badge>
+                                        <Badge className="bg-blue-500/20 text-blue-600 dark:text-blue-400 border-blue-500/30">Resolved</Badge>
                                     </div>
-                                    <p className="text-sm text-gray-400">{incident.description}</p>
+                                    <p className="text-sm text-muted-foreground">{incident.description}</p>
                                 </CardContent>
                             </Card>
                         ))}

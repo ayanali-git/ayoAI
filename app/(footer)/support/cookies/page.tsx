@@ -73,16 +73,16 @@ export default function CookiesPage() {
                     <Badge className="bg-gradient-to-r from-blue-500 to-purple-600 text-white border-0 mb-4 px-4 py-1">
                         <Cookie className="w-4 h-4 mr-2" />Legal
                     </Badge>
-                    <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">Cookie Policy</h1>
-                    <div className="flex items-center justify-center gap-2 text-gray-400">
+                    <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-4">Cookie Policy</h1>
+                    <div className="flex items-center justify-center gap-2 text-muted-foreground">
                         <Calendar className="w-4 h-4" /><span>Last Updated: January 1, 2026</span>
                     </div>
                 </motion.div>
 
                 <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="mb-12">
-                    <Card className="bg-[#12121a] border-white/5">
+                    <Card className="bg-card border-border">
                         <CardContent className="p-8">
-                            <p className="text-gray-400 leading-relaxed">
+                            <p className="text-muted-foreground leading-relaxed">
                                 This Cookie Policy explains how ayoAI uses cookies and similar technologies to recognize you when you visit our platform. It explains what these technologies are, why we use them, and your rights to control our use of them.
                             </p>
                         </CardContent>
@@ -92,12 +92,12 @@ export default function CookiesPage() {
                 <div className="space-y-8">
                     {sections.map((section, index) => (
                         <motion.div key={section.title} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 + index * 0.03 }}>
-                            <Card className="bg-[#12121a] border-white/5">
+                            <Card className="bg-card border-border">
                                 <CardContent className="p-8">
-                                    <h2 className="text-xl font-bold text-white mb-4">{section.title}</h2>
-                                    <div className="text-gray-400 leading-relaxed whitespace-pre-line">
+                                    <h2 className="text-xl font-bold text-foreground mb-4">{section.title}</h2>
+                                    <div className="text-muted-foreground leading-relaxed whitespace-pre-line">
                                         {section.content.split('\n').map((p, i) => {
-                                            if (p.startsWith('**') && p.endsWith('**')) return <p key={i} className="font-semibold text-white mt-4 mb-2">{p.replace(/\*\*/g, '')}</p>;
+                                            if (p.startsWith('**') && p.endsWith('**')) return <p key={i} className="font-semibold text-foreground mt-4 mb-2">{p.replace(/\*\*/g, '')}</p>;
                                             if (p.startsWith('- ')) return <li key={i} className="ml-4 mb-1">{p.substring(2)}</li>;
                                             return p ? <p key={i} className="mb-2">{p}</p> : null;
                                         })}
@@ -110,7 +110,7 @@ export default function CookiesPage() {
 
                 <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }} className="mt-12 text-center">
                     <Separator className="bg-white/5 mb-8" />
-                    <p className="text-gray-500 text-sm">By using ayoAI, you consent to our use of cookies as described in this policy.</p>
+                    <p className="text-muted-foreground text-sm">By using ayoAI, you consent to our use of cookies as described in this policy.</p>
                 </motion.div>
             </div>
         </div>

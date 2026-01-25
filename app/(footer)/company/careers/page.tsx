@@ -101,13 +101,13 @@ export default function CareersPage() {
                         <Briefcase className="w-4 h-4 mr-2" />
                         Careers at ayoAI
                     </Badge>
-                    <h1 className="text-4xl md:text-5xl font-bold text-white mb-6">
+                    <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-6">
                         Build the Future of{' '}
                         <span className="bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
                             AI With Us
                         </span>
                     </h1>
-                    <p className="text-xl text-gray-400 max-w-3xl mx-auto mb-8">
+                    <p className="text-xl text-muted-foreground max-w-3xl mx-auto mb-8">
                         Join a passionate team of builders, dreamers, and innovators working to make AI accessible to everyone.
                     </p>
                     <Button asChild className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700">
@@ -125,8 +125,8 @@ export default function CareersPage() {
                     transition={{ delay: 0.1 }}
                     className="mb-20"
                 >
-                    <h2 className="text-3xl font-bold text-white text-center mb-4">Our Culture</h2>
-                    <p className="text-gray-400 text-center max-w-2xl mx-auto mb-12">
+                    <h2 className="text-3xl font-bold text-foreground text-center mb-4">Our Culture</h2>
+                    <p className="text-muted-foreground text-center max-w-2xl mx-auto mb-12">
                         We believe great products come from great teams. Here's what we value.
                     </p>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -137,13 +137,13 @@ export default function CareersPage() {
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ delay: 0.2 + index * 0.1 }}
                             >
-                                <Card className="h-full bg-[#12121a] border-white/5 hover:border-purple-500/30 transition-all text-center">
+                                <Card className="h-full bg-card border-border hover:border-purple-500/30 transition-all text-center">
                                     <CardContent className="pt-6">
                                         <div className="w-12 h-12 mx-auto mb-4 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center text-white text-lg font-bold">
                                             {index + 1}
                                         </div>
-                                        <h3 className="text-lg font-semibold text-white mb-2">{value.title}</h3>
-                                        <p className="text-sm text-gray-500">{value.description}</p>
+                                        <h3 className="text-lg font-semibold text-foreground mb-2">{value.title}</h3>
+                                        <p className="text-sm text-muted-foreground">{value.description}</p>
                                     </CardContent>
                                 </Card>
                             </motion.div>
@@ -158,8 +158,8 @@ export default function CareersPage() {
                     transition={{ delay: 0.3 }}
                     className="mb-20"
                 >
-                    <h2 className="text-3xl font-bold text-white text-center mb-4">Perks & Benefits</h2>
-                    <p className="text-gray-400 text-center max-w-2xl mx-auto mb-12">
+                    <h2 className="text-3xl font-bold text-foreground text-center mb-4">Perks & Benefits</h2>
+                    <p className="text-muted-foreground text-center max-w-2xl mx-auto mb-12">
                         We take care of our team so they can focus on building amazing things.
                     </p>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -170,14 +170,14 @@ export default function CareersPage() {
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ delay: 0.4 + index * 0.05 }}
                             >
-                                <Card className="bg-[#12121a] border-white/5 hover:border-purple-500/30 transition-all">
+                                <Card className="bg-card border-border hover:border-purple-500/30 transition-all">
                                     <CardContent className="pt-6 flex items-start gap-4">
                                         <div className="p-3 rounded-xl bg-gradient-to-br from-blue-500/10 to-purple-500/10 flex-shrink-0">
-                                            <benefit.icon className="w-6 h-6 text-purple-400" />
+                                            <benefit.icon className="w-6 h-6 text-purple-600 dark:text-purple-400" />
                                         </div>
                                         <div>
-                                            <h3 className="text-white font-medium mb-1">{benefit.title}</h3>
-                                            <p className="text-sm text-gray-500">{benefit.description}</p>
+                                            <h3 className="text-foreground font-medium mb-1">{benefit.title}</h3>
+                                            <p className="text-sm text-muted-foreground">{benefit.description}</p>
                                         </div>
                                     </CardContent>
                                 </Card>
@@ -194,8 +194,8 @@ export default function CareersPage() {
                     id="openings"
                     className="scroll-mt-24"
                 >
-                    <h2 className="text-3xl font-bold text-white text-center mb-4">Open Positions</h2>
-                    <p className="text-gray-400 text-center max-w-2xl mx-auto mb-12">
+                    <h2 className="text-3xl font-bold text-foreground text-center mb-4">Open Positions</h2>
+                    <p className="text-muted-foreground text-center max-w-2xl mx-auto mb-12">
                         Find your perfect role and help us shape the future of AI.
                     </p>
                     <div className="space-y-4">
@@ -206,20 +206,20 @@ export default function CareersPage() {
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ delay: 0.6 + index * 0.05 }}
                             >
-                                <Card className="bg-[#12121a] border-white/5 hover:border-purple-500/30 transition-all cursor-pointer group">
+                                <Card className="bg-card border-border hover:border-purple-500/30 transition-all cursor-pointer group">
                                     <CardContent className="p-6">
                                         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
                                             <div className="flex-1">
                                                 <div className="flex flex-wrap items-center gap-2 mb-2">
-                                                    <h3 className="text-lg font-semibold text-white group-hover:text-purple-300 transition-colors">
+                                                    <h3 className="text-lg font-semibold text-foreground group-hover:text-purple-600 dark:group-hover:text-purple-300 transition-colors">
                                                         {position.title}
                                                     </h3>
-                                                    <Badge className="bg-purple-500/20 text-purple-400 border-purple-500/30">
+                                                    <Badge className="bg-purple-500/20 text-purple-600 dark:text-purple-400 border-purple-500/30">
                                                         {position.department}
                                                     </Badge>
                                                 </div>
-                                                <p className="text-sm text-gray-500 mb-3">{position.description}</p>
-                                                <div className="flex flex-wrap items-center gap-4 text-sm text-gray-500">
+                                                <p className="text-sm text-muted-foreground mb-3">{position.description}</p>
+                                                <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
                                                     <div className="flex items-center gap-1">
                                                         <MapPin className="w-4 h-4" />
                                                         {position.location}
@@ -234,7 +234,7 @@ export default function CareersPage() {
                                                     </div>
                                                 </div>
                                             </div>
-                                            <Button className="bg-white/5 text-white hover:bg-white/10 w-full lg:w-auto">
+                                            <Button className="bg-secondary text-foreground hover:bg-secondary/80 w-full lg:w-auto">
                                                 Apply Now
                                                 <ChevronRight className="w-4 h-4 ml-1" />
                                             </Button>
@@ -253,14 +253,14 @@ export default function CareersPage() {
                     transition={{ delay: 0.8 }}
                     className="mt-16"
                 >
-                    <Card className="bg-gradient-to-br from-[#12121a] to-[#1a1a2e] border-purple-500/20">
+                    <Card className="bg-gradient-to-br from-card to-muted border-purple-500/20">
                         <CardContent className="py-12 text-center">
-                            <Sparkles className="w-12 h-12 text-purple-400 mx-auto mb-4" />
-                            <h2 className="text-2xl font-bold text-white mb-4">Don't See the Right Role?</h2>
-                            <p className="text-gray-400 mb-6 max-w-lg mx-auto">
+                            <Sparkles className="w-12 h-12 text-purple-600 dark:text-purple-400 mx-auto mb-4" />
+                            <h2 className="text-2xl font-bold text-foreground mb-4">Don't See the Right Role?</h2>
+                            <p className="text-muted-foreground mb-6 max-w-lg mx-auto">
                                 We're always looking for talented individuals. Send us your resume and we'll keep you in mind for future opportunities.
                             </p>
-                            <Button asChild variant="outline" className="border-white/10 text-gray-300 hover:text-white hover:bg-white/5">
+                            <Button asChild variant="outline" className="border-border text-muted-foreground hover:text-foreground hover:bg-secondary">
                                 <a href="mailto:careers@ayoai.com">
                                     Send Your Resume
                                 </a>
