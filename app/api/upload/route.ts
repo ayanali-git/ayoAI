@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { createClient } from '@supabase/supabase-js';
 import { supabaseAdmin } from '@/lib/supabase-admin';
 import { fileService } from '@/lib/file-service';
 import { aiService } from '@/lib/ai-service';
@@ -27,10 +28,27 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
     }
 
-    const { data: { user }, error: userError } = await supabaseAdmin.auth.admin.getUserById(userId);
+    // Create authenticated Supabase client
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+    const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+    const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+      global: {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      },
+    });
+
+    // Verify user with the token
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
 
     if (userError || !user) {
-      return NextResponse.json({ error: 'User not found' }, { status: 401 });
+      return NextResponse.json({ error: 'User not found or unauthorized' }, { status: 401 });
+    }
+
+    // Double check that the token belongs to the claimed user (optional but safer)
+    if (user.id !== userId) {
+      return NextResponse.json({ error: 'Token mismatch' }, { status: 403 });
     }
 
     const validation = fileService.validateFile(file);
@@ -38,7 +56,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: validation.error }, { status: 400 });
     }
 
-    const uploadedFile = await fileService.uploadFile(file, userId, messageId);
+    const uploadedFile = await fileService.uploadFile(supabase, file, userId, messageId);
     const analysis = await aiService.analyzeFile(file);
 
     return NextResponse.json({

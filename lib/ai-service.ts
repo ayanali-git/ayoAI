@@ -1,8 +1,10 @@
 import OpenAI from 'openai';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 
 // Initialize OpenAI client
 const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
+  apiKey: process.env.OPENAI_API_KEY || 'dummy-key',
+  dangerouslyAllowBrowser: true
 });
 
 interface AIResponse {
@@ -20,9 +22,35 @@ interface Message {
 }
 
 export class AIService {
-  async generateResponse(messages: Message[], fileContext?: string): Promise<AIResponse> {
+  private useGemini = true; // Set to true to prefer Gemini by default
+
+  private getGenAIClient() {
+    const key = process.env.GOOGLE_API_KEY;
+    if (key) {
+      return new GoogleGenerativeAI(key);
+    }
+    console.log('Google API Key is missing in process.env');
+    return null;
+  }
+
+  async generateResponse(messages: Message[], fileContext?: string, imageUrls?: string[]): Promise<AIResponse> {
+    const genAI = this.getGenAIClient();
+
+    // If Gemini is preferred and available, try it.
+    // If it fails, report THAT error, because likely OpenAI is dead anyway.
+    if (this.useGemini && genAI) {
+      try {
+        console.log('Attempting to generate response with Gemini...');
+        return await this.generateGeminiResponse(messages, fileContext, imageUrls);
+      } catch (geminiError: any) {
+        console.error('Gemini generation failed:', geminiError);
+        throw new Error(`Gemini Error: ${geminiError.message || geminiError}`);
+      }
+    }
+
+    // Fallback to OpenAI only if Gemini is NOT configured (no key)
     try {
-      // Validate API key
+      // Validate API key for OpenAI
       if (!process.env.OPENAI_API_KEY) {
         throw new Error('OpenAI API key is not configured');
       }
@@ -62,8 +90,8 @@ Please provide helpful, accurate, and engaging responses.`;
       };
 
     } catch (error: any) {
-      console.error('AI Service error:', error);
-      
+      console.error('AI Service (OpenAI) error:', error);
+
       // Handle specific OpenAI errors
       if (error.code === 'invalid_api_key') {
         throw new Error('Invalid OpenAI API key. Please check your configuration.');
@@ -72,9 +100,90 @@ Please provide helpful, accurate, and engaging responses.`;
       } else if (error.code === 'rate_limit_exceeded') {
         throw new Error('Rate limit exceeded. Please try again later.');
       }
-      
+
       throw new Error(`AI service error: ${error.message || 'Unknown error occurred'}`);
     }
+  }
+
+  async generateGeminiResponse(messages: Message[], fileContext?: string, imageUrls?: string[]): Promise<AIResponse> {
+    const genAI = this.getGenAIClient();
+    if (!genAI) throw new Error('Google Generative AI not initialized (Missing API Key)');
+
+    // Use gemini-2.0-flash as the latest model (supports vision)
+    const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+
+    let systemPrompt = `You are ayoAI, a helpful and intelligent AI assistant.
+${fileContext ? `\n\nFile Context:\n${fileContext}` : ''}
+`;
+
+    // Extract the latest user message for the prompt, and history for context
+    const lastMessage = messages[messages.length - 1];
+
+    // Map OpenAI roles to Gemini roles
+    // user -> user
+    // assistant -> model
+    // system -> (handled by prepend)
+    const history = messages.slice(0, -1).map(msg => {
+      let role = 'user';
+      if (msg.role === 'assistant') role = 'model';
+
+      // Gemini history cannot contain system messages directly in 'history' usually, 
+      // but we filter them out anyway.
+      return {
+        role: role,
+        parts: [{ text: msg.content }]
+      };
+    }).filter(msg => msg.role === 'user' || msg.role === 'model');
+
+    // Build the message parts (text + images if any)
+    const messageParts: any[] = [];
+
+    // Add the text prompt
+    const promptWithContext = `${systemPrompt}\n\nUser: ${lastMessage.content}`;
+    messageParts.push({ text: promptWithContext });
+
+    // If there are images, fetch and add them
+    if (imageUrls && imageUrls.length > 0) {
+      for (const imageUrl of imageUrls) {
+        try {
+          // Fetch the image and convert to base64
+          const response = await fetch(imageUrl);
+          const arrayBuffer = await response.arrayBuffer();
+          const base64 = Buffer.from(arrayBuffer).toString('base64');
+          const mimeType = response.headers.get('content-type') || 'image/jpeg';
+
+          messageParts.push({
+            inlineData: {
+              mimeType: mimeType,
+              data: base64
+            }
+          });
+        } catch (error) {
+          console.error('Failed to fetch image:', imageUrl, error);
+        }
+      }
+    }
+
+    // Basic chat session
+    const chat = model.startChat({
+      history: history,
+      generationConfig: {
+        maxOutputTokens: 1000,
+      },
+    });
+
+    const result = await chat.sendMessage(messageParts);
+    const response = await result.response;
+    const text = response.text();
+
+    return {
+      content: text,
+      usage: {
+        prompt_tokens: 0,
+        completion_tokens: 0,
+        total_tokens: 0
+      }
+    };
   }
 
   async generateGhibliStyleImage(prompt: string): Promise<string> {
@@ -110,7 +219,7 @@ Please provide helpful, accurate, and engaging responses.`;
     try {
       const fileType = file.type;
       const fileName = file.name;
-      
+
       // For now, return basic file analysis
       // In a full implementation, you would process the file content
       const analysis = {
@@ -141,7 +250,7 @@ Please provide helpful, accurate, and engaging responses.`;
       // For DALL-E, we can't directly process uploaded images
       // Instead, we'll create a Ghibli-style image based on a description
       const prompt = `Convert this image to Studio Ghibli art style with soft colors, dreamy atmosphere, and whimsical details`;
-      
+
       return await this.generateGhibliStyleImage(prompt);
 
     } catch (error: any) {

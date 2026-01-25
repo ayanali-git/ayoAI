@@ -1,4 +1,4 @@
-import { supabase } from './supabase';
+import { SupabaseClient } from '@supabase/supabase-js';
 
 export interface FileUpload {
   id: string;
@@ -46,7 +46,7 @@ export class FileService {
     return { valid: true };
   }
 
-  async uploadFile(file: File, userId: string, messageId?: string): Promise<FileUpload> {
+  async uploadFile(supabase: SupabaseClient, file: File, userId: string, messageId?: string): Promise<FileUpload> {
     try {
       // Validate file first
       const validation = this.validateFile(file);
@@ -99,7 +99,7 @@ export class FileService {
         await supabase.storage
           .from('uploads')
           .remove([uniqueFileName]);
-        
+
         throw new Error(`Database error: ${dbError.message}`);
       }
 
@@ -120,7 +120,7 @@ export class FileService {
     }
   }
 
-  async deleteFile(fileId: string, userId: string): Promise<void> {
+  async deleteFile(supabase: SupabaseClient, fileId: string, userId: string): Promise<void> {
     try {
       // Get file record first
       const { data: fileRecord, error: fetchError } = await supabase
@@ -161,7 +161,7 @@ export class FileService {
     }
   }
 
-  async getUserFiles(userId: string): Promise<FileUpload[]> {
+  async getUserFiles(supabase: SupabaseClient, userId: string): Promise<FileUpload[]> {
     try {
       const { data, error } = await supabase
         .from('files')
@@ -181,7 +181,7 @@ export class FileService {
     }
   }
 
-  async getFileById(fileId: string, userId: string): Promise<FileUpload | null> {
+  async getFileById(supabase: SupabaseClient, fileId: string, userId: string): Promise<FileUpload | null> {
     try {
       const { data, error } = await supabase
         .from('files')

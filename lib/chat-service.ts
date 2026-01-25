@@ -1,4 +1,4 @@
-import { supabase } from './supabase';
+import { SupabaseClient } from '@supabase/supabase-js';
 
 export interface Chat {
   id: string;
@@ -30,7 +30,7 @@ export interface FileAttachment {
 
 class ChatService {
   // ✅ Fixed: Accept userId directly instead of trying to extract from token
-  async createChat(userId: string, title: string): Promise<Chat> {
+  async createChat(supabase: SupabaseClient, userId: string, title: string): Promise<Chat> {
     try {
       const { data, error } = await supabase
         .from('chats')
@@ -60,7 +60,7 @@ class ChatService {
     }
   }
 
-  async getUserChats(userId: string): Promise<Chat[]> {
+  async getUserChats(supabase: SupabaseClient, userId: string): Promise<Chat[]> {
     try {
       const { data, error } = await supabase
         .from('chats')
@@ -117,7 +117,7 @@ class ChatService {
     }
   }
 
-  async addMessage(chatId: string, role: 'user' | 'assistant', content: string, metadata?: any): Promise<Message> {
+  async addMessage(supabase: SupabaseClient, chatId: string, role: 'user' | 'assistant', content: string, metadata?: any): Promise<Message> {
     try {
       const { data, error } = await supabase
         .from('messages')
@@ -155,7 +155,7 @@ class ChatService {
     }
   }
 
-  async updateChatTitle(chatId: string, title: string): Promise<void> {
+  async updateChatTitle(supabase: SupabaseClient, chatId: string, title: string): Promise<void> {
     try {
       const { error } = await supabase
         .from('chats')
@@ -171,7 +171,7 @@ class ChatService {
     }
   }
 
-  async toggleChatStar(chatId: string, starred: boolean): Promise<void> {
+  async toggleChatStar(supabase: SupabaseClient, chatId: string, starred: boolean): Promise<void> {
     try {
       const { error } = await supabase
         .from('chats')
@@ -187,7 +187,7 @@ class ChatService {
     }
   }
 
-  async deleteChat(chatId: string): Promise<void> {
+  async deleteChat(supabase: SupabaseClient, chatId: string): Promise<void> {
     try {
       // Messages and file uploads will be deleted automatically due to CASCADE
       const { error } = await supabase
@@ -204,7 +204,7 @@ class ChatService {
     }
   }
 
-  async searchChats(userId: string, query: string): Promise<Chat[]> {
+  async searchChats(supabase: SupabaseClient, userId: string, query: string): Promise<Chat[]> {
     try {
       const { data, error } = await supabase
         .from('chats')

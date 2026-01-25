@@ -5,12 +5,12 @@ import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { 
-  MessageCircle, 
-  Image, 
-  FileText, 
-  Sparkles, 
-  Crown, 
+import {
+  MessageCircle,
+  Image,
+  FileText,
+  Sparkles,
+  Crown,
   User,
   Settings,
   LogOut,
@@ -37,6 +37,7 @@ import { chatService, type Chat, type Message } from '@/lib/chat-service';
 import { fileService } from '@/lib/file-service';
 import toast from 'react-hot-toast';
 import { supabase } from '@/lib/supabase';
+import ReactMarkdown from 'react-markdown';
 
 export default function ChatPage() {
   const { user, loading, signOut } = useAuth();
@@ -49,6 +50,7 @@ export default function ChatPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
   const [isUploading, setIsUploading] = useState(false);
+  const [pendingMessage, setPendingMessage] = useState<{ content: string, files: File[] } | null>(null);
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop: (acceptedFiles) => {
@@ -74,7 +76,7 @@ export default function ChatPage() {
 
   const loadChats = async () => {
     try {
-      const userChats = await chatService.getUserChats(user!.id);
+      const userChats = await chatService.getUserChats(supabase, user!.id);
       setChats(userChats);
     } catch (error) {
       console.error('Failed to load chats:', error);
@@ -83,74 +85,79 @@ export default function ChatPage() {
   };
 
   const handleSendMessage = async () => {
-  if (!message.trim() && uploadedFiles.length === 0) return;
+    if (!message.trim() && uploadedFiles.length === 0) return;
 
-  setIsTyping(true);
-  const userMessageContent = message;
-  setMessage('');
+    const userMessageContent = message;
+    const filesToUpload = [...uploadedFiles];
 
-  try {
-    // ✅ Get latest session and token
-    const { data: { session }, error } = await supabase.auth.getSession();
-    
-    if (error || !session || !session.access_token) {
-      throw new Error('User session not found. Please log in again.');
-    }
+    // Clear input immediately for better UX
+    setMessage('');
+    setUploadedFiles([]);
 
-    const token = session.access_token;
-    console.log("✅ Got session token:", token);
+    // Show pending message immediately (optimistic UI)
+    setPendingMessage({ content: userMessageContent, files: filesToUpload });
+    setIsTyping(true);
 
-    // 🔁 Upload files if any
-    let fileUploads = [];
-    if (uploadedFiles.length > 0) {
-      setIsUploading(true);
-      for (const file of uploadedFiles) {
-        const formData = new FormData();
-        formData.append('file', file);
+    try {
+      // ✅ Get latest session and token
+      const { data: { session }, error } = await supabase.auth.getSession();
 
-        const response = await fetch('/api/upload', {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${token}`, // ✅ using the token
-          },
-          body: formData,
-        });
-
-        if (response.ok) {
-          const result = await response.json();
-          fileUploads.push(result.file);
-        } else {
-          console.error('File upload error:', await response.text());
-          toast.error(`Failed to upload ${file.name}`);
-        }
+      if (error || !session || !session.access_token) {
+        throw new Error('User session not found. Please log in again.');
       }
-      setIsUploading(false);
-      setUploadedFiles([]);
-    }
 
-    // 🔁 Send chat message
-    const response = await fetch('/api/chat', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`, // ✅ again using the token
-      },
-      body: JSON.stringify({
-        message: userMessageContent,
-        chatId: currentChat?.id,
-        files: fileUploads,
-      }),
-    });
+      const token = session.access_token;
 
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.error || 'Failed to send message');
-    }
+      // 🔁 Upload files if any
+      let fileUploads = [];
+      if (filesToUpload.length > 0) {
+        setIsUploading(true);
+        for (const file of filesToUpload) {
+          const formData = new FormData();
+          formData.append('file', file);
 
-    const result = await response.json();
+          const response = await fetch('/api/upload', {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${token}`,
+            },
+            body: formData,
+          });
 
-    // Update current chat...
-    // Update current chat with new messages
+          if (response.ok) {
+            const result = await response.json();
+            fileUploads.push(result.file);
+          } else {
+            console.error('File upload error:', await response.text());
+            toast.error(`Failed to upload ${file.name}`);
+          }
+        }
+        setIsUploading(false);
+      }
+
+      // 🔁 Send chat message
+      const response = await fetch('/api/chat', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`, // ✅ again using the token
+        },
+        body: JSON.stringify({
+          message: userMessageContent,
+          chatId: currentChat?.id,
+          files: fileUploads,
+        }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to send message');
+      }
+
+      const result = await response.json();
+
+      // Update current chat...
+      // Update current chat with new messages
       if (currentChat?.id === result.chatId) {
         setCurrentChat(prev => prev ? {
           ...prev,
@@ -159,19 +166,20 @@ export default function ChatPage() {
       } else {
         // New chat created
         await loadChats();
-        const newChat = await chatService.getUserChats(user!.id);
+        const newChat = await chatService.getUserChats(supabase, user!.id);
         const chat = newChat.find(c => c.id === result.chatId);
         if (chat) setCurrentChat(chat);
       }
-    // (keep your logic here as-is)
+      // (keep your logic here as-is)
 
-  } catch (error: any) {
-    console.error('Send message error:', error);
-    toast.error(error.message || 'Failed to send message');
-  } finally {
-    setIsTyping(false);
-  }
-};
+    } catch (error: any) {
+      console.error('Send message error:', error);
+      toast.error(error.message || 'Failed to send message');
+    } finally {
+      setIsTyping(false);
+      setPendingMessage(null);
+    }
+  };
 
 
   const startNewChat = () => {
@@ -182,7 +190,7 @@ export default function ChatPage() {
 
   const deleteChat = async (chatId: string) => {
     try {
-      await chatService.deleteChat(chatId);
+      await chatService.deleteChat(supabase, chatId);
       setChats(prev => prev.filter(c => c.id !== chatId));
       if (currentChat?.id === chatId) {
         setCurrentChat(null);
@@ -196,8 +204,8 @@ export default function ChatPage() {
 
   const toggleStar = async (chatId: string, starred: boolean) => {
     try {
-      await chatService.toggleChatStar(chatId, !starred);
-      setChats(prev => prev.map(c => 
+      await chatService.toggleChatStar(supabase, chatId, !starred);
+      setChats(prev => prev.map(c =>
         c.id === chatId ? { ...c, starred: !starred } : c
       ));
     } catch (error) {
@@ -243,12 +251,12 @@ export default function ChatPage() {
                 </div>
                 <ThemeToggle />
               </div>
-              
+
               <Button onClick={startNewChat} className="w-full mb-3">
                 <Plus className="w-4 h-4 mr-2" />
                 New Chat
               </Button>
-              
+
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
@@ -268,11 +276,10 @@ export default function ChatPage() {
                     key={chat.id}
                     initial={{ opacity: 0, x: -20 }}
                     animate={{ opacity: 1, x: 0 }}
-                    className={`p-3 rounded-lg cursor-pointer transition-colors ${
-                      currentChat?.id === chat.id 
-                        ? 'bg-primary/10 border border-primary/20' 
-                        : 'hover:bg-muted'
-                    }`}
+                    className={`p-3 rounded-lg cursor-pointer transition-colors ${currentChat?.id === chat.id
+                      ? 'bg-primary/10 border border-primary/20'
+                      : 'hover:bg-muted'
+                      }`}
                     onClick={() => setCurrentChat(chat)}
                   >
                     <div className="flex items-center justify-between">
@@ -333,7 +340,7 @@ export default function ChatPage() {
                   </div>
                 </div>
               </div>
-              
+
               <div className="grid grid-cols-2 gap-2">
                 <Button variant="outline" size="sm" onClick={() => router.push('/settings')}>
                   <Settings className="w-4 h-4 mr-1" />
@@ -398,12 +405,19 @@ export default function ChatPage() {
                   className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
                 >
                   <div className={`max-w-[80%] ${msg.role === 'user' ? 'order-2' : 'order-1'}`}>
-                    <div className={`p-4 rounded-lg ${
-                      msg.role === 'user' 
-                        ? 'bg-primary text-primary-foreground' 
+                    <div className={`p-4 rounded-lg ${msg.role === 'user'
+                      ? 'bg-primary text-primary-foreground'
+                      : (msg.content.startsWith('I encountered an issue') || msg.content.startsWith('Gemini Error') || msg.content.startsWith('AI Service'))
+                        ? 'bg-destructive/10 text-destructive border border-destructive/20'
                         : 'bg-muted'
-                    }`}>
-                      <p className="text-sm whitespace-pre-wrap">{msg.content}</p>
+                      }`}>
+                      {msg.role === 'user' ? (
+                        <p className="text-sm whitespace-pre-wrap">{msg.content}</p>
+                      ) : (
+                        <div className="text-sm prose prose-sm dark:prose-invert max-w-none prose-p:my-1 prose-ul:my-1 prose-ol:my-1 prose-li:my-0 prose-headings:my-2">
+                          <ReactMarkdown>{msg.content}</ReactMarkdown>
+                        </div>
+                      )}
                       {msg.files && msg.files.length > 0 && (
                         <div className="mt-2 space-y-1">
                           {msg.files.map((file, idx) => (
@@ -438,7 +452,42 @@ export default function ChatPage() {
                   </div>
                 </motion.div>
               ))}
-              
+
+              {/* Show pending user message immediately */}
+              {pendingMessage && (
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="flex justify-end"
+                >
+                  <div className="max-w-[80%] order-2">
+                    <div className="p-4 rounded-lg bg-primary text-primary-foreground">
+                      <p className="text-sm whitespace-pre-wrap">{pendingMessage.content}</p>
+                      {pendingMessage.files.length > 0 && (
+                        <div className="mt-2 space-y-1">
+                          {pendingMessage.files.map((file, idx) => (
+                            <div key={idx} className="text-xs opacity-70">
+                              📎 {file.name}
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                      <div className="text-xs opacity-70 mt-2">
+                        {new Date().toLocaleTimeString()}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="order-1 mr-3">
+                    <Avatar className="w-8 h-8">
+                      <AvatarImage src={user.user_metadata?.avatar_url} />
+                      <AvatarFallback>
+                        {user.user_metadata?.name?.[0] || user.email?.[0] || 'U'}
+                      </AvatarFallback>
+                    </Avatar>
+                  </div>
+                </motion.div>
+              )}
+
               {isTyping && (
                 <motion.div
                   initial={{ opacity: 0, y: 20 }}
@@ -516,9 +565,8 @@ export default function ChatPage() {
 
             <div
               {...getRootProps()}
-              className={`border-2 border-dashed rounded-lg p-4 transition-colors ${
-                isDragActive ? 'border-primary bg-primary/5' : 'border-muted'
-              }`}
+              className={`border-2 border-dashed rounded-lg p-4 transition-colors ${isDragActive ? 'border-primary bg-primary/5' : 'border-muted'
+                }`}
             >
               <input {...getInputProps()} />
               <div className="space-y-3">
@@ -538,15 +586,15 @@ export default function ChatPage() {
                     />
                   </div>
                   <div className="flex items-center space-x-2">
-                    <Button 
-                      variant="outline" 
+                    <Button
+                      variant="outline"
                       size="sm"
                       onClick={() => (document.querySelector('input[type="file"]') as HTMLInputElement)?.click()}
                       disabled={isUploading}
                     >
                       {isUploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Paperclip className="w-4 h-4" />}
                     </Button>
-                    <Button 
+                    <Button
                       onClick={handleSendMessage}
                       disabled={(!message.trim() && uploadedFiles.length === 0) || isTyping || isUploading}
                       className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700"

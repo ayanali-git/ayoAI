@@ -1,6 +1,8 @@
 // app/api/chat/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { aiService } from '@/lib/ai-service';
+import { chatService } from '@/lib/chat-service';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
@@ -8,19 +10,18 @@ const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 export async function POST(request: NextRequest) {
   try {
     console.log('🚀 API Route called');
-    
+
     // Get the authorization header
     const authHeader = request.headers.get('authorization');
     console.log('🔑 Auth header present:', !!authHeader);
-    console.log('🔑 Auth header starts with Bearer:', authHeader?.startsWith('Bearer '));
-    
+
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
       console.log('❌ No valid authorization token');
       return NextResponse.json({ error: 'No authorization token' }, { status: 401 });
     }
 
-    const token = authHeader.substring(7); // Remove 'Bearer ' prefix
-    console.log('🎫 Token extracted (first 20 chars):', token.substring(0, 20) + '...');
+    const token = authHeader.substring(7);
+    // console.log('🎫 Token extracted');
 
     // Create Supabase client with the user's token
     const supabase = createClient(supabaseUrl, supabaseAnonKey, {
@@ -31,65 +32,104 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    console.log('🔧 Supabase client created');
-
     // Verify the user is authenticated
     const { data: { user }, error: authError } = await supabase.auth.getUser();
-    
-    console.log('👤 Auth check - User:', !!user);
-    console.log('👤 Auth check - User ID:', user?.id);
-    console.log('❌ Auth error:', authError);
-    
+
     if (authError || !user) {
-      console.error('Auth error details:', authError);
+      console.error('Auth error:', authError);
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     const body = await request.json();
-    const { message } = body;
+    const { message, chatId, files } = body;
     console.log('📝 Message received:', message?.substring(0, 50));
 
-    // Log what we're about to insert
-    const insertData = {
-      title: message.substring(0, 50) + (message.length > 50 ? '...' : ''),
-      user_id: user.id,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-    };
-    console.log('💾 About to insert:', insertData);
+    let currentChatId = chatId;
 
-    // Create a new chat with the authenticated user's ID
-    const { data: chat, error: chatError } = await supabase
-      .from('chats')
-      .insert(insertData)
-      .select()
-      .single();
-
-    if (chatError) {
-      console.error('💥 Chat creation error details:', {
-        message: chatError.message,
-        details: chatError.details,
-        hint: chatError.hint,
-        code: chatError.code
-      });
-      return NextResponse.json(
-        { error: `Failed to create chat: ${chatError.message}` },
-        { status: 500 }
+    // If no chatId provided, create a new chat
+    if (!currentChatId) {
+      console.log('🆕 Creating new chat...');
+      const newChat = await chatService.createChat(
+        supabase,
+        user.id,
+        message.substring(0, 50) + (message.length > 50 ? '...' : '')
       );
+      currentChatId = newChat.id;
+      console.log('✅ New chat created:', currentChatId);
     }
 
-    console.log('✅ Chat created successfully:', chat);
+    // Add the user message to the chat
+    console.log('💬 Adding user message...');
+    const userMessage = await chatService.addMessage(
+      supabase,
+      currentChatId,
+      'user',
+      message,
+      { files: files || [] }
+    );
+    console.log('✅ User message added');
 
-    return NextResponse.json({ 
-      success: true, 
-      chatId: chat.id,
-      chat: chat 
+    // Get chat history for context
+    const chats = await chatService.getUserChats(supabase, user.id);
+    const currentChat = chats.find(c => c.id === currentChatId);
+
+    // Prepare messages for AI (convert to OpenAI format)
+    const aiMessages = currentChat?.messages.map(msg => ({
+      role: msg.role as 'user' | 'assistant',
+      content: msg.content
+    })) || [];
+
+    // Generate AI response
+    console.log('🤖 Generating AI response...');
+    let fileContext = '';
+    let imageUrls: string[] = [];
+
+    if (files && files.length > 0) {
+      // Separate images from other files
+      for (const file of files) {
+        if (file.fileType && file.fileType.startsWith('image/') && file.url) {
+          imageUrls.push(file.url);
+        } else {
+          fileContext += `File: ${file.filename}\n`;
+        }
+      }
+    }
+
+    let aiContent = 'I apologize, but I encountered an error responding to your request.';
+    let usage = undefined;
+
+    try {
+      const aiResponse = await aiService.generateResponse(aiMessages, fileContext, imageUrls);
+      aiContent = aiResponse.content;
+      usage = aiResponse.usage;
+      console.log('✅ AI response generated');
+    } catch (aiError: any) {
+      console.error('❌ AI Generation failed:', aiError);
+      aiContent = `I encountered an issue generating a response: ${aiError.message}. \n\nIf you are the developer, please check your API keys and quotas.`;
+    }
+
+    // Add the AI response to the chat
+    console.log('💬 Adding AI message...');
+    const assistantMessage = await chatService.addMessage(
+      supabase,
+      currentChatId,
+      'assistant',
+      aiContent
+    );
+    console.log('✅ AI message added');
+
+    return NextResponse.json({
+      success: true,
+      chatId: currentChatId,
+      userMessage,
+      assistantMessage,
+      usage
     });
 
-  } catch (error) {
+  } catch (error: any) {
     console.error('💥 API error:', error);
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { error: error.message || 'Internal server error' },
       { status: 500 }
     );
   }
