@@ -120,6 +120,33 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
         fetchSubscription();
     }, [fetchSubscription]);
 
+    // Real-time subscription to profile changes (for when webhook updates the plan)
+    useEffect(() => {
+        if (!user) return;
+
+        const channel = supabase
+            .channel('profile-changes')
+            .on(
+                'postgres_changes',
+                {
+                    event: 'UPDATE',
+                    schema: 'public',
+                    table: 'profiles',
+                    filter: `id=eq.${user.id}`,
+                },
+                (payload) => {
+                    console.log('Profile updated:', payload);
+                    // Refresh subscription data when profile is updated
+                    fetchSubscription();
+                }
+            )
+            .subscribe();
+
+        return () => {
+            supabase.removeChannel(channel);
+        };
+    }, [user, fetchSubscription]);
+
     const canUseFeature = useCallback((feature: 'messages' | 'images' | 'files'): boolean => {
         if (feature === 'files') {
             return limits.canUploadFiles;

@@ -1,6 +1,7 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
@@ -110,22 +111,43 @@ export default function UpgradePage() {
   const { plan: currentPlan, hasActiveSubscription, refreshSubscription } = useSubscription();
   const [isYearly, setIsYearly] = useState(false);
   const [loading, setLoading] = useState<string | null>(null);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const hasProcessedSuccess = useRef(false);
 
   // Handle success/cancel from Stripe checkout
   useEffect(() => {
     const success = searchParams.get('success');
     const canceled = searchParams.get('canceled');
 
-    if (success === 'true') {
+    if (success === 'true' && !hasProcessedSuccess.current) {
+      hasProcessedSuccess.current = true;
       toast.success('Subscription successful! Your plan has been upgraded.');
-      refreshSubscription();
+
+      // Poll for subscription update (webhook may take a moment)
+      let attempts = 0;
+      const maxAttempts = 10;
+      const pollInterval = setInterval(async () => {
+        await refreshSubscription();
+        attempts++;
+
+        // Check if plan has been updated (currentPlan will update from context)
+        if (currentPlan !== 'free' || attempts >= maxAttempts) {
+          clearInterval(pollInterval);
+          setShowSuccessModal(true);
+        }
+      }, 1000);
+
       // Clean URL
       router.replace('/upgrade');
-    } else if (canceled === 'true') {
+
+      // Cleanup on unmount
+      return () => clearInterval(pollInterval);
+    } else if (canceled === 'true' && !hasProcessedSuccess.current) {
+      hasProcessedSuccess.current = true;
       toast.error('Checkout was canceled.');
       router.replace('/upgrade');
     }
-  }, [searchParams, router, refreshSubscription]);
+  }, [searchParams, router, refreshSubscription, currentPlan]);
 
   const handleUpgrade = async (planId: string) => {
     if (!user) {
@@ -220,7 +242,7 @@ export default function UpgradePage() {
           <Button
             variant="ghost"
             className="text-muted-foreground hover:text-foreground hover:bg-secondary"
-            onClick={() => router.back()}
+            onClick={() => router.push('/chat')}
           >
             <ChevronLeft className="w-4 h-4 mr-1" />
             Back to Chat
@@ -471,6 +493,101 @@ export default function UpgradePage() {
           </div>
         </div>
       </div>
+
+      {/* Success Modal */}
+      <Dialog open={showSuccessModal} onOpenChange={setShowSuccessModal}>
+        <DialogContent className="sm:max-w-md bg-card border-border">
+          <DialogHeader>
+            <div className="flex justify-center mb-4">
+              <div className="w-16 h-16 bg-gradient-to-br from-green-500 to-emerald-600 rounded-2xl flex items-center justify-center">
+                <Check className="w-8 h-8 text-white" />
+              </div>
+            </div>
+            <DialogTitle className="text-center text-2xl">
+              🎉 Welcome to {currentPlan === 'pro' ? 'Pro' : currentPlan === 'plus' ? 'Plus' : 'Pro'}!
+            </DialogTitle>
+            <DialogDescription className="text-center text-muted-foreground">
+              Your subscription is now active. Here&apos;s what you can do:
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-3">
+              {currentPlan === 'pro' && (
+                <>
+                  <div className="flex items-center gap-3 p-3 rounded-lg bg-secondary/50">
+                    <div className="w-8 h-8 rounded-full bg-blue-500/20 flex items-center justify-center">
+                      <InfinityIcon className="w-4 h-4 text-blue-500" />
+                    </div>
+                    <div>
+                      <p className="font-medium text-foreground">Unlimited AI Conversations</p>
+                      <p className="text-xs text-muted-foreground">No more daily limits on chats</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3 p-3 rounded-lg bg-secondary/50">
+                    <div className="w-8 h-8 rounded-full bg-purple-500/20 flex items-center justify-center">
+                      <Image className="w-4 h-4 text-purple-500" />
+                    </div>
+                    <div>
+                      <p className="font-medium text-foreground">100 Image Generations/Day</p>
+                      <p className="text-xs text-muted-foreground">Create stunning AI images</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3 p-3 rounded-lg bg-secondary/50">
+                    <div className="w-8 h-8 rounded-full bg-green-500/20 flex items-center justify-center">
+                      <Zap className="w-4 h-4 text-green-500" />
+                    </div>
+                    <div>
+                      <p className="font-medium text-foreground">Faster Response Speed</p>
+                      <p className="text-xs text-muted-foreground">Priority processing for your requests</p>
+                    </div>
+                  </div>
+                </>
+              )}
+              {(currentPlan === 'plus' || currentPlan === 'ultra') && (
+                <>
+                  <div className="flex items-center gap-3 p-3 rounded-lg bg-secondary/50">
+                    <div className="w-8 h-8 rounded-full bg-purple-500/20 flex items-center justify-center">
+                      <Crown className="w-4 h-4 text-purple-500" />
+                    </div>
+                    <div>
+                      <p className="font-medium text-foreground">Everything in Pro + More</p>
+                      <p className="text-xs text-muted-foreground">Unlimited everything</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3 p-3 rounded-lg bg-secondary/50">
+                    <div className="w-8 h-8 rounded-full bg-blue-500/20 flex items-center justify-center">
+                      <Users className="w-4 h-4 text-blue-500" />
+                    </div>
+                    <div>
+                      <p className="font-medium text-foreground">Team Collaboration</p>
+                      <p className="text-xs text-muted-foreground">Work together with your team</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3 p-3 rounded-lg bg-secondary/50">
+                    <div className="w-8 h-8 rounded-full bg-green-500/20 flex items-center justify-center">
+                      <Shield className="w-4 h-4 text-green-500" />
+                    </div>
+                    <div>
+                      <p className="font-medium text-foreground">Full API Access</p>
+                      <p className="text-xs text-muted-foreground">Integrate with your apps</p>
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
+            <Button
+              className="w-full bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white"
+              onClick={() => {
+                setShowSuccessModal(false);
+                router.push('/chat');
+              }}
+            >
+              <Sparkles className="w-4 h-4 mr-2" />
+              Start Chatting
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

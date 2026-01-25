@@ -42,6 +42,7 @@ import { chatService, type Chat, type Message } from '@/lib/chat-service';
 import { fileService } from '@/lib/file-service';
 import toast from 'react-hot-toast';
 import { supabase } from '@/lib/supabase';
+import { useSubscription } from '@/components/subscription-provider';
 import ReactMarkdown from 'react-markdown';
 
 // Helper function to group chats by date
@@ -85,6 +86,7 @@ const groupChatsByDate = (chats: Chat[]) => {
 export default function ChatPage() {
   const { user, loading, signOut } = useAuth();
   const router = useRouter();
+  const { plan: userPlan } = useSubscription();
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [currentChat, setCurrentChat] = useState<Chat | null>(null);
@@ -97,16 +99,12 @@ export default function ChatPage() {
   const [pendingMessage, setPendingMessage] = useState<{ content: string, files: File[] } | null>(null);
   const [hoveredChatId, setHoveredChatId] = useState<string | null>(null);
 
-  // Get user's plan dynamically
-  const userPlan = useMemo(() => {
-    return user?.user_metadata?.plan || 'free';
-  }, [user]);
-
   const planLabel = useMemo(() => {
     const plans: { [key: string]: string } = {
       'free': 'Free Plan',
       'pro': 'Pro Plan',
-      'ultra': 'Ultra Pro'
+      'ultra': 'Ultra Pro',
+      'plus': 'Plus Plan'
     };
     return plans[userPlan] || 'Free Plan';
   }, [userPlan]);

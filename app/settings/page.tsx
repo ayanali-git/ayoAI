@@ -9,6 +9,7 @@ import { Switch } from '@/components/ui/switch';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/hooks/use-auth';
+import { useSubscription } from '@/components/subscription-provider';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'react-hot-toast';
 import {
@@ -28,6 +29,7 @@ import { motion } from 'framer-motion';
 
 export default function SettingsPage() {
   const { user, loading } = useAuth();
+  const { plan: userPlan } = useSubscription();
   const [profile, setProfile] = useState({ name: '', email: '', plan: '' });
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -41,12 +43,10 @@ export default function SettingsPage() {
   const [emailNotifications, setEmailNotifications] = useState(true);
   const [marketingEmails, setMarketingEmails] = useState(false);
 
-  // Get user's plan dynamically
-  const userPlan = user?.user_metadata?.plan || 'free';
   const planLabels: { [key: string]: string } = {
     'free': 'Free',
     'pro': 'Pro',
-    'ultra': 'Ultra Pro'
+    'plus': 'Plus'
   };
 
   useEffect(() => {
