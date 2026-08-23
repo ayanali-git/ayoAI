@@ -1,31 +1,21 @@
 'use client';
+
 import { useState, useEffect, useRef } from 'react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Separator } from '@/components/ui/separator';
 import { Switch } from '@/components/ui/switch';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/hooks/use-auth';
 import { useSubscription } from '@/components/subscription-provider';
 import { supabase } from '@/lib/supabase';
-import { motion } from 'framer-motion';
 import toast from 'react-hot-toast';
 import {
   ChevronLeft,
-  Crown,
   Check,
-  Sparkles,
-  Zap,
-  Users,
   Shield,
-  MessageCircle,
-  Image,
-  FileText,
-  Headphones,
-  Infinity as InfinityIcon,
-  Star
+  Loader
 } from 'lucide-react';
 
 const plans = [
@@ -40,12 +30,10 @@ const plans = [
       { text: '5 image generations/day', included: true },
       { text: 'Basic document analysis', included: true },
       { text: 'Standard response speed', included: true },
-      { text: 'Community support', included: true },
       { text: 'Priority access', included: false },
       { text: 'API access', included: false },
     ],
     popular: false,
-    icon: MessageCircle,
   },
   {
     id: 'pro',
@@ -58,16 +46,14 @@ const plans = [
       { text: '100 image generations/day', included: true },
       { text: 'Advanced document analysis', included: true },
       { text: 'Faster response speed', included: true },
-      { text: 'Priority email support', included: true },
-      { text: 'Priority access to new features', included: true },
+      { text: 'Priority support', included: true },
       { text: 'API access', included: false },
     ],
     popular: true,
-    icon: Zap,
   },
   {
-    id: 'plus',
-    name: 'Plus',
+    id: 'ultra',
+    name: 'Ultra Pro',
     description: 'For teams and heavy users',
     monthlyPrice: 199,
     yearlyPrice: 1999,
@@ -77,11 +63,9 @@ const plans = [
       { text: 'Team collaboration tools', included: true },
       { text: 'Fastest response speed', included: true },
       { text: '24/7 priority support', included: true },
-      { text: 'Early access to beta features', included: true },
       { text: 'Full API access', included: true },
     ],
     popular: false,
-    icon: Crown,
   },
 ];
 
@@ -92,14 +76,14 @@ const faqs = [
   },
   {
     question: 'What payment methods do you accept?',
-    answer: 'We accept all major credit cards, debit cards, UPI, and net banking for Indian users.',
+    answer: 'We accept all major credit cards, debit cards, UPI, and net banking.',
   },
   {
     question: 'Is there a refund policy?',
     answer: 'Yes, we offer a 7-day money-back guarantee if you are not satisfied with your subscription.',
   },
   {
-    question: 'Do unused credits roll over?',
+    question: 'Do unused limits roll over?',
     answer: 'Daily limits reset every 24 hours and do not roll over to the next day.',
   },
 ];
@@ -114,7 +98,6 @@ export default function UpgradePage() {
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const hasProcessedSuccess = useRef(false);
 
-  // Handle success/cancel from Stripe checkout
   useEffect(() => {
     const success = searchParams.get('success');
     const canceled = searchParams.get('canceled');
@@ -123,24 +106,19 @@ export default function UpgradePage() {
       hasProcessedSuccess.current = true;
       toast.success('Subscription successful! Your plan has been upgraded.');
 
-      // Poll for subscription update (webhook may take a moment)
       let attempts = 0;
       const maxAttempts = 10;
       const pollInterval = setInterval(async () => {
         await refreshSubscription();
         attempts++;
 
-        // Check if plan has been updated (currentPlan will update from context)
         if (currentPlan !== 'free' || attempts >= maxAttempts) {
           clearInterval(pollInterval);
           setShowSuccessModal(true);
         }
       }, 1000);
 
-      // Clean URL
       router.replace('/upgrade');
-
-      // Cleanup on unmount
       return () => clearInterval(pollInterval);
     } else if (canceled === 'true' && !hasProcessedSuccess.current) {
       hasProcessedSuccess.current = true;
@@ -153,12 +131,6 @@ export default function UpgradePage() {
     if (!user) {
       toast.error('Please login to upgrade your plan');
       router.push('/auth/login');
-      return;
-    }
-
-    if (planId === 'plus') {
-      // Contact sales for plus plan
-      window.open('mailto:sales@ayoai.com?subject=Plus Plan Inquiry', '_blank');
       return;
     }
 
@@ -190,7 +162,6 @@ export default function UpgradePage() {
         throw new Error(data.error || 'Failed to create checkout session');
       }
 
-      // Redirect to Stripe Checkout
       window.location.href = data.url;
     } catch (error: any) {
       console.error('Checkout error:', error);
@@ -224,7 +195,6 @@ export default function UpgradePage() {
         throw new Error(data.error || 'Failed to open subscription portal');
       }
 
-      // Redirect to Stripe Customer Portal
       window.location.href = data.url;
     } catch (error: any) {
       console.error('Portal error:', error);
@@ -237,12 +207,13 @@ export default function UpgradePage() {
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
-      <div className="border-b border-border bg-background/80 backdrop-blur-xl sticky top-0 z-10">
-        <div className="max-w-6xl mx-auto px-4 py-4">
+      <div className="border-b border-border sticky top-0 z-10 bg-background">
+        <div className="max-w-6xl mx-auto px-6 py-4">
           <Button
             variant="ghost"
-            className="text-muted-foreground hover:text-foreground hover:bg-secondary"
-            onClick={() => router.push('/chat')}
+            size="sm"
+            className="text-muted-foreground hover:text-foreground"
+            onClick={() => router.push('/c')}
           >
             <ChevronLeft className="w-4 h-4 mr-1" />
             Back to Chat
@@ -250,49 +221,36 @@ export default function UpgradePage() {
         </div>
       </div>
 
-      <div className="max-w-6xl mx-auto px-4 py-12">
-        {/* Hero Section */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="text-center mb-12"
-        >
-          <Badge className="bg-gradient-to-r from-blue-500 to-purple-600 text-white border-0 mb-4 px-4 py-1">
-            <Crown className="w-4 h-4 mr-2" />
-            Upgrade Your Plan
-          </Badge>
-          <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-4">
-            Unlock More with{' '}
-            <span className="bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
-              ayoAI Pro
-            </span>
+      <div className="max-w-5xl mx-auto px-6 py-12">
+        {/* Title */}
+        <div className="text-center mb-12">
+          <h1 className="text-3xl md:text-4xl font-semibold text-foreground mb-3">
+            Upgrade your plan
           </h1>
-          <p className="text-xl text-muted-foreground max-w-2xl mx-auto mb-8">
-            Choose the plan that fits your needs and boost your productivity with advanced AI capabilities.
+          <p className="text-muted-foreground max-w-lg mx-auto">
+            Choose the plan that best fits your workflow.
           </p>
 
           {/* Billing Toggle */}
-          <div className="flex items-center justify-center gap-4 mb-8">
-            <span className={`text-sm ${!isYearly ? 'text-foreground' : 'text-muted-foreground'}`}>Monthly</span>
+          <div className="flex items-center justify-center gap-4 mt-8">
+            <span className={`text-sm ${!isYearly ? 'text-foreground font-medium' : 'text-muted-foreground'}`}>Monthly</span>
             <Switch
               checked={isYearly}
               onCheckedChange={setIsYearly}
-              className="data-[state=checked]:bg-purple-600"
             />
-            <span className={`text-sm ${isYearly ? 'text-foreground' : 'text-muted-foreground'}`}>
+            <span className={`text-sm ${isYearly ? 'text-foreground font-medium' : 'text-muted-foreground'}`}>
               Yearly
-              <Badge className="ml-2 bg-green-500/20 text-green-600 dark:text-green-400 border-green-500/30">
-                Save 15%
-              </Badge>
+              <span className="ml-1.5 text-xs text-neutral-500 font-normal">
+                (Save 15%)
+              </span>
             </span>
           </div>
 
-          {/* Manage Subscription Button */}
           {hasActiveSubscription && (
-            <div className="flex justify-center mb-8">
+            <div className="flex justify-center mt-6">
               <Button
                 variant="outline"
-                className="border-purple-500/50 text-purple-400 hover:bg-purple-500/10"
+                size="sm"
                 onClick={handleManageSubscription}
                 disabled={loading === 'manage'}
               >
@@ -300,196 +258,129 @@ export default function UpgradePage() {
               </Button>
             </div>
           )}
-        </motion.div>
+        </div>
 
         {/* Pricing Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-16">
-          {plans.map((plan, index) => {
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-20">
+          {plans.map((plan) => {
             const isCurrentPlan = currentPlan === plan.id;
             const price = isYearly ? plan.yearlyPrice : plan.monthlyPrice;
-            const Icon = plan.icon;
 
             return (
-              <motion.div
+              <Card
                 key={plan.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.1 }}
+                className={`relative flex flex-col justify-between p-8 rounded-2xl bg-card transition-colors ${
+                  plan.popular
+                    ? 'border-2 border-foreground'
+                    : 'border border-border'
+                }`}
               >
-                <Card className={`relative h-full bg-card border-border overflow-hidden transition-all duration-300 hover:scale-[1.02] hover:shadow-2xl ${plan.popular
-                  ? 'border-purple-500/50 shadow-lg shadow-purple-500/10'
-                  : 'hover:border-muted-foreground/20'
-                  }`}>
-                  {/* Popular Badge */}
-                  {plan.popular && (
-                    <div className="absolute -top-px left-1/2 -translate-x-1/2">
-                      <Badge className="bg-gradient-to-r from-blue-500 to-purple-600 text-white border-0 rounded-t-none">
-                        <Star className="w-3 h-3 mr-1" />
-                        Most Popular
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <CardTitle className="text-lg font-semibold text-foreground">{plan.name}</CardTitle>
+                    {plan.popular && (
+                      <Badge variant="secondary" className="text-xs font-normal">
+                        Popular
                       </Badge>
-                    </div>
-                  )}
+                    )}
+                  </div>
+                  <CardDescription className="text-sm text-muted-foreground mb-6">
+                    {plan.description}
+                  </CardDescription>
 
-                  <CardHeader className={`${plan.popular ? 'pt-10' : 'pt-6'}`}>
-                    <div className="flex items-center gap-3 mb-2">
-                      <div className={`p-2.5 rounded-xl ${plan.id === 'free'
-                        ? 'bg-muted'
-                        : plan.id === 'pro'
-                          ? 'bg-blue-500/10'
-                          : 'bg-purple-500/10'
-                        }`}>
-                        <Icon className={`w-5 h-5 ${plan.id === 'free'
-                          ? 'text-muted-foreground'
-                          : plan.id === 'pro'
-                            ? 'text-blue-500'
-                            : 'text-purple-500'
-                          }`} />
-                      </div>
-                      <CardTitle className="text-xl text-foreground">{plan.name}</CardTitle>
+                  <div className="mb-8">
+                    <div className="flex items-baseline gap-1">
+                      <span className="text-4xl font-semibold text-foreground">₹{price}</span>
+                      <span className="text-sm text-muted-foreground">
+                        /{isYearly ? 'year' : 'month'}
+                      </span>
                     </div>
-                    <CardDescription className="text-muted-foreground">{plan.description}</CardDescription>
+                  </div>
 
-                    {/* Price */}
-                    <div className="mt-6">
-                      <div className="flex items-baseline gap-1">
-                        <span className="text-4xl font-bold text-foreground">₹{price}</span>
-                        <span className="text-muted-foreground">
-                          /{isYearly ? 'year' : 'month'}
+                  <div className="space-y-3 mb-8">
+                    {plan.features.map((feature, idx) => (
+                      <div key={idx} className="flex items-center gap-3">
+                        <Check
+                          className={`w-4 h-4 flex-shrink-0 ${
+                            feature.included ? 'text-foreground' : 'text-neutral-300'
+                          }`}
+                        />
+                        <span
+                          className={`text-sm ${
+                            feature.included ? 'text-foreground' : 'text-muted-foreground'
+                          }`}
+                        >
+                          {feature.text}
                         </span>
                       </div>
-                      {isYearly && price > 0 && (
-                        <p className="text-sm text-green-600 dark:text-green-400 mt-1">
-                          Save ₹{(plan.monthlyPrice * 12) - plan.yearlyPrice} yearly
-                        </p>
+                    ))}
+                  </div>
+                </div>
+
+                <div>
+                  {isCurrentPlan ? (
+                    <Button
+                      variant="outline"
+                      className="w-full rounded-full cursor-default text-muted-foreground"
+                      disabled
+                    >
+                      Current Plan
+                    </Button>
+                  ) : plan.id === 'free' ? (
+                    <Button
+                      variant="outline"
+                      className="w-full rounded-full text-muted-foreground"
+                      disabled
+                    >
+                      Free
+                    </Button>
+                  ) : (
+                    <Button
+                      className={`w-full rounded-full ${
+                        plan.popular
+                          ? 'bg-primary text-primary-foreground hover:opacity-90'
+                          : 'bg-secondary text-foreground hover:bg-neutral-200'
+                      }`}
+                      onClick={() => handleUpgrade(plan.id)}
+                      disabled={loading !== null}
+                    >
+                      {loading === plan.id ? (
+                        <><Loader className="w-4 h-4 mr-2 animate-spin" />Processing...</>
+                      ) : (
+                        `Upgrade to ${plan.name}`
                       )}
-                    </div>
-                  </CardHeader>
-
-                  <CardContent className="pt-4">
-                    {/* Features */}
-                    <div className="space-y-3 mb-6">
-                      {plan.features.map((feature, idx) => (
-                        <div key={idx} className="flex items-center gap-3">
-                          <div className={`flex-shrink-0 w-5 h-5 rounded-full flex items-center justify-center ${feature.included
-                            ? 'bg-green-500/20'
-                            : 'bg-muted'
-                            }`}>
-                            <Check className={`w-3 h-3 ${feature.included
-                              ? 'text-green-600 dark:text-green-400'
-                              : 'text-muted-foreground'
-                              }`} />
-                          </div>
-                          <span className={`text-sm ${feature.included
-                            ? 'text-foreground'
-                            : 'text-muted-foreground'
-                            }`}>
-                            {feature.text}
-                          </span>
-                        </div>
-                      ))}
-                    </div>
-
-                    {/* CTA Button */}
-                    {isCurrentPlan ? (
-                      <Button
-                        className="w-full bg-secondary text-muted-foreground cursor-default"
-                        disabled
-                      >
-                        Current Plan
-                      </Button>
-                    ) : plan.id === 'free' ? (
-                      <Button
-                        variant="outline"
-                        className="w-full border-border text-muted-foreground hover:text-foreground hover:bg-secondary"
-                        disabled
-                      >
-                        Free Forever
-                      </Button>
-                    ) : (
-                      <Button
-                        className={`w-full ${plan.popular
-                          ? 'bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white shadow-lg shadow-purple-500/25'
-                          : 'bg-secondary text-foreground hover:bg-muted'
-                          }`}
-                        onClick={() => handleUpgrade(plan.id)}
-                        disabled={loading !== null}
-                      >
-                        {loading === plan.id ? 'Processing...' : plan.id === 'plus' ? 'Contact Sales' : 'Upgrade to Pro'}
-                      </Button>
-                    )}
-                  </CardContent>
-                </Card>
-              </motion.div>
+                    </Button>
+                  )}
+                </div>
+              </Card>
             );
           })}
         </div>
 
-        {/* Feature Highlights */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3 }}
-          className="mb-16"
-        >
-          <h2 className="text-2xl font-bold text-foreground text-center mb-8">
-            Why Upgrade to Pro?
+        {/* FAQs */}
+        <div className="max-w-3xl mx-auto mb-16">
+          <h2 className="text-xl font-semibold text-foreground text-center mb-8">
+            Frequently asked questions
           </h2>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-            {[
-              { icon: InfinityIcon, title: 'Unlimited Chats', desc: 'No daily limits on conversations' },
-              { icon: Image, title: 'More Images', desc: 'Generate up to 100 images daily' },
-              { icon: Zap, title: 'Faster Response', desc: 'Priority processing for your requests' },
-              { icon: Headphones, title: 'Priority Support', desc: 'Get help when you need it' },
-            ].map((item, index) => (
-              <Card key={index} className="bg-card border-border hover:border-purple-500/30 transition-all">
-                <CardContent className="pt-6 text-center">
-                  <div className="w-12 h-12 mx-auto mb-4 rounded-xl bg-gradient-to-br from-blue-500/10 to-purple-500/10 flex items-center justify-center">
-                    <item.icon className="w-6 h-6 text-purple-600 dark:text-purple-400" />
-                  </div>
-                  <h3 className="text-foreground font-medium mb-2">{item.title}</h3>
-                  <p className="text-sm text-muted-foreground">{item.desc}</p>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </motion.div>
-
-        {/* FAQ Section */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4 }}
-        >
-          <h2 className="text-2xl font-bold text-foreground text-center mb-8">
-            Frequently Asked Questions
-          </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-4xl mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {faqs.map((faq, index) => (
-              <Card key={index} className="bg-card border-border">
-                <CardContent className="pt-6">
-                  <h3 className="text-foreground font-medium mb-2">{faq.question}</h3>
-                  <p className="text-sm text-muted-foreground">{faq.answer}</p>
-                </CardContent>
-              </Card>
+              <div key={index} className="border border-border rounded-2xl p-6">
+                <h3 className="text-sm font-medium text-foreground mb-2">{faq.question}</h3>
+                <p className="text-sm text-muted-foreground">{faq.answer}</p>
+              </div>
             ))}
           </div>
-        </motion.div>
+        </div>
 
         {/* Trust Badges */}
-        <div className="mt-16 text-center">
-          <div className="flex items-center justify-center gap-8 text-muted-foreground">
-            <div className="flex items-center gap-2">
-              <Shield className="w-5 h-5" />
-              <span className="text-sm">Secure Payment</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <Check className="w-5 h-5" />
-              <span className="text-sm">7-Day Refund</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <Headphones className="w-5 h-5" />
-              <span className="text-sm">24/7 Support</span>
-            </div>
+        <div className="border-t border-border pt-8 flex items-center justify-center gap-8 text-xs text-muted-foreground">
+          <div className="flex items-center gap-1.5">
+            <Shield className="w-4 h-4" />
+            <span>Secure payment via Stripe</span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <Check className="w-4 h-4" />
+            <span>7-day money-back guarantee</span>
           </div>
         </div>
       </div>
@@ -499,91 +390,26 @@ export default function UpgradePage() {
         <DialogContent className="sm:max-w-md bg-card border-border">
           <DialogHeader>
             <div className="flex justify-center mb-4">
-              <div className="w-16 h-16 bg-gradient-to-br from-green-500 to-emerald-600 rounded-2xl flex items-center justify-center">
-                <Check className="w-8 h-8 text-white" />
+              <div className="w-12 h-12 bg-black text-white rounded-full flex items-center justify-center">
+                <Check className="w-6 h-6" />
               </div>
             </div>
-            <DialogTitle className="text-center text-2xl">
-              🎉 Welcome to {currentPlan === 'pro' ? 'Pro' : currentPlan === 'plus' ? 'Plus' : 'Pro'}!
+            <DialogTitle className="text-center text-xl">
+              Welcome to {currentPlan === 'ultra' ? 'Ultra Pro' : 'Pro'}
             </DialogTitle>
             <DialogDescription className="text-center text-muted-foreground">
-              Your subscription is now active. Here&apos;s what you can do:
+              Your subscription is now active. You have full access to upgraded features.
             </DialogDescription>
           </DialogHeader>
-          <div className="space-y-4 py-4">
-            <div className="space-y-3">
-              {currentPlan === 'pro' && (
-                <>
-                  <div className="flex items-center gap-3 p-3 rounded-lg bg-secondary/50">
-                    <div className="w-8 h-8 rounded-full bg-blue-500/20 flex items-center justify-center">
-                      <InfinityIcon className="w-4 h-4 text-blue-500" />
-                    </div>
-                    <div>
-                      <p className="font-medium text-foreground">Unlimited AI Conversations</p>
-                      <p className="text-xs text-muted-foreground">No more daily limits on chats</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-3 p-3 rounded-lg bg-secondary/50">
-                    <div className="w-8 h-8 rounded-full bg-purple-500/20 flex items-center justify-center">
-                      <Image className="w-4 h-4 text-purple-500" />
-                    </div>
-                    <div>
-                      <p className="font-medium text-foreground">100 Image Generations/Day</p>
-                      <p className="text-xs text-muted-foreground">Create stunning AI images</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-3 p-3 rounded-lg bg-secondary/50">
-                    <div className="w-8 h-8 rounded-full bg-green-500/20 flex items-center justify-center">
-                      <Zap className="w-4 h-4 text-green-500" />
-                    </div>
-                    <div>
-                      <p className="font-medium text-foreground">Faster Response Speed</p>
-                      <p className="text-xs text-muted-foreground">Priority processing for your requests</p>
-                    </div>
-                  </div>
-                </>
-              )}
-              {(currentPlan === 'plus' || currentPlan === 'ultra') && (
-                <>
-                  <div className="flex items-center gap-3 p-3 rounded-lg bg-secondary/50">
-                    <div className="w-8 h-8 rounded-full bg-purple-500/20 flex items-center justify-center">
-                      <Crown className="w-4 h-4 text-purple-500" />
-                    </div>
-                    <div>
-                      <p className="font-medium text-foreground">Everything in Pro + More</p>
-                      <p className="text-xs text-muted-foreground">Unlimited everything</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-3 p-3 rounded-lg bg-secondary/50">
-                    <div className="w-8 h-8 rounded-full bg-blue-500/20 flex items-center justify-center">
-                      <Users className="w-4 h-4 text-blue-500" />
-                    </div>
-                    <div>
-                      <p className="font-medium text-foreground">Team Collaboration</p>
-                      <p className="text-xs text-muted-foreground">Work together with your team</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-3 p-3 rounded-lg bg-secondary/50">
-                    <div className="w-8 h-8 rounded-full bg-green-500/20 flex items-center justify-center">
-                      <Shield className="w-4 h-4 text-green-500" />
-                    </div>
-                    <div>
-                      <p className="font-medium text-foreground">Full API Access</p>
-                      <p className="text-xs text-muted-foreground">Integrate with your apps</p>
-                    </div>
-                  </div>
-                </>
-              )}
-            </div>
+          <div className="py-4">
             <Button
-              className="w-full bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white"
+              className="w-full rounded-full"
               onClick={() => {
                 setShowSuccessModal(false);
-                router.push('/chat');
+                router.push('/c');
               }}
             >
-              <Sparkles className="w-4 h-4 mr-2" />
-              Start Chatting
+              Start Asking
             </Button>
           </div>
         </DialogContent>

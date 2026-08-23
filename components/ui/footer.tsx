@@ -1,147 +1,272 @@
-'use client';
+"use client";
 
-import Link from 'next/link';
-import { Sparkles, Github, Twitter, Linkedin, Mail } from 'lucide-react';
-import { Separator } from '@/components/ui/separator';
-
-const footerLinks = {
-    product: [
-        { name: 'Features', href: '/product/features' },
-        { name: 'Pricing', href: '/#pricing' },
-        { name: 'API', href: '/product/api-docs' },
-        { name: 'Documentation', href: '/product/docs' },
-    ],
-    company: [
-        { name: 'About', href: '/company/about' },
-        { name: 'Blog', href: '/company/blog' },
-        { name: 'Careers', href: '/company/careers' },
-        { name: 'Contact', href: '/company/contact' },
-    ],
-    support: [
-        { name: 'Help Center', href: '/support/help' },
-        { name: 'Privacy Policy', href: '/support/privacy' },
-        { name: 'Terms of Service', href: '/support/terms' },
-        { name: 'Status', href: '/support/status' },
-    ],
-};
-
-const socialLinks = [
-    { name: 'Twitter', href: 'https://twitter.com/ayoai', icon: Twitter },
-    { name: 'GitHub', href: 'https://github.com/ayoai', icon: Github },
-    { name: 'LinkedIn', href: 'https://linkedin.com/company/ayoai', icon: Linkedin },
-    { name: 'Email', href: 'mailto:contact@ayoai.com', icon: Mail },
-];
+import Link from "next/link";
+import { AyoAIIcon } from "@/components/brand/logo";
+import { Globe, ArrowUpRight } from "lucide-react";
 
 export function Footer() {
-    const currentYear = new Date().getFullYear();
+  return (
+    <footer className="w-full bg-background border-t border-border/50 text-foreground pt-16 pb-12 px-6 sm:px-8 select-none">
+      <div className="max-w-[1400px] mx-auto">
+        {/* Multi-Column Links Grid matching OpenAI Footer */}
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-8 pb-16 border-b border-border/40">
+          {/* Research */}
+          <div className="space-y-3">
+            <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+              Research
+            </h4>
+            <ul className="space-y-2.5 text-sm">
+              <li>
+                <Link href="/research/overview" className="text-muted-foreground hover:text-foreground transition-colors">
+                  Overview
+                </Link>
+              </li>
+              <li>
+                <Link href="/research/overview" className="text-muted-foreground hover:text-foreground transition-colors">
+                  Research Index
+                </Link>
+              </li>
+              <li>
+                <Link href="/research/safety" className="text-muted-foreground hover:text-foreground transition-colors">
+                  Safety & Alignment
+                </Link>
+              </li>
+              <li>
+                <Link href="/research/overview" className="text-muted-foreground hover:text-foreground transition-colors">
+                  Research Residency
+                </Link>
+              </li>
+              <li>
+                <Link href="/research/overview" className="text-muted-foreground hover:text-foreground transition-colors">
+                  Publications
+                </Link>
+              </li>
+            </ul>
+          </div>
 
-    return (
-        <footer className="border-t border-border bg-background py-12 px-4 sm:px-6 lg:px-8">
-            <div className="container mx-auto max-w-6xl">
-                <div className="grid grid-cols-1 md:grid-cols-5 gap-8">
-                    {/* Brand Section */}
-                    <div className="md:col-span-2">
-                        <Link href="/" className="flex items-center space-x-2 mb-4 group">
-                            <div className="flex items-center justify-center w-9 h-9 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl shadow-lg shadow-purple-500/20 group-hover:shadow-purple-500/40 transition-shadow">
-                                <Sparkles className="w-5 h-5 text-white" />
-                            </div>
-                            <span className="text-xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 dark:from-white dark:to-gray-300 bg-clip-text text-transparent">
-                                ayoAI
-                            </span>
-                        </Link>
-                        <p className="text-sm text-muted-foreground mb-6 max-w-sm">
-                            Your AI-powered assistant for the modern world. Chat, generate images, and analyze documents with advanced AI.
-                        </p>
+          {/* Products */}
+          <div className="space-y-3">
+            <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+              Products
+            </h4>
+            <ul className="space-y-2.5 text-sm">
+              <li>
+                <Link href="/c" className="text-muted-foreground hover:text-foreground transition-colors">
+                  ayoAI Chat
+                </Link>
+              </li>
+              <li>
+                <Link href="/product/features" className="text-muted-foreground hover:text-foreground transition-colors">
+                  Canvas & Codex
+                </Link>
+              </li>
+              <li>
+                <Link href="/product/features" className="text-muted-foreground hover:text-foreground transition-colors">
+                  Voice Intelligence
+                </Link>
+              </li>
+              <li>
+                <Link href="/product/pricing" className="text-muted-foreground hover:text-foreground transition-colors">
+                  Pricing Plans
+                </Link>
+              </li>
+              <li>
+                <Link href="/c" className="text-muted-foreground hover:text-foreground transition-colors">
+                  Desktop & Mobile Apps
+                </Link>
+              </li>
+            </ul>
+          </div>
 
-                        {/* Social Links */}
-                        <div className="flex items-center space-x-4">
-                            {socialLinks.map((social) => (
-                                <a
-                                    key={social.name}
-                                    href={social.href}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="w-9 h-9 rounded-lg bg-secondary hover:bg-secondary/80 flex items-center justify-center text-muted-foreground hover:text-foreground transition-all"
-                                    aria-label={social.name}
-                                >
-                                    <social.icon className="w-4 h-4" />
-                                </a>
-                            ))}
-                        </div>
-                    </div>
+          {/* Business */}
+          <div className="space-y-3">
+            <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+              Business
+            </h4>
+            <ul className="space-y-2.5 text-sm">
+              <li>
+                <Link href="/business/enterprise" className="text-muted-foreground hover:text-foreground transition-colors">
+                  Overview
+                </Link>
+              </li>
+              <li>
+                <Link href="/business/enterprise" className="text-muted-foreground hover:text-foreground transition-colors">
+                  ayoAI Enterprise
+                </Link>
+              </li>
+              <li>
+                <Link href="/business/enterprise" className="text-muted-foreground hover:text-foreground transition-colors">
+                  Teams & Workspaces
+                </Link>
+              </li>
+              <li>
+                <Link href="/business/enterprise" className="text-muted-foreground hover:text-foreground transition-colors">
+                  Customer Stories
+                </Link>
+              </li>
+              <li>
+                <Link href="/company/contact" className="text-muted-foreground hover:text-foreground transition-colors">
+                  Contact Sales
+                </Link>
+              </li>
+            </ul>
+          </div>
 
-                    {/* Product Links */}
-                    <div>
-                        <h4 className="font-semibold text-foreground mb-4">Product</h4>
-                        <ul className="space-y-3">
-                            {footerLinks.product.map((link) => (
-                                <li key={link.name}>
-                                    <Link
-                                        href={link.href}
-                                        className="text-sm text-muted-foreground hover:text-foreground transition-colors"
-                                    >
-                                        {link.name}
-                                    </Link>
-                                </li>
-                            ))}
-                        </ul>
-                    </div>
+          {/* Developers */}
+          <div className="space-y-3">
+            <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+              Developers
+            </h4>
+            <ul className="space-y-2.5 text-sm">
+              <li>
+                <Link href="/product/api-docs" className="text-muted-foreground hover:text-foreground transition-colors">
+                  API Platform
+                </Link>
+              </li>
+              <li>
+                <Link href="/product/api-docs" className="text-muted-foreground hover:text-foreground transition-colors">
+                  Documentation
+                </Link>
+              </li>
+              <li>
+                <Link href="/product/api-docs" className="text-muted-foreground hover:text-foreground transition-colors">
+                  API Reference
+                </Link>
+              </li>
+              <li>
+                <Link href="/product/api-docs" className="text-muted-foreground hover:text-foreground transition-colors">
+                  Cookbook
+                </Link>
+              </li>
+              <li>
+                <Link href="/support/status" className="text-muted-foreground hover:text-foreground transition-colors">
+                  System Status
+                </Link>
+              </li>
+            </ul>
+          </div>
 
-                    {/* Company Links */}
-                    <div>
-                        <h4 className="font-semibold text-foreground mb-4">Company</h4>
-                        <ul className="space-y-3">
-                            {footerLinks.company.map((link) => (
-                                <li key={link.name}>
-                                    <Link
-                                        href={link.href}
-                                        className="text-sm text-muted-foreground hover:text-foreground transition-colors"
-                                    >
-                                        {link.name}
-                                    </Link>
-                                </li>
-                            ))}
-                        </ul>
-                    </div>
+          {/* Company */}
+          <div className="space-y-3">
+            <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+              Company
+            </h4>
+            <ul className="space-y-2.5 text-sm">
+              <li>
+                <Link href="/company/about" className="text-muted-foreground hover:text-foreground transition-colors">
+                  About Us
+                </Link>
+              </li>
+              <li>
+                <Link href="/company/careers" className="text-muted-foreground hover:text-foreground transition-colors">
+                  Careers
+                </Link>
+              </li>
+              <li>
+                <Link href="/company/blog" className="text-muted-foreground hover:text-foreground transition-colors">
+                  News & Blog
+                </Link>
+              </li>
+              <li>
+                <Link href="/company/about" className="text-muted-foreground hover:text-foreground transition-colors">
+                  Security & Trust
+                </Link>
+              </li>
+              <li>
+                <Link href="/foundation" className="text-muted-foreground hover:text-foreground transition-colors">
+                  ayoAI Foundation
+                </Link>
+              </li>
+            </ul>
+          </div>
 
-                    {/* Support Links */}
-                    <div>
-                        <h4 className="font-semibold text-foreground mb-4">Support</h4>
-                        <ul className="space-y-3">
-                            {footerLinks.support.map((link) => (
-                                <li key={link.name}>
-                                    <Link
-                                        href={link.href}
-                                        className="text-sm text-muted-foreground hover:text-foreground transition-colors"
-                                    >
-                                        {link.name}
-                                    </Link>
-                                </li>
-                            ))}
-                        </ul>
-                    </div>
-                </div>
+          {/* Terms & Policies */}
+          <div className="space-y-3">
+            <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+              Policies
+            </h4>
+            <ul className="space-y-2.5 text-sm">
+              <li>
+                <Link href="/support/terms" className="text-muted-foreground hover:text-foreground transition-colors">
+                  Terms of Service
+                </Link>
+              </li>
+              <li>
+                <Link href="/support/privacy" className="text-muted-foreground hover:text-foreground transition-colors">
+                  Privacy Policy
+                </Link>
+              </li>
+              <li>
+                <Link href="/support/privacy" className="text-muted-foreground hover:text-foreground transition-colors">
+                  Cookie Settings
+                </Link>
+              </li>
+              <li>
+                <Link href="/research/safety" className="text-muted-foreground hover:text-foreground transition-colors">
+                  Usage Policies
+                </Link>
+              </li>
+              <li>
+                <Link href="/support/help" className="text-muted-foreground hover:text-foreground transition-colors">
+                  Help Center
+                </Link>
+              </li>
+            </ul>
+          </div>
+        </div>
 
-                <Separator className="my-8" />
+        {/* Bottom Bar: Copyright & Region Switcher */}
+        <div className="mt-8 flex flex-col md:flex-row items-center justify-between gap-4 text-xs text-muted-foreground">
+          <div className="flex items-center gap-3">
+            <Link href="/" className="flex items-center gap-2 hover:opacity-85 transition-opacity">
+              <AyoAIIcon size={18} />
+              <span className="font-semibold text-sm text-foreground">ayoAI</span>
+            </Link>
+            <span>© 2026 ayoAI Inc. All rights reserved.</span>
+          </div>
 
-                {/* Bottom Section */}
-                <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-                    <p className="text-sm text-muted-foreground">
-                        © {currentYear} ayoAI. All rights reserved.
-                    </p>
-                    <div className="flex items-center gap-6">
-                        <Link href="/support/privacy" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-                            Privacy
-                        </Link>
-                        <Link href="/support/terms" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-                            Terms
-                        </Link>
-                        <Link href="/support/cookies" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-                            Cookies
-                        </Link>
-                    </div>
-                </div>
-            </div>
-        </footer>
-    );
+          <div className="flex items-center gap-6">
+            <button className="flex items-center gap-1.5 hover:text-foreground transition-colors cursor-pointer">
+              <Globe className="w-3.5 h-3.5" />
+              <span>English (United States)</span>
+            </button>
+            <a
+              href="https://twitter.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:text-foreground transition-colors"
+            >
+              Twitter / X
+            </a>
+            <a
+              href="https://github.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:text-foreground transition-colors"
+            >
+              GitHub
+            </a>
+            <a
+              href="https://linkedin.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:text-foreground transition-colors"
+            >
+              LinkedIn
+            </a>
+            <a
+              href="https://discord.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:text-foreground transition-colors"
+            >
+              Discord
+            </a>
+          </div>
+        </div>
+      </div>
+    </footer>
+  );
 }
+
+export default Footer;

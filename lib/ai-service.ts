@@ -104,8 +104,8 @@ Please provide helpful, accurate, and engaging responses.`;
     const genAI = this.getGenAIClient();
     if (!genAI) throw new Error('Google Generative AI not initialized (Missing API Key)');
 
-    // Use gemini-2.0-flash as the latest model (supports vision)
-    const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+    // Use gemini-3.6-flash as the latest model (supports vision)
+    const model = genAI.getGenerativeModel({ model: "gemini-3.6-flash" });
 
     let systemPrompt = `You are ayoAI, a helpful and intelligent AI assistant.
 ${fileContext ? `\n\nFile Context:\n${fileContext}` : ''}

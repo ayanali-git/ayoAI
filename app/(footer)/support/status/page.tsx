@@ -1,88 +1,56 @@
 'use client';
 
-import { motion } from 'framer-motion';
-import { Card, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
-import { Activity, CheckCircle, Clock, AlertTriangle, Server, Globe, MessageSquare, Image, FileText, Zap } from 'lucide-react';
-
-const services = [
-    { name: 'AI Chat Service', status: 'operational', uptime: '99.99%', icon: MessageSquare, description: 'Core conversation functionality' },
-    { name: 'Image Generation', status: 'operational', uptime: '99.95%', icon: Image, description: 'AI-powered image creation' },
-    { name: 'Document Analysis', status: 'operational', uptime: '99.97%', icon: FileText, description: 'File upload and analysis' },
-    { name: 'Authentication', status: 'operational', uptime: '99.99%', icon: Server, description: 'Login and account management' },
-    { name: 'API Services', status: 'operational', uptime: '99.98%', icon: Zap, description: 'Developer API endpoints' },
-    { name: 'Website', status: 'operational', uptime: '99.99%', icon: Globe, description: 'Web application interface' },
-];
-
-const incidents = [
-    { date: 'Jan 20, 2026', title: 'Scheduled Maintenance Complete', status: 'resolved', description: 'Upgraded image generation infrastructure.', time: '03:00 - 04:30 UTC' },
-    { date: 'Jan 15, 2026', title: 'Minor API Latency', status: 'resolved', description: 'Increased response times resolved within 45 minutes.', time: '14:20 - 15:05 UTC' },
-    { date: 'Jan 8, 2026', title: 'Image Generation Delayed', status: 'resolved', description: 'Additional capacity deployed.', time: '19:00 - 20:00 UTC' },
-];
+import { CheckCircle2 } from 'lucide-react';
 
 export default function StatusPage() {
-    return (
-        <div className="py-16 px-4 sm:px-6 lg:px-8">
-            <div className="max-w-4xl mx-auto">
-                <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="text-center mb-12">
-                    <Badge className="bg-gradient-to-r from-blue-500 to-purple-600 text-white border-0 mb-4 px-4 py-1">
-                        <Activity className="w-4 h-4 mr-2" />System Status
-                    </Badge>
-                    <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-6">ayoAI Status</h1>
-                    <Card className="inline-block bg-green-500/10 border-green-500/30">
-                        <CardContent className="py-4 px-8 flex items-center gap-3">
-                            <CheckCircle className="w-6 h-6 text-green-600 dark:text-green-400" />
-                            <span className="text-lg font-semibold text-green-600 dark:text-green-400">All Systems Operational</span>
-                        </CardContent>
-                    </Card>
-                </motion.div>
+  return (
+    <div className="min-h-screen bg-background">
+      <main className="mx-auto max-w-4xl px-4 py-24 sm:px-6 lg:px-8">
+        <header className="mb-12">
+          <h1 className="text-4xl font-semibold tracking-tight text-foreground sm:text-5xl mb-6">System Status</h1>
+          <p className="text-xl text-muted-foreground">
+            Real-time status of ayoAI services and APIs.
+          </p>
+        </header>
 
-                <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="mb-12">
-                    <h2 className="text-2xl font-bold text-foreground mb-6">Services</h2>
-                    <div className="space-y-4">
-                        {services.map((service, i) => (
-                            <Card key={i} className="bg-card border-border">
-                                <CardContent className="p-6 flex items-center justify-between">
-                                    <div className="flex items-center gap-4">
-                                        <div className="p-2 rounded-lg bg-gradient-to-br from-blue-500/10 to-purple-500/10">
-                                            <service.icon className="w-5 h-5 text-purple-600 dark:text-purple-400" />
-                                        </div>
-                                        <div>
-                                            <h3 className="text-foreground font-medium">{service.name}</h3>
-                                            <p className="text-sm text-muted-foreground">{service.description}</p>
-                                        </div>
-                                    </div>
-                                    <div className="flex items-center gap-4">
-                                        <span className="text-sm text-muted-foreground hidden sm:block">{service.uptime}</span>
-                                        <CheckCircle className="w-5 h-5 text-green-600 dark:text-green-400" />
-                                    </div>
-                                </CardContent>
-                            </Card>
-                        ))}
-                    </div>
-                </motion.div>
-
-                <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
-                    <h2 className="text-2xl font-bold text-foreground mb-6">Recent Incidents</h2>
-                    <div className="space-y-4">
-                        {incidents.map((incident, i) => (
-                            <Card key={i} className="bg-card border-border">
-                                <CardContent className="p-6">
-                                    <div className="flex justify-between items-start gap-4 mb-2">
-                                        <div>
-                                            <h3 className="text-foreground font-medium">{incident.title}</h3>
-                                            <p className="text-sm text-muted-foreground">{incident.date} • {incident.time}</p>
-                                        </div>
-                                        <Badge className="bg-blue-500/20 text-blue-600 dark:text-blue-400 border-blue-500/30">Resolved</Badge>
-                                    </div>
-                                    <p className="text-sm text-muted-foreground">{incident.description}</p>
-                                </CardContent>
-                            </Card>
-                        ))}
-                    </div>
-                </motion.div>
+        <div className="p-6 bg-card border border-border rounded-2xl mb-12 flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <CheckCircle2 className="h-8 w-8 text-foreground" />
+            <div>
+              <h2 className="text-xl font-semibold">All Systems Operational</h2>
+              <p className="text-sm text-muted-foreground">Updated a few minutes ago</p>
             </div>
+          </div>
+          <div className="text-sm font-medium px-3 py-1 bg-secondary rounded-full">
+            99.99% Uptime
+          </div>
         </div>
-    );
+
+        <div className="space-y-6">
+          <h3 className="text-lg font-semibold">Service Metrics</h3>
+          {[
+            { name: "Web Application", status: "Operational" },
+            { name: "API endpoints", status: "Operational" },
+            { name: "Model Inference", status: "Operational" },
+            { name: "Billing & Accounts", status: "Operational" }
+          ].map((service, i) => (
+            <div key={i} className="flex items-center justify-between py-4 border-b border-border">
+              <span className="font-medium text-foreground">{service.name}</span>
+              <span className="text-sm text-muted-foreground flex items-center gap-2">
+                <span className="h-2 w-2 rounded-full bg-foreground block"></span>
+                {service.status}
+              </span>
+            </div>
+          ))}
+        </div>
+
+        <section className="mt-16">
+          <h3 className="text-lg font-semibold mb-6">Past Incidents</h3>
+          <div className="text-muted-foreground">
+            <p>No incidents reported in the last 30 days.</p>
+          </div>
+        </section>
+      </main>
+    </div>
+  );
 }

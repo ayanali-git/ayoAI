@@ -1,0 +1,94 @@
+'use client';
+
+import React from 'react';
+import Link from 'next/link';
+import { AnimatedArrow } from '@/components/ui/animated-arrow';
+import { Building2, ShieldCheck, Zap, Users, BarChart3, Lock } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+
+export default function EnterprisePage() {
+  const enterpriseFeatures = [
+    {
+      icon: ShieldCheck,
+      title: "Enterprise Data Privacy",
+      description: "Dedicated isolated tenant architecture. Customer inputs and outputs are never retained or used to train models.",
+    },
+    {
+      icon: Zap,
+      title: "Unlimited High-Speed Inference",
+      description: "Dedicated GPU clusters guarantee sub-second latency and custom rate limit allocations for critical workflows.",
+    },
+    {
+      icon: Lock,
+      title: "SSO & SCIM Provisioning",
+      description: "SAML 2.0, Okta, Azure AD, and automated role-based access control with granular audit logging.",
+    },
+    {
+      icon: Users,
+      title: "Team Workspaces & Shared Canvas",
+      description: "Collaborative prompt libraries, shared document indexing, and role-governed generative projects.",
+    },
+  ];
+
+  return (
+    <div className="py-20 max-w-5xl mx-auto select-none">
+      {/* Header */}
+      <div className="max-w-3xl mb-16">
+        <p className="text-xs font-semibold text-muted-foreground tracking-wider uppercase mb-3">
+          ayoAI for Business
+        </p>
+        <h1 className="text-4xl sm:text-6xl font-semibold tracking-tight text-foreground mb-6 leading-[1.1]">
+          Supercharge your organization with frontier AI.
+        </h1>
+        <p className="text-lg sm:text-xl text-muted-foreground leading-relaxed mb-8">
+          Empower your teams with industry-leading intelligence, enterprise security, and administrative governance designed for global scale.
+        </p>
+        <div className="flex flex-wrap items-center gap-4">
+          <Button asChild size="lg" className="rounded-full px-8 bg-foreground text-background hover:opacity-90">
+            <Link href="/company/contact">Contact Sales</Link>
+          </Button>
+          <Button asChild variant="outline" size="lg" className="rounded-full px-8 border-border hover:bg-secondary">
+            <Link href="/product/pricing">View Pricing Plans</Link>
+          </Button>
+        </div>
+      </div>
+
+      {/* Feature Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-16">
+        {enterpriseFeatures.map((feat, i) => {
+          const Icon = feat.icon;
+          return (
+            <div
+              key={i}
+              className="p-8 rounded-3xl border border-border/50 bg-card hover:border-border transition-all flex flex-col justify-between"
+            >
+              <div>
+                <div className="w-12 h-12 rounded-2xl bg-secondary flex items-center justify-center mb-6">
+                  <Icon className="w-6 h-6 text-foreground" />
+                </div>
+                <h3 className="text-xl font-semibold text-foreground mb-2">{feat.title}</h3>
+                <p className="text-sm text-muted-foreground leading-relaxed">{feat.description}</p>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Customer Trust Banner */}
+      <div className="rounded-3xl border border-border/60 bg-gradient-to-br from-card via-card to-secondary/30 p-10 sm:p-14 text-center">
+        <h2 className="text-2xl sm:text-4xl font-semibold text-foreground mb-4">
+          Trusted by high-growth engineering and creative teams worldwide
+        </h2>
+        <p className="text-muted-foreground text-sm max-w-lg mx-auto mb-8">
+          Join thousands of enterprises transforming productivity with ayoAI's secure reasoning infrastructure.
+        </p>
+        <Button asChild className="group rounded-full px-8 h-12 bg-foreground text-background hover:opacity-90">
+          <Link href="/company/contact" className="flex items-center">
+            <span>Schedule an Enterprise Demo</span>
+            <AnimatedArrow size={14} />
+          </Link>
+        </Button>
+      </div>
+    </div>
+  );
+}

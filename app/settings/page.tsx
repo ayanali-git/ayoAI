@@ -18,14 +18,11 @@ import {
   User,
   Shield,
   Bell,
-  Palette,
-  Crown,
-  Loader2,
+  Loader,
   Check,
   Upload
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { motion } from 'framer-motion';
 
 export default function SettingsPage() {
   const { user, loading } = useAuth();
@@ -39,13 +36,13 @@ export default function SettingsPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
 
-  // Notification preferences
   const [emailNotifications, setEmailNotifications] = useState(true);
   const [marketingEmails, setMarketingEmails] = useState(false);
 
   const planLabels: { [key: string]: string } = {
     'free': 'Free',
     'pro': 'Pro',
+    'ultra': 'Ultra Pro',
     'plus': 'Plus'
   };
 
@@ -64,13 +61,11 @@ export default function SettingsPage() {
     const file = event.target.files?.[0];
     if (!file) return;
 
-    // Validate file type
     if (!file.type.startsWith('image/')) {
       toast.error('Please upload an image file');
       return;
     }
 
-    // Validate file size (max 2MB)
     if (file.size > 2 * 1024 * 1024) {
       toast.error('Image size should be less than 2MB');
       return;
@@ -78,33 +73,23 @@ export default function SettingsPage() {
 
     setUploading(true);
     try {
-      // Generate unique filename
       const fileExt = file.name.split('.').pop();
       const fileName = `${user!.id}-${Date.now()}.${fileExt}`;
       const filePath = `avatars/${fileName}`;
 
-      // Upload to Supabase Storage
       const { error: uploadError } = await supabase.storage
         .from('avatars')
         .upload(filePath, file, { upsert: true });
 
       if (uploadError) {
-        // If bucket doesn't exist, create a local URL instead
         if (uploadError.message.includes('Bucket not found') || uploadError.message.includes('bucket')) {
-          // Fallback: Use base64 data URL
           const reader = new FileReader();
           reader.onload = async (e) => {
             const base64Url = e.target?.result as string;
-
-            // Update user metadata with base64 avatar
             const { error: updateError } = await supabase.auth.updateUser({
               data: { avatar_url: base64Url },
             });
-
-            if (updateError) {
-              throw updateError;
-            }
-
+            if (updateError) throw updateError;
             setAvatarUrl(base64Url);
             toast.success('Profile picture updated!');
           };
@@ -114,20 +99,15 @@ export default function SettingsPage() {
         throw uploadError;
       }
 
-      // Get public URL
       const { data: { publicUrl } } = supabase.storage
         .from('avatars')
         .getPublicUrl(filePath);
 
-      // Update user metadata with avatar URL
       const { error: updateError } = await supabase.auth.updateUser({
         data: { avatar_url: publicUrl },
       });
 
-      if (updateError) {
-        throw updateError;
-      }
-
+      if (updateError) throw updateError;
       setAvatarUrl(publicUrl);
       toast.success('Profile picture updated!');
     } catch (error: any) {
@@ -191,283 +171,202 @@ export default function SettingsPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-background">
-        <Loader2 className="w-8 h-8 animate-spin text-purple-500" />
+        <Loader className="w-6 h-6 animate-spin text-muted-foreground" />
       </div>
     );
   }
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
-      <div className="border-b border-border bg-background/80 backdrop-blur-xl sticky top-0 z-10">
-        <div className="max-w-4xl mx-auto px-4 py-4">
+      <div className="border-b border-border sticky top-0 z-10 bg-background">
+        <div className="max-w-2xl mx-auto px-6 py-4">
           <Button
             variant="ghost"
-            className="text-muted-foreground hover:text-foreground hover:bg-secondary"
-            onClick={() => router.back()}
+            size="sm"
+            className="text-muted-foreground hover:text-foreground"
+            onClick={() => router.push('/c')}
           >
             <ChevronLeft className="w-4 h-4 mr-1" />
-            Back to Chat
+            Back
           </Button>
         </div>
       </div>
 
-      <div className="max-w-4xl mx-auto px-4 py-8">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-        >
-          {/* Page Header */}
-          <div className="text-center mb-8">
-            <h1 className="text-3xl font-bold text-foreground mb-2">Settings</h1>
-            <p className="text-muted-foreground">Manage your profile and account settings</p>
-          </div>
+      <div className="max-w-2xl mx-auto px-6 py-10">
+        <h1 className="text-2xl font-semibold text-foreground mb-1">Settings</h1>
+        <p className="text-sm text-muted-foreground mb-8">Manage your profile and account</p>
 
-          <div className="grid gap-6">
-            {/* Profile Section */}
-            <Card className="bg-card border-border">
-              <CardHeader>
-                <div className="flex items-center gap-3">
-                  <div className="p-2 rounded-lg bg-purple-500/10">
-                    <User className="w-5 h-5 text-purple-600 dark:text-purple-400" />
-                  </div>
-                  <div>
-                    <CardTitle className="text-foreground">Profile Information</CardTitle>
-                    <CardDescription className="text-muted-foreground">Update your personal details</CardDescription>
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <form onSubmit={handleProfileUpdate} className="space-y-6">
-                  {/* Avatar Upload */}
-                  <div className="flex items-center gap-6">
-                    <div className="relative group">
-                      <Avatar className="w-24 h-24 ring-4 ring-purple-500/20">
-                        <AvatarImage src={avatarUrl || undefined} />
-                        <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white text-2xl">
-                          {profile.name?.[0] || profile.email?.[0] || 'U'}
-                        </AvatarFallback>
-                      </Avatar>
-                      <button
-                        type="button"
-                        onClick={() => fileInputRef.current?.click()}
-                        className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-full opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
-                        disabled={uploading}
-                      >
-                        {uploading ? (
-                          <Loader2 className="w-6 h-6 text-white animate-spin" />
-                        ) : (
-                          <Camera className="w-6 h-6 text-white" />
-                        )}
-                      </button>
-                      <input
-                        ref={fileInputRef}
-                        type="file"
-                        accept="image/*"
-                        onChange={handleAvatarUpload}
-                        className="hidden"
-                      />
-                    </div>
-                    <div>
-                      <h3 className="text-foreground font-medium mb-1">Profile Picture</h3>
-                      <p className="text-sm text-muted-foreground mb-3">Click on the avatar to upload a new photo</p>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        className="border-border text-muted-foreground hover:text-foreground hover:bg-secondary"
-                        onClick={() => fileInputRef.current?.click()}
-                        disabled={uploading}
-                      >
-                        <Upload className="w-4 h-4 mr-2" />
-                        Upload Image
-                      </Button>
-                    </div>
-                  </div>
-
-                  <Separator className="bg-border" />
-
-                  {/* Name Field */}
-                  <div className="space-y-2">
-                    <Label htmlFor="name" className="text-foreground">Full Name</Label>
-                    <Input
-                      id="name"
-                      value={profile.name}
-                      onChange={e => setProfile({ ...profile, name: e.target.value })}
-                      className="bg-secondary border-border text-foreground placeholder:text-muted-foreground focus:border-purple-500/50"
-                      placeholder="Enter your name"
-                    />
-                  </div>
-
-                  {/* Email Field */}
-                  <div className="space-y-2">
-                    <Label htmlFor="email" className="text-foreground">Email Address</Label>
-                    <Input
-                      id="email"
-                      value={profile.email}
-                      disabled
-                      className="bg-secondary border-border text-muted-foreground"
-                    />
-                    <p className="text-xs text-muted-foreground">Email cannot be changed</p>
-                  </div>
-
-                  <Button
-                    type="submit"
-                    className="w-full bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white"
-                    disabled={saving}
+        <div className="space-y-8">
+          {/* Profile Section */}
+          <div>
+            <h2 className="text-base font-medium text-foreground mb-4 flex items-center gap-2">
+              <User className="w-4 h-4" />
+              Profile
+            </h2>
+            <div className="border border-border rounded-2xl p-6 space-y-6">
+              <div className="flex items-center gap-6">
+                <div className="relative group">
+                  <Avatar className="w-20 h-20">
+                    <AvatarImage src={avatarUrl || undefined} />
+                    <AvatarFallback className="bg-secondary text-foreground text-xl font-medium">
+                      {profile.name?.[0] || profile.email?.[0] || 'U'}
+                    </AvatarFallback>
+                  </Avatar>
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    className="absolute inset-0 flex items-center justify-center bg-black/40 rounded-full opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+                    disabled={uploading}
                   >
-                    {saving ? (
-                      <>
-                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                        Saving...
-                      </>
+                    {uploading ? (
+                      <Loader className="w-5 h-5 text-white animate-spin" />
                     ) : (
-                      <>
-                        <Check className="w-4 h-4 mr-2" />
-                        Save Changes
-                      </>
+                      <Camera className="w-5 h-5 text-white" />
                     )}
-                  </Button>
-                </form>
-              </CardContent>
-            </Card>
-
-            {/* Subscription Section */}
-            <Card className="bg-card border-border">
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="p-2 rounded-lg bg-yellow-500/10">
-                      <Crown className="w-5 h-5 text-yellow-500" />
-                    </div>
-                    <div>
-                      <CardTitle className="text-foreground">Subscription</CardTitle>
-                      <CardDescription className="text-muted-foreground">Manage your plan</CardDescription>
-                    </div>
-                  </div>
-                  <Badge className={`${userPlan === 'pro'
-                    ? 'bg-blue-500/20 text-blue-600 dark:text-blue-400 border-blue-500/30'
-                    : userPlan === 'ultra'
-                      ? 'bg-purple-500/20 text-purple-600 dark:text-purple-400 border-purple-500/30'
-                      : 'bg-secondary text-muted-foreground border-border'
-                    }`}>
-                    {planLabels[userPlan]}
-                  </Badge>
+                  </button>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    onChange={handleAvatarUpload}
+                    className="hidden"
+                  />
                 </div>
-              </CardHeader>
-              <CardContent>
-                <div className="flex items-center justify-between p-4 rounded-lg bg-secondary border border-border">
-                  <div>
-                    <h3 className="text-foreground font-medium mb-1">Current Plan: {planLabels[userPlan]}</h3>
-                    <p className="text-sm text-muted-foreground">
-                      {userPlan === 'free'
-                        ? 'Upgrade to unlock more features'
-                        : 'You have access to all premium features'
-                      }
-                    </p>
-                  </div>
+                <div>
+                  <p className="text-sm font-medium text-foreground">Profile picture</p>
+                  <p className="text-xs text-muted-foreground mb-2">Click avatar to change</p>
                   <Button
-                    variant={userPlan === 'free' ? 'default' : 'outline'}
-                    className={userPlan === 'free'
-                      ? 'bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white'
-                      : 'border-border text-muted-foreground hover:text-foreground hover:bg-secondary'
-                    }
-                    onClick={() => router.push('/upgrade')}
-                  >
-                    {userPlan === 'free' ? 'Upgrade Now' : 'Manage Plan'}
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Security Section */}
-            <Card className="bg-card border-border">
-              <CardHeader>
-                <div className="flex items-center gap-3">
-                  <div className="p-2 rounded-lg bg-red-500/10">
-                    <Shield className="w-5 h-5 text-red-500" />
-                  </div>
-                  <div>
-                    <CardTitle className="text-foreground">Security</CardTitle>
-                    <CardDescription className="text-muted-foreground">Update your password</CardDescription>
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <form onSubmit={handlePasswordChange} className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="newPassword" className="text-foreground">New Password</Label>
-                    <Input
-                      id="newPassword"
-                      type="password"
-                      value={newPassword}
-                      onChange={e => setNewPassword(e.target.value)}
-                      placeholder="Enter new password"
-                      className="bg-secondary border-border text-foreground placeholder:text-muted-foreground focus:border-purple-500/50"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="confirmPassword" className="text-foreground">Confirm Password</Label>
-                    <Input
-                      id="confirmPassword"
-                      type="password"
-                      value={confirmPassword}
-                      onChange={e => setConfirmPassword(e.target.value)}
-                      placeholder="Confirm new password"
-                      className="bg-secondary border-border text-foreground placeholder:text-muted-foreground focus:border-purple-500/50"
-                    />
-                  </div>
-                  <Button
-                    type="submit"
+                    type="button"
                     variant="outline"
-                    className="w-full border-border text-foreground hover:bg-secondary"
-                    disabled={saving || !newPassword || !confirmPassword}
+                    size="sm"
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={uploading}
                   >
-                    {saving ? 'Updating...' : 'Update Password'}
+                    <Upload className="w-3 h-3 mr-1.5" />
+                    Upload
                   </Button>
-                </form>
-              </CardContent>
-            </Card>
+                </div>
+              </div>
 
-            {/* Notifications Section */}
-            <Card className="bg-card border-border">
-              <CardHeader>
-                <div className="flex items-center gap-3">
-                  <div className="p-2 rounded-lg bg-blue-500/10">
-                    <Bell className="w-5 h-5 text-blue-500" />
-                  </div>
-                  <div>
-                    <CardTitle className="text-foreground">Notifications</CardTitle>
-                    <CardDescription className="text-muted-foreground">Manage your notification preferences</CardDescription>
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex items-center justify-between p-4 rounded-lg bg-secondary">
-                  <div>
-                    <h3 className="text-foreground font-medium">Email Notifications</h3>
-                    <p className="text-sm text-muted-foreground">Receive updates about your conversations</p>
-                  </div>
-                  <Switch
-                    checked={emailNotifications}
-                    onCheckedChange={setEmailNotifications}
+              <Separator />
+
+              <form onSubmit={handleProfileUpdate} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="name">Name</Label>
+                  <Input
+                    id="name"
+                    value={profile.name}
+                    onChange={e => setProfile({ ...profile, name: e.target.value })}
+                    placeholder="Your name"
                   />
                 </div>
-                <div className="flex items-center justify-between p-4 rounded-lg bg-secondary">
-                  <div>
-                    <h3 className="text-foreground font-medium">Marketing Emails</h3>
-                    <p className="text-sm text-muted-foreground">Receive news and promotional content</p>
-                  </div>
-                  <Switch
-                    checked={marketingEmails}
-                    onCheckedChange={setMarketingEmails}
-                  />
+                <div className="space-y-2">
+                  <Label htmlFor="email">Email</Label>
+                  <Input id="email" value={profile.email} disabled className="text-muted-foreground" />
+                  <p className="text-xs text-muted-foreground">Email cannot be changed</p>
                 </div>
-              </CardContent>
-            </Card>
+                <Button type="submit" className="w-full" disabled={saving}>
+                  {saving ? (
+                    <><Loader className="w-4 h-4 mr-2 animate-spin" />Saving...</>
+                  ) : (
+                    <><Check className="w-4 h-4 mr-2" />Save changes</>
+                  )}
+                </Button>
+              </form>
+            </div>
           </div>
-        </motion.div>
+
+          {/* Subscription */}
+          <div>
+            <h2 className="text-base font-medium text-foreground mb-4">Subscription</h2>
+            <div className="border border-border rounded-2xl p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-foreground">
+                    Current plan: {planLabels[userPlan] || 'Free'}
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {userPlan === 'free'
+                      ? 'Upgrade to unlock more features'
+                      : 'You have access to premium features'}
+                  </p>
+                </div>
+                <Button
+                  variant={userPlan === 'free' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => router.push('/upgrade')}
+                >
+                  {userPlan === 'free' ? 'Upgrade' : 'Manage plan'}
+                </Button>
+              </div>
+            </div>
+          </div>
+
+          {/* Security */}
+          <div>
+            <h2 className="text-base font-medium text-foreground mb-4 flex items-center gap-2">
+              <Shield className="w-4 h-4" />
+              Security
+            </h2>
+            <div className="border border-border rounded-2xl p-6">
+              <form onSubmit={handlePasswordChange} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="newPassword">New password</Label>
+                  <Input
+                    id="newPassword"
+                    type="password"
+                    value={newPassword}
+                    onChange={e => setNewPassword(e.target.value)}
+                    placeholder="Enter new password"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="confirmPassword">Confirm password</Label>
+                  <Input
+                    id="confirmPassword"
+                    type="password"
+                    value={confirmPassword}
+                    onChange={e => setConfirmPassword(e.target.value)}
+                    placeholder="Confirm new password"
+                  />
+                </div>
+                <Button
+                  type="submit"
+                  variant="outline"
+                  className="w-full"
+                  disabled={saving || !newPassword || !confirmPassword}
+                >
+                  {saving ? 'Updating...' : 'Update password'}
+                </Button>
+              </form>
+            </div>
+          </div>
+
+          {/* Notifications */}
+          <div>
+            <h2 className="text-base font-medium text-foreground mb-4 flex items-center gap-2">
+              <Bell className="w-4 h-4" />
+              Notifications
+            </h2>
+            <div className="border border-border rounded-2xl p-6 space-y-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-foreground">Email notifications</p>
+                  <p className="text-xs text-muted-foreground">Receive updates about your conversations</p>
+                </div>
+                <Switch checked={emailNotifications} onCheckedChange={setEmailNotifications} />
+              </div>
+              <Separator />
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-foreground">Marketing emails</p>
+                  <p className="text-xs text-muted-foreground">Receive news and promotional content</p>
+                </div>
+                <Switch checked={marketingEmails} onCheckedChange={setMarketingEmails} />
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );
