@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { supabase } from '@/lib/supabase';
+import { getServerAuthUser } from '@/lib/supabase-server';
 import { subscriptionService } from '@/lib/subscription-service';
 
 export async function POST(request: NextRequest) {
@@ -10,15 +10,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'No prompt provided' }, { status: 400 });
     }
 
-    // Get user from auth header
-    const authHeader = request.headers.get('authorization');
-    if (!authHeader) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    const token = authHeader.replace('Bearer ', '');
-    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
-
+    const { user, error: authError } = await getServerAuthUser(request);
     if (authError || !user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }

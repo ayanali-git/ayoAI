@@ -2,40 +2,45 @@ import { NextRequest, NextResponse } from 'next/server';
 
 export const dynamic = 'force-dynamic';
 
-import { createClient } from '@supabase/supabase-js';
+import { getServerAuthUser, supabaseAdmin } from '@/lib/supabase-server';
 import { subscriptionService } from '@/lib/subscription-service';
-
-// Create admin client
-const supabaseAdmin = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
 
 export async function GET(request: NextRequest) {
     try {
-        // Get authorization header
-        const authHeader = request.headers.get('authorization');
-        if (!authHeader || !authHeader.startsWith('Bearer ')) {
+        const { user, error: authError } = await getServerAuthUser(request);
+        if (authError || !user) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
-        const token = authHeader.split(' ')[1];
-
-        // Verify user
-        const { data: { user }, error: authError } = await supabaseAdmin.auth.getUser(token);
-        if (authError || !user) {
-            return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
-        }
-
         // Get profile with subscription info
-        const { data: profile, error: profileError } = await supabaseAdmin
+        let { data: profile } = await supabaseAdmin
             .from('profiles')
             .select('plan, subscription_status, customer_id, subscription_id')
             .eq('id', user.id)
-            .single();
+            .maybeSingle();
 
-        if (profileError) {
-            return NextResponse.json({ error: 'Profile not found' }, { status: 404 });
+        // If profile doesn't exist yet, auto-create a free profile
+        if (!profile) {
+            const userName = user.user_metadata?.full_name || 
+                             user.user_metadata?.name || 
+                             user.email?.split('@')[0] || '';
+            const userAvatar = user.user_metadata?.avatar_url || 
+                               user.user_metadata?.picture || null;
+
+            const { data: newProfile } = await supabaseAdmin
+                .from('profiles')
+                .upsert({
+                    id: user.id,
+                    email: user.email,
+                    name: userName,
+                    avatar_url: userAvatar,
+                    plan: 'free',
+                    subscription_status: 'inactive',
+                }, { onConflict: 'id' })
+                .select('plan, subscription_status, customer_id, subscription_id')
+                .single();
+
+            profile = newProfile;
         }
 
         const plan = profile?.plan || 'free';

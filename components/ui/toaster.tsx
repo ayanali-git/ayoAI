@@ -1,35 +1,16 @@
 'use client';
 
-import { useToast } from '@/hooks/use-toast';
-import {
-  Toast,
-  ToastClose,
-  ToastDescription,
-  ToastProvider,
-  ToastTitle,
-  ToastViewport,
-} from '@/components/ui/toast';
+import { useTheme } from 'next-themes';
+import { GoeyToaster } from 'goey-toast';
 
-export function Toaster() {
-  const { toasts } = useToast();
+export function ToasterProvider() {
+  const { resolvedTheme } = useTheme();
 
   return (
-    <ToastProvider>
-      {toasts.map(function ({ id, title, description, action, ...props }) {
-        return (
-          <Toast key={id} {...props}>
-            <div className="grid gap-1">
-              {title && <ToastTitle>{title}</ToastTitle>}
-              {description && (
-                <ToastDescription>{description}</ToastDescription>
-              )}
-            </div>
-            {action}
-            <ToastClose />
-          </Toast>
-        );
-      })}
-      <ToastViewport />
-    </ToastProvider>
+    <GoeyToaster
+      position="top-center"
+      theme={resolvedTheme === 'dark' ? 'dark' : 'light'}
+      preset="snappy"
+    />
   );
 }

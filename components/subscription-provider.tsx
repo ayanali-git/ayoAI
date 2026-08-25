@@ -69,7 +69,7 @@ export const useSubscription = () => {
 };
 
 export function SubscriptionProvider({ children }: { children: React.ReactNode }) {
-    const { user } = useAuth();
+    const { user, token } = useAuth();
     const [plan, setPlan] = useState('free');
     const [status, setStatus] = useState('inactive');
     const [hasActiveSubscription, setHasActiveSubscription] = useState(false);
@@ -89,17 +89,12 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
         }
 
         try {
-            const { data: { session } } = await supabase.auth.getSession();
-            if (!session?.access_token) {
-                setLoading(false);
-                return;
+            const headers: Record<string, string> = {};
+            if (token) {
+                headers['Authorization'] = `Bearer ${token}`;
             }
 
-            const response = await fetch('/api/subscription', {
-                headers: {
-                    'Authorization': `Bearer ${session.access_token}`,
-                },
-            });
+            const response = await fetch('/api/subscription', { headers });
 
             if (response.ok) {
                 const data = await response.json();
@@ -114,7 +109,7 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
         } finally {
             setLoading(false);
         }
-    }, [user]);
+    }, [user, token]);
 
     useEffect(() => {
         fetchSubscription();

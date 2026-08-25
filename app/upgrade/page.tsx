@@ -10,7 +10,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/hooks/use-auth';
 import { useSubscription } from '@/components/subscription-provider';
 import { supabase } from '@/lib/supabase';
-import toast from 'react-hot-toast';
+import toast from '@/lib/toast';
 import {
   ChevronLeft,
   Check,
@@ -91,7 +91,7 @@ const faqs = [
 export default function UpgradePage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { user } = useAuth();
+  const { user, token } = useAuth();
   const { plan: currentPlan, hasActiveSubscription, refreshSubscription } = useSubscription();
   const [isYearly, setIsYearly] = useState(false);
   const [loading, setLoading] = useState<string | null>(null);
@@ -137,19 +137,16 @@ export default function UpgradePage() {
     setLoading(planId);
 
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session?.access_token) {
-        toast.error('Session expired. Please login again.');
-        router.push('/auth/login');
-        return;
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+      };
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
       }
 
       const response = await fetch('/api/stripe/checkout', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${session.access_token}`,
-        },
+        headers,
         body: JSON.stringify({
           plan: planId,
           interval: isYearly ? 'yearly' : 'monthly',
@@ -172,21 +169,22 @@ export default function UpgradePage() {
   };
 
   const handleManageSubscription = async () => {
+    if (!user) {
+      router.push('/auth/login');
+      return;
+    }
+
     setLoading('manage');
 
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session?.access_token) {
-        toast.error('Session expired. Please login again.');
-        router.push('/auth/login');
-        return;
+      const headers: Record<string, string> = {};
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
       }
 
       const response = await fetch('/api/stripe/portal', {
         method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${session.access_token}`,
-        },
+        headers,
       });
 
       const data = await response.json();
@@ -233,14 +231,14 @@ export default function UpgradePage() {
 
           {/* Billing Toggle */}
           <div className="flex items-center justify-center gap-4 mt-8">
-            <span className={`text-sm ${!isYearly ? 'text-foreground font-medium' : 'text-muted-foreground'}`}>Monthly</span>
+            <span className={`text-md ${!isYearly ? 'text-foreground font-medium' : 'text-muted-foreground'}`}>Monthly</span>
             <Switch
               checked={isYearly}
               onCheckedChange={setIsYearly}
             />
-            <span className={`text-sm ${isYearly ? 'text-foreground font-medium' : 'text-muted-foreground'}`}>
+            <span className={`text-md ${isYearly ? 'text-foreground font-medium' : 'text-muted-foreground'}`}>
               Yearly
-              <span className="ml-1.5 text-xs text-neutral-500 font-normal">
+              <span className="ml-1.5 text-md text-neutral-500 font-normal">
                 (Save 15%)
               </span>
             </span>
@@ -279,19 +277,19 @@ export default function UpgradePage() {
                   <div className="flex items-center justify-between mb-2">
                     <CardTitle className="text-lg font-semibold text-foreground">{plan.name}</CardTitle>
                     {plan.popular && (
-                      <Badge variant="secondary" className="text-xs font-normal">
+                      <Badge variant="secondary" className="text-md font-normal">
                         Popular
                       </Badge>
                     )}
                   </div>
-                  <CardDescription className="text-sm text-muted-foreground mb-6">
+                  <CardDescription className="text-md text-muted-foreground mb-6">
                     {plan.description}
                   </CardDescription>
 
                   <div className="mb-8">
                     <div className="flex items-baseline gap-1">
                       <span className="text-4xl font-semibold text-foreground">₹{price}</span>
-                      <span className="text-sm text-muted-foreground">
+                      <span className="text-md text-muted-foreground">
                         /{isYearly ? 'year' : 'month'}
                       </span>
                     </div>
@@ -306,7 +304,7 @@ export default function UpgradePage() {
                           }`}
                         />
                         <span
-                          className={`text-sm ${
+                          className={`text-md ${
                             feature.included ? 'text-foreground' : 'text-muted-foreground'
                           }`}
                         >
@@ -365,15 +363,15 @@ export default function UpgradePage() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {faqs.map((faq, index) => (
               <div key={index} className="border border-border rounded-2xl p-6">
-                <h3 className="text-sm font-medium text-foreground mb-2">{faq.question}</h3>
-                <p className="text-sm text-muted-foreground">{faq.answer}</p>
+                <h3 className="text-md font-medium text-foreground mb-2">{faq.question}</h3>
+                <p className="text-md text-muted-foreground">{faq.answer}</p>
               </div>
             ))}
           </div>
         </div>
 
         {/* Trust Badges */}
-        <div className="border-t border-border pt-8 flex items-center justify-center gap-8 text-xs text-muted-foreground">
+        <div className="border-t border-border pt-8 flex items-center justify-center gap-8 text-md text-muted-foreground">
           <div className="flex items-center gap-1.5">
             <Shield className="w-4 h-4" />
             <span>Secure payment via Stripe</span>

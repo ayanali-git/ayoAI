@@ -11,7 +11,7 @@ import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/hooks/use-auth';
 import { useSubscription } from '@/components/subscription-provider';
 import { supabase } from '@/lib/supabase';
-import { toast } from 'react-hot-toast';
+import { toast } from '@/lib/toast';
 import {
   ChevronLeft,
   Camera,
@@ -194,7 +194,7 @@ export default function SettingsPage() {
 
       <div className="max-w-2xl mx-auto px-6 py-10">
         <h1 className="text-2xl font-semibold text-foreground mb-1">Settings</h1>
-        <p className="text-sm text-muted-foreground mb-8">Manage your profile and account</p>
+        <p className="text-md text-muted-foreground mb-8">Manage your profile and account</p>
 
         <div className="space-y-8">
           {/* Profile Section */}
@@ -219,9 +219,9 @@ export default function SettingsPage() {
                     disabled={uploading}
                   >
                     {uploading ? (
-                      <Loader className="w-5 h-5 text-white animate-spin" />
+                      <Loader className="w-4 h-4 text-white animate-spin" />
                     ) : (
-                      <Camera className="w-5 h-5 text-white" />
+                      <Camera className="w-4 h-4 text-white" />
                     )}
                   </button>
                   <input
@@ -233,8 +233,8 @@ export default function SettingsPage() {
                   />
                 </div>
                 <div>
-                  <p className="text-sm font-medium text-foreground">Profile picture</p>
-                  <p className="text-xs text-muted-foreground mb-2">Click avatar to change</p>
+                  <p className="text-md font-medium text-foreground">Profile picture</p>
+                  <p className="text-md text-muted-foreground mb-2">Click avatar to change</p>
                   <Button
                     type="button"
                     variant="outline"
@@ -242,7 +242,7 @@ export default function SettingsPage() {
                     onClick={() => fileInputRef.current?.click()}
                     disabled={uploading}
                   >
-                    <Upload className="w-3 h-3 mr-1.5" />
+                    <Upload className="w-4 h-4 mr-1.5" />
                     Upload
                   </Button>
                 </div>
@@ -263,7 +263,7 @@ export default function SettingsPage() {
                 <div className="space-y-2">
                   <Label htmlFor="email">Email</Label>
                   <Input id="email" value={profile.email} disabled className="text-muted-foreground" />
-                  <p className="text-xs text-muted-foreground">Email cannot be changed</p>
+                  <p className="text-md text-muted-foreground">Email cannot be changed</p>
                 </div>
                 <Button type="submit" className="w-full" disabled={saving}>
                   {saving ? (
@@ -282,10 +282,10 @@ export default function SettingsPage() {
             <div className="border border-border rounded-2xl p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-foreground">
+                  <p className="text-md font-medium text-foreground">
                     Current plan: {planLabels[userPlan] || 'Free'}
                   </p>
-                  <p className="text-xs text-muted-foreground mt-1">
+                  <p className="text-md text-muted-foreground mt-1">
                     {userPlan === 'free'
                       ? 'Upgrade to unlock more features'
                       : 'You have access to premium features'}
@@ -351,16 +351,16 @@ export default function SettingsPage() {
             <div className="border border-border rounded-2xl p-6 space-y-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-foreground">Email notifications</p>
-                  <p className="text-xs text-muted-foreground">Receive updates about your conversations</p>
+                  <p className="text-md font-medium text-foreground">Email notifications</p>
+                  <p className="text-md text-muted-foreground">Receive updates about your conversations</p>
                 </div>
                 <Switch checked={emailNotifications} onCheckedChange={setEmailNotifications} />
               </div>
               <Separator />
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-foreground">Marketing emails</p>
-                  <p className="text-xs text-muted-foreground">Receive news and promotional content</p>
+                  <p className="text-md font-medium text-foreground">Marketing emails</p>
+                  <p className="text-md text-muted-foreground">Receive news and promotional content</p>
                 </div>
                 <Switch checked={marketingEmails} onCheckedChange={setMarketingEmails} />
               </div>

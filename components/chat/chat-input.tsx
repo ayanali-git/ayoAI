@@ -44,7 +44,7 @@ export function ChatInput({
 }: ChatInputProps) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [isThinkingMode, setIsThinkingMode] = useState(true);
+  const [isThinkingMode, setIsThinkingMode] = useState(false);
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop: (acceptedFiles) => {
@@ -91,7 +91,7 @@ export function ChatInput({
     <div
       className={cn(
         "w-full select-none transition-all duration-200",
-        centered ? "max-w-2xl mx-auto" : "max-w-3xl mx-auto px-4 pb-2"
+        centered ? "max-w-2xl mx-auto px-2 sm:px-4" : "max-w-3xl mx-auto px-2 sm:px-4 pb-2"
       )}
     >
       <div
@@ -99,8 +99,8 @@ export function ChatInput({
         className={cn(
           "relative bg-background dark:bg-[#212121] border border-border/80 dark:border-neutral-700/80 transition-all duration-200",
           isMultiLine || uploadedFiles.length > 0
-            ? "rounded-3xl p-3"
-            : "rounded-full px-3 py-1.5 min-h-[52px]",
+            ? "rounded-3xl p-2.5 sm:p-3"
+            : "rounded-full px-1.5 sm:px-2 py-1 min-h-[48px] sm:min-h-[52px]",
           isDragActive && "ring-2 ring-primary border-primary"
         )}
       >
@@ -112,10 +112,10 @@ export function ChatInput({
             {uploadedFiles.map((file, i) => (
               <div
                 key={i}
-                className="flex items-center gap-1.5 bg-secondary/80 border border-border/60 rounded-full pl-3 pr-2 py-1 text-xs text-foreground"
+                className="flex items-center gap-1.5 bg-secondary/80 border border-border/60 rounded-full pl-3 pr-2 py-1 text-xs sm:text-sm text-foreground"
               >
-                <Paperclip className="w-3.5 h-3.5 text-muted-foreground" />
-                <span className="truncate max-w-[140px] font-medium">
+                <Paperclip className="w-4 h-4 text-muted-foreground shrink-0" />
+                <span className="truncate max-w-[120px] sm:max-w-[160px] font-medium">
                   {file.name}
                 </span>
                 <button
@@ -123,7 +123,7 @@ export function ChatInput({
                   onClick={() => removeFile(i)}
                   className="p-0.5 rounded-full hover:bg-background text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
                 >
-                  <X className="w-3.5 h-3.5" />
+                  <X className="w-4 h-4" />
                 </button>
               </div>
             ))}
@@ -133,12 +133,12 @@ export function ChatInput({
         {/* Text Input Row / Area */}
         <div
           className={cn(
-            "flex items-center gap-2",
+            "flex items-center gap-1 sm:gap-2",
             isMultiLine ? "flex-col items-stretch" : "flex-row"
           )}
         >
           {/* Main Input Field */}
-          <div className="flex-1 flex items-center min-w-0 pl-1">
+          <div className="flex-1 flex items-center min-w-0 pl-0.5 sm:pl-1">
             {/* Attachment Button */}
             <input
               type="file"
@@ -160,13 +160,13 @@ export function ChatInput({
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
                   disabled={isTyping || isUploading}
-                  className="w-11 h-11 rounded-full flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors shrink-0 cursor-pointer"
+                  className="w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors shrink-0 cursor-pointer"
                   aria-label="Add attachment"
                 >
-                  <Plus className="w-5 h-5" />
+                  <Plus className="w-4 h-4 sm:w-5 sm:h-5" />
                 </button>
               </TooltipTrigger>
-              <TooltipContent className="text-xs">
+              <TooltipContent className="text-md">
                 Add files and more
               </TooltipContent>
             </Tooltip>
@@ -179,14 +179,14 @@ export function ChatInput({
               placeholder="Ask anything"
               rows={1}
               disabled={isTyping || isUploading}
-              className="w-full bg-transparent border-0 px-3 py-2 text-[15px] text-foreground placeholder:text-muted-foreground/70 focus:outline-none focus:ring-0 resize-none min-h-[36px] max-h-[200px] leading-relaxed"
+              className="w-full min-w-0 bg-transparent border-0 px-2 py-1.5 sm:py-2 text-[14.5px] sm:text-[15px] text-foreground placeholder:text-muted-foreground/70 focus:outline-none focus:ring-0 resize-none min-h-[34px] max-h-[200px] leading-relaxed"
             />
           </div>
 
           {/* Right Action Tools Dock */}
           <div
             className={cn(
-              "flex items-center gap-1.5 shrink-0 pr-1",
+              "flex items-center gap-1 sm:gap-1.5 shrink-0 pr-0.5 sm:pr-1",
               isMultiLine && "justify-end pt-1"
             )}
           >
@@ -195,20 +195,17 @@ export function ChatInput({
               <TooltipTrigger asChild>
                 <button
                   type="button"
-                  onClick={() => setIsThinkingMode(!isThinkingMode)}
-                  className={cn(
-                    "flex items-center gap-1.5 px-3 py-3 rounded-full text-xs font-medium transition-all duration-150 cursor-pointer select-none",
-                    isThinkingMode
-                      ? "bg-secondary text-foreground hover:bg-secondary/80"
-                      : "text-muted-foreground hover:bg-secondary/60 hover:text-foreground"
-                  )}
+                  onClick={(e) => e.preventDefault()}
+                  style={{ cursor: "not-allowed" }}
+                  className="hidden min-[420px]:flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-full text-xs sm:text-[13px] font-medium text-muted-foreground/50 opacity-60 cursor-not-allowed select-none bg-transparent hover:bg-transparent"
+                  aria-label="Think mode (Coming soon)"
                 >
-                  <Brain className="w-3.5 h-3.5 text-muted-foreground" />
-                  <span>Think</span>
+                  <Brain className="w-4 h-4 text-muted-foreground/50 pointer-events-none" />
+                  <span className="pointer-events-none hidden sm:inline">Think</span>
                 </button>
               </TooltipTrigger>
-              <TooltipContent className="text-xs">
-                Deep reasoning mode
+              <TooltipContent className="text-md">
+                Coming soon
               </TooltipContent>
             </Tooltip>
 
@@ -217,42 +214,40 @@ export function ChatInput({
               <TooltipTrigger asChild>
                 <button
                   type="button"
-                  className="w-11 h-11 rounded-full flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors cursor-pointer"
+                  className="w-8 h-8 sm:w-9 sm:h-9 rounded-full flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors cursor-pointer shrink-0"
                   aria-label="Dictate"
                 >
                   <Mic className="w-4 h-4" />
                 </button>
               </TooltipTrigger>
-              <TooltipContent className="text-xs">Dictate</TooltipContent>
+              <TooltipContent className="text-md">Dictate</TooltipContent>
             </Tooltip>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <button
-                    type="button"
-                    onClick={onSend}
-                    disabled={isTyping || isUploading}
-                    className="w-10 h-10 rounded-full bg-foreground text-background flex items-center justify-center hover:opacity-90 active:scale-95 transition-all shadow-sm cursor-pointer ml-1"
-                    aria-label="Send message"
-                  >
-                    <ArrowUp className="w-4 h-4 stroke-[2.5]" />
-                  </button>
-                </TooltipTrigger>
-                <TooltipContent className="text-xs">
-                  Send message
-                </TooltipContent>
-              </Tooltip>
+
+            {/* Send Button */}
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button
+                  type="button"
+                  onClick={onSend}
+                  disabled={!hasContent || isTyping || isUploading}
+                  className={cn(
+                    "w-8 h-8 sm:w-9 sm:h-9 rounded-full flex items-center justify-center transition-all shrink-0",
+                    hasContent && !isTyping && !isUploading
+                      ? "bg-foreground text-background cursor-pointer hover:opacity-90 active:scale-95"
+                      : "bg-neutral-300 dark:bg-[#383838] text-muted-foreground/50 cursor-not-allowed opacity-50"
+                  )}
+                  aria-label="Send message"
+                >
+                  <ArrowUp className="w-4 h-4 stroke-[2.5]" />
+                </button>
+              </TooltipTrigger>
+              <TooltipContent className="text-md">
+                Send message
+              </TooltipContent>
+            </Tooltip>
           </div>
         </div>
       </div>
-
-      {/* Safety Disclaimer - Only rendered when in active chat (showDisclaimer = true) */}
-      {showDisclaimer && (
-        <div className="mt-2 text-center select-none animate-in fade-in-50 duration-200">
-          <p className="text-[11.5px] text-muted-foreground/80 font-normal">
-            ayoAI can make mistakes. Verify important info.
-          </p>
-        </div>
-      )}
     </div>
   );
 }

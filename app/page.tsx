@@ -8,6 +8,7 @@ import { Footer } from "@/components/ui/footer";
 import { AnimatedArrow } from "@/components/ui/animated-arrow";
 import { ArrowUpRight, ArrowRight, Sparkles, ArrowUp, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 export default function LandingPage() {
   const router = useRouter();
@@ -23,10 +24,11 @@ export default function LandingPage() {
   };
 
   const quickPills = [
-    { label: "Find a model for coding", prompt: "What is the best ayoAI model for software engineering and coding?" },
-    { label: "API pricing", prompt: "Explain the API pricing tiers and token costs" },
-    { label: "Safety index", prompt: "What are the latest safety evaluations and benchmarks for frontier models?" },
-    { label: "Explore careers", prompt: "What engineering and research roles are open at ayoAI?" },
+    { label: "Talk with ChatGPT", prompt: "Explain the latest frontier AI models and reasoning capabilities" },
+    { label: "Research", prompt: "Summarize recent breakthrough papers in AI alignment and safety" },
+    { label: "API Platform", prompt: "How do I get started with the API and developer platform?" },
+    { label: "Stories", prompt: "Showcase customer success stories and real-world applications" },
+    { label: "More", prompt: "Explore all ayoAI features, enterprise solutions, and tools" },
   ];
 
   return (
@@ -35,30 +37,42 @@ export default function LandingPage() {
 
       <main className="flex-1">
         {/* ---------------------------------------------------------------- */}
-        {/* HERO PROMPT DOCK (OpenAI Style Search / Chat Trigger)            */}
+        {/* HERO PROMPT DOCK */}
         {/* ---------------------------------------------------------------- */}
-        <section className="pt-20 pb-14 px-6 sm:px-8 text-center max-w-4xl mx-auto">
-          <h1 className="text-3xl sm:text-4xl font-medium tracking-tight text-foreground mb-6">
-            What can I help you find?
+        <section className="min-h-[calc(100svh-180px)] sm:min-h-[calc(100svh-300px)] lg:min-h-[calc(100vh-350px)] flex flex-col items-center justify-center pt-8 pb-4 px-6 sm:px-8 text-center max-w-4xl mx-auto">
+          <h1 className="text-3xl sm:text-4xl md:text-5xl font-medium tracking-tight text-foreground mb-8">
+            What can I help with?
           </h1>
 
-          {/* Floating Search Pill Bar */}
-          <form onSubmit={handleHeroSubmit} className="relative max-w-2xl mx-auto mb-4">
-            <div className="flex items-center w-full h-14 pl-5 pr-2.5 rounded-full border border-border/80 bg-card transition-all shadow-lg">
-              <input
-                type="text"
+          {/* Hero Input Card */}
+          <form onSubmit={handleHeroSubmit} className="relative w-full max-w-3xl mx-auto mb-6">
+            <div className="relative w-full rounded-3xl dark:border-neutral-700/80 bg-secondary/80 dark:bg-[#212121] p-4 min-h-[100px] flex flex-col justify-between transition-all focus-within:border-neutral-500/80">
+              <textarea
                 value={heroPrompt}
                 onChange={(e) => setHeroPrompt(e.target.value)}
-                placeholder="Ask about research, models, pricing, capabilities..."
-                className="w-full bg-transparent text-[14.5px] text-foreground placeholder:text-muted-foreground/60 outline-none border-none ring-0"
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    handleHeroSubmit(e);
+                  }
+                }}
+                placeholder="Ask about anything, from research to reasoning and more..."
+                rows={2}
+                className="w-full bg-transparent resize-none text-[15px] text-foreground placeholder:text-muted-foreground/60 outline-none border-none ring-0 leading-relaxed"
               />
-              <div className="flex items-center gap-1.5 shrink-0">
+              <div className="flex items-center justify-end">
                 <button
                   type="submit"
-                  className="w-9 h-9 rounded-full bg-foreground text-background flex items-center justify-center hover:opacity-90 transition-opacity cursor-pointer"
+                  disabled={!heroPrompt.trim()}
+                  className={cn(
+                    "w-8 h-8 rounded-full flex items-center justify-center transition-all duration-200",
+                    heroPrompt.trim().length > 0
+                      ? "bg-foreground text-background cursor-pointer hover:opacity-90 active:scale-95"
+                      : "bg-neutral-300 dark:bg-[#383838] text-foreground cursor-not-allowed opacity-60"
+                  )}
                   aria-label="Send prompt"
                 >
-                  <ArrowUp className="w-4 h-4" />
+                  <ArrowUp className="w-4 h-4 stroke-[2.5]" />
                 </button>
               </div>
             </div>
@@ -73,7 +87,7 @@ export default function LandingPage() {
                   setHeroPrompt(pill.prompt);
                   router.push(`/c?q=${encodeURIComponent(pill.prompt)}`);
                 }}
-                className="px-3.5 py-1.5 rounded-full border border-border/70 bg-secondary/40 hover:bg-secondary text-xs text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+                className="px-5 py-3 rounded-full border border-border/70 bg-secondary/40 hover:bg-secondary text-md sm:text-[13px] text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
               >
                 {pill.label}
               </button>
@@ -82,115 +96,173 @@ export default function LandingPage() {
         </section>
 
         {/* ---------------------------------------------------------------- */}
-        {/* FEATURED BILLBOARD GRID (GPT-5.6 / Frontier Spotlight)          */}
+        {/* FEATURED SPOTLIGHT (Sticky Left + Scrolling Right) */}
         {/* ---------------------------------------------------------------- */}
-        <section className="px-6 sm:px-8 max-w-[1400px] mx-auto pb-16">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
-            {/* Massive Main Feature Card (8 cols) */}
-            <Link
-              href="/research/overview"
-              className="group lg:col-span-8 relative rounded-3xl overflow-hidden min-h-[480px] sm:min-h-[540px] flex flex-col justify-between p-8 sm:p-12 border border-border/50 bg-[#0c0c0e] text-white transition-all duration-300"
-            >
-              {/* Cosmic Glow Background */}
-              <div className="absolute inset-0 bg-gradient-to-br from-indigo-950/60 via-purple-950/30 to-black z-0" />
-              <div className="absolute -top-24 -left-24 w-96 h-96 bg-blue-500/20 rounded-full blur-3xl pointer-events-none" />
-              <div className="absolute top-1/2 right-0 w-80 h-80 bg-amber-500/15 rounded-full blur-3xl pointer-events-none" />
-              <div className="absolute bottom-0 inset-x-0 h-1/2 bg-gradient-to-t from-black via-black/80 to-transparent z-0" />
+        <section className="px-6 sm:px-8 max-w-[1400px] mx-auto pt-6 pb-28">
+          <div className="relative flex flex-col lg:flex-row gap-8 lg:gap-14">
+            
+            {/* STICKY LEFT COLUMN TRACK: GPT-5.6 Spotlight */}
+            <div className="w-full lg:w-[62%] relative">
+              <div className="lg:sticky lg:top-24">
+                <Link href="/research/overview" className="group block">
+                {/* Big Cosmic Image Card with GPT 5.6 */}
+                <div className="relative w-full aspect-[16/10] rounded-3xl overflow-hidden bg-black border border-border/40 transition-all duration-300">
+                  {/* Space Planet, Earth Crescent & Cosmic Sun Flare Background */}
+                  <div
+                    className="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-105"
+                    style={{
+                      backgroundImage: `url('https://images.unsplash.com/photo-1451187580459-43490279c0fa?q=80&w=1600&auto=format&fit=crop')`,
+                    }}
+                  />
+                  {/* Planet Crescent Graphic Layer */}
+                  <div className="absolute inset-0 bg-gradient-to-tr from-black/80 via-transparent to-amber-500/20" />
+                  <div className="absolute -bottom-16 -left-16 w-80 h-80 rounded-full bg-slate-900/90 border border-slate-700/50 blur-sm pointer-events-none" />
+                  <div className="absolute top-1/4 right-1/4 w-96 h-96 rounded-full bg-amber-400/20 blur-3xl pointer-events-none" />
 
-              {/* Big Watermark Title */}
-              <div className="relative z-10">
-                <div className="flex items-center justify-between">
-                  <span className="text-4xl sm:text-6xl md:text-7xl font-bold tracking-tighter opacity-90">
-                    GPT 5.6
-                  </span>
-                  <div className="w-10 h-10 rounded-full bg-white/10 backdrop-blur-md flex items-center justify-center group-hover:bg-white group-hover:text-black transition-all">
-                    <ArrowUpRight className="w-5 h-5" />
+                  {/* Top-Left: Bold Giant "GPT" */}
+                  <div className="absolute top-6 sm:top-10 left-6 sm:left-10 z-10">
+                    <span className="text-6xl sm:text-8xl md:text-9xl font-black tracking-tighter text-white select-none leading-none drop-shadow-2xl">
+                      GPT
+                    </span>
+                  </div>
+
+                  {/* Bottom-Right: Bold Giant "5.6" */}
+                  <div className="absolute bottom-6 sm:bottom-10 right-6 sm:right-10 z-10">
+                    <span className="text-6xl sm:text-8xl md:text-9xl font-black tracking-tighter text-white select-none leading-none drop-shadow-2xl">
+                      5.6
+                    </span>
                   </div>
                 </div>
-              </div>
 
-              {/* Headline & Link at Bottom */}
-              <div className="relative z-10 max-w-xl">
-                <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight text-white mb-2 leading-snug">
-                  GPT-5.6: Frontier intelligence that scales with your ambition
-                </h2>
-                <p className="text-sm text-neutral-300 mb-4 line-clamp-2">
-                  Our most versatile reasoning model yet, delivering unprecedented breakthroughs across code generation, mathematical analysis, and creative synthesis.
-                </p>
-                <div className="inline-flex items-center text-xs font-semibold text-white uppercase tracking-wider">
-                  <span>Read announcement</span>
-                  <AnimatedArrow size={14} className="ml-1.5 text-white" />
-                </div>
-              </div>
-            </Link>
-
-            {/* Stack of 3 Side Cards (4 cols) */}
-            <div className="lg:col-span-4 flex flex-col gap-5">
-              {/* Side Card 1 */}
-              <Link
-                href="/research/overview"
-                className="group relative rounded-3xl p-6 border border-border/50 bg-[#121214] text-white flex-1 flex flex-col justify-between overflow-hidden transition-colors hover:border-border"
-              >
-                <div className="absolute inset-0 bg-gradient-to-r from-orange-950/20 to-transparent z-0" />
-                <div className="relative z-10 flex items-center justify-between mb-4">
-                  <span className="text-[11px] font-semibold tracking-wider text-orange-400 uppercase">
-                    Research
-                  </span>
-                  <ArrowUpRight className="w-4 h-4 text-muted-foreground group-hover:text-white transition-colors" />
-                </div>
-                <div className="relative z-10">
-                  <h3 className="text-base font-semibold text-white group-hover:underline leading-snug mb-1">
-                    Introducing the Next-Gen Frontier Reasoning Architecture
-                  </h3>
-                  <p className="text-xs text-neutral-400">August 2026</p>
-                </div>
-              </Link>
-
-              {/* Side Card 2 */}
-              <Link
-                href="/product/features"
-                className="group relative rounded-3xl p-6 border border-border/50 bg-[#121214] text-white flex-1 flex flex-col justify-between overflow-hidden transition-colors hover:border-border"
-              >
-                <div className="absolute inset-0 bg-gradient-to-r from-blue-950/20 to-transparent z-0" />
-                <div className="relative z-10 flex items-center justify-between mb-4">
-                  <span className="text-[11px] font-semibold tracking-wider text-blue-400 uppercase">
-                    Product
-                  </span>
-                  <ArrowUpRight className="w-4 h-4 text-muted-foreground group-hover:text-white transition-colors" />
-                </div>
-                <div className="relative z-10">
-                  <h3 className="text-base font-semibold text-white group-hover:underline leading-snug mb-1">
-                    ayoAI Mobile & Voice: Real-time interactive canvas
-                  </h3>
-                  <p className="text-xs text-neutral-400">August 2026</p>
-                </div>
-              </Link>
-
-              {/* Side Card 3 */}
-              <Link
-                href="/product/features"
-                className="group relative rounded-3xl p-6 border border-border/50 bg-[#121214] text-white flex-1 flex flex-col justify-between overflow-hidden transition-colors hover:border-border"
-              >
-                <div className="absolute inset-0 bg-gradient-to-r from-pink-950/20 to-transparent z-0" />
-                <div className="relative z-10 flex items-center justify-between mb-4">
-                  <span className="text-[11px] font-semibold tracking-wider text-pink-400 uppercase">
-                    Creative
-                  </span>
-                  <ArrowUpRight className="w-4 h-4 text-muted-foreground group-hover:text-white transition-colors" />
-                </div>
-                <div className="relative z-10">
-                  <h3 className="text-base font-semibold text-white group-hover:underline leading-snug mb-1">
-                    Launching Advanced Generative Studio & Canvas
-                  </h3>
-                  <p className="text-xs text-neutral-400">August 2026</p>
+                {/* Left Title & Tag Below Card */}
+                <div className="mt-4 flex flex-col justify-between h-[92px] max-w-2xl">
+                  <h2 className="text-xl sm:text-2xl md:text-3xl font-bold tracking-tight text-foreground group-hover:underline leading-snug">
+                    GPT-5.6: Frontier intelligence that scales with your ambition
+                  </h2>
+                  <div className="flex items-center gap-2 text-md text-muted-foreground">
+                    <span className="font-semibold text-foreground">Product</span>
+                    <span>·</span>
+                    <span>18 min read</span>
+                  </div>
                 </div>
               </Link>
             </div>
           </div>
+
+            {/* SCROLLING RIGHT COLUMN: 3 Items Stream (one by one) */}
+            <div className="w-full lg:w-[38%] flex flex-col gap-8 lg:gap-10">
+              {/* Item 1: Expanding Daybreak Horizon */}
+              <Link href="/company/blog" className="group block">
+                <div className="relative w-full aspect-[4/3] rounded-2xl overflow-hidden bg-black border border-border/40">
+                  <div
+                    className="absolute inset-0 bg-cover bg-center transition-transform duration-500 group-hover:scale-105"
+                    style={{
+                      backgroundImage: `url('https://images.unsplash.com/photo-1506703719100-a0f3a48c0f86?q=80&w=800&auto=format&fit=crop')`,
+                    }}
+                  />
+                  {/* Glowing Solar Arc Horizon */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent" />
+                  <div className="absolute bottom-0 inset-x-0 h-1/2 bg-gradient-to-t from-amber-600/30 via-orange-500/10 to-transparent" />
+                </div>
+                <div className="mt-4 flex flex-col justify-between h-[92px]">
+                  <h3 className="text-base sm:text-lg font-semibold text-foreground group-hover:underline leading-snug">
+                    Expanding Daybreak as the Cyber Defense Window Narrows
+                  </h3>
+                  <div className="flex items-center gap-2 text-md text-muted-foreground">
+                    <span className="font-semibold text-foreground">Security</span>
+                    <span>·</span>
+                    <span>8 min read</span>
+                  </div>
+                </div>
+              </Link>
+
+              {/* Item 2: Mobile Interface Sol */}
+              <Link href="/product/features" className="group block">
+                <div className="relative w-full aspect-[4/3] rounded-2xl overflow-hidden bg-[#0a0a0f] border border-border/40 flex items-center justify-center p-4">
+                  <div
+                    className="absolute inset-0 bg-cover bg-center opacity-30 transition-transform duration-500 group-hover:scale-105"
+                    style={{
+                      backgroundImage: `url('https://images.unsplash.com/photo-1534447677768-be436bb09401?q=80&w=800&auto=format&fit=crop')`,
+                    }}
+                  />
+                  {/* Floating App Mockup Card with Phone Look */}
+                  <div className="relative z-10 w-[74%] bg-white/95 dark:bg-[#1f1f22] backdrop-blur-md rounded-2xl p-4 border border-white/20 dark:border-neutral-700/50">
+                    <div className="text-md font-semibold text-center text-muted-foreground mb-2.5">
+                      5.6 Medium
+                    </div>
+                    <div className="flex items-center justify-between bg-neutral-100 dark:bg-neutral-800 rounded-full px-3 py-1.5 text-md mb-2">
+                      <span className="font-medium text-foreground">5.6 Sol</span>
+                      <div className="w-7 h-4 bg-blue-600 rounded-full relative">
+                        <div className="w-3 h-3 bg-white rounded-full absolute right-0.5 top-0.5" />
+                      </div>
+                    </div>
+                    {/* Fake typing row */}
+                    <div className="flex gap-1 justify-center py-1">
+                      <div className="w-1.5 h-1.5 rounded-full bg-neutral-400 animate-pulse" />
+                      <div className="w-1.5 h-1.5 rounded-full bg-neutral-400 animate-pulse delay-100" />
+                      <div className="w-1.5 h-1.5 rounded-full bg-neutral-400 animate-pulse delay-200" />
+                    </div>
+                  </div>
+                </div>
+                <div className="mt-4 flex flex-col justify-between h-[92px]">
+                  <h3 className="text-base sm:text-lg font-semibold text-foreground group-hover:underline leading-snug">
+                    Improving GPT-5.6 Sol in ChatGPT — and expanding access to GPT-5.6 Luna for free users
+                  </h3>
+                  <div className="flex items-center gap-2 text-md text-muted-foreground">
+                    <span className="font-semibold text-foreground">Product</span>
+                    <span>·</span>
+                    <span>5 min read</span>
+                  </div>
+                </div>
+              </Link>
+
+              {/* Item 3: Health in ChatGPT (White Squircle + Red Flower Heart Badge matching Image 3) */}
+              <Link href="/product/features" className="group block">
+                <div className="relative w-full aspect-[4/3] rounded-2xl overflow-hidden bg-gradient-to-br from-[#fed1d8] via-[#fee5d4] to-[#fbcfe0] dark:from-[#32161d] dark:via-[#261612] dark:to-[#221019] border border-border/40 flex items-center justify-center p-6">
+                  {/* Soft Warm Blurred Background Glow */}
+                  <div className="absolute inset-0 bg-gradient-to-tr from-pink-300/30 via-amber-200/20 to-rose-300/30 blur-xl pointer-events-none" />
+
+                  {/* Center Crisp White Squircle Card */}
+                  <div className="relative z-10 w-28 h-28 sm:w-32 sm:h-32 rounded-[28px] bg-white flex items-center justify-center shadow-xl shadow-rose-950/10 transition-transform duration-500 group-hover:scale-105">
+                    <svg viewBox="0 0 100 100" className="w-16 h-16 sm:w-18 sm:h-18" xmlns="http://www.w3.org/2000/svg">
+                      {/* Red Scalloped Flower / Petals */}
+                      <g fill="#e50914">
+                        <circle cx="50" cy="50" r="24" />
+                        <circle cx="50" cy="27" r="14" />
+                        <circle cx="69.9" cy="38.5" r="14" />
+                        <circle cx="69.9" cy="61.5" r="14" />
+                        <circle cx="50" cy="73" r="14" />
+                        <circle cx="30.1" cy="61.5" r="14" />
+                        <circle cx="30.1" cy="38.5" r="14" />
+                      </g>
+                      {/* Crisp White Heart in Center */}
+                      <path
+                        d="M50 63.5 C50 63.5 35 52 35 41 C35 34.5 40 30.5 45.5 30.5 C48.5 30.5 50 32.5 50 32.5 C50 32.5 51.5 30.5 54.5 30.5 C60 30.5 65 34.5 65 41 C65 52 50 63.5 50 63.5 Z"
+                        fill="#ffffff"
+                      />
+                    </svg>
+                  </div>
+                </div>
+                <div className="mt-4 flex flex-col justify-between h-[92px]">
+                  <h3 className="text-base sm:text-lg font-semibold text-foreground group-hover:underline leading-snug">
+                    Launching Health in ChatGPT
+                  </h3>
+                  <div className="flex items-center gap-2 text-md text-muted-foreground">
+                    <span className="font-semibold text-foreground">Product</span>
+                    <span>·</span>
+                    <span>Jul 23, 2026</span>
+                    <span>·</span>
+                    <span>7 min read</span>
+                  </div>
+                </div>
+              </Link>
+            </div>
+
+          </div>
         </section>
 
         {/* ---------------------------------------------------------------- */}
-        {/* LATEST NEWS & UPDATES (OpenAI Grid)                              */}
+        {/* LATEST NEWS & UPDATES */}
         {/* ---------------------------------------------------------------- */}
         <section className="px-6 sm:px-8 max-w-[1400px] mx-auto py-12 border-t border-border/40">
           <div className="flex items-center justify-between mb-8">
@@ -199,7 +271,7 @@ export default function LandingPage() {
             </h2>
             <Link
               href="/company/blog"
-              className="group inline-flex items-center text-xs font-semibold text-foreground uppercase tracking-wider"
+              className="group inline-flex items-center text-md font-semibold text-foreground uppercase tracking-wider"
             >
               <span>View news</span>
               <AnimatedArrow size={14} />
@@ -252,7 +324,7 @@ export default function LandingPage() {
               >
                 {/* Visual Thumbnail */}
                 <div className={`h-40 w-full bg-gradient-to-br ${news.color} opacity-85 group-hover:opacity-100 transition-opacity flex items-end p-4`}>
-                  <span className="text-[11px] font-semibold text-white/90 uppercase tracking-wider bg-black/40 px-2.5 py-1 rounded-full backdrop-blur-md">
+                  <span className="text-[13px] font-semibold text-white/90 uppercase tracking-wider bg-black/40 px-2.5 py-1 rounded-full backdrop-blur-md">
                     {news.category}
                   </span>
                 </div>
@@ -260,7 +332,7 @@ export default function LandingPage() {
                   <h3 className="text-base font-medium text-foreground group-hover:underline leading-snug mb-3">
                     {news.title}
                   </h3>
-                  <p className="text-xs text-muted-foreground">{news.date}</p>
+                  <p className="text-md text-muted-foreground">{news.date}</p>
                 </div>
               </Link>
             ))}
@@ -268,7 +340,7 @@ export default function LandingPage() {
         </section>
 
         {/* ---------------------------------------------------------------- */}
-        {/* STORIES & REAL-WORLD IMPACT (OpenAI 3-Column Stories)            */}
+        {/* STORIES & REAL-WORLD IMPACT */}
         {/* ---------------------------------------------------------------- */}
         <section className="px-6 sm:px-8 max-w-[1400px] mx-auto py-12 border-t border-border/40">
           <div className="flex items-center justify-between mb-8">
@@ -277,7 +349,7 @@ export default function LandingPage() {
             </h2>
             <Link
               href="/company/blog"
-              className="group inline-flex items-center text-xs font-semibold text-foreground uppercase tracking-wider"
+              className="group inline-flex items-center text-md font-semibold text-foreground uppercase tracking-wider"
             >
               <span>View all</span>
               <AnimatedArrow size={14} />
@@ -312,7 +384,7 @@ export default function LandingPage() {
               >
                 <div className={`absolute inset-0 bg-gradient-to-b ${story.gradient} opacity-90 z-0`} />
                 <div className="relative z-10 flex items-center justify-between">
-                  <span className="text-xs font-semibold text-neutral-300 uppercase tracking-wider">
+                  <span className="text-md font-semibold text-neutral-300 uppercase tracking-wider">
                     {story.category}
                   </span>
                   <ArrowUpRight className="w-4 h-4 text-neutral-400 group-hover:text-white" />
@@ -321,7 +393,7 @@ export default function LandingPage() {
                   <h3 className="text-xl font-semibold text-white group-hover:underline leading-snug mb-2">
                     {story.title}
                   </h3>
-                  <p className="text-xs text-neutral-400">{story.date}</p>
+                  <p className="text-md text-neutral-400">{story.date}</p>
                 </div>
               </Link>
             ))}
@@ -338,7 +410,7 @@ export default function LandingPage() {
             </h2>
             <Link
               href="/research/overview"
-              className="group inline-flex items-center text-xs font-semibold text-foreground uppercase tracking-wider"
+              className="group inline-flex items-center text-md font-semibold text-foreground uppercase tracking-wider"
             >
               <span>View research</span>
               <AnimatedArrow size={14} />
@@ -351,13 +423,13 @@ export default function LandingPage() {
               className="group rounded-3xl p-7 border border-border/50 bg-[#0e1118] text-white flex flex-col justify-between min-h-[300px] hover:border-border transition-all"
             >
               <div className="w-10 h-10 rounded-2xl bg-blue-500/20 text-blue-400 flex items-center justify-center mb-4">
-                <Sparkles className="w-5 h-5" />
+                <Sparkles className="w-4 h-4" />
               </div>
               <div>
                 <h3 className="text-lg font-semibold text-white group-hover:underline leading-snug mb-2">
                   The next generation model architecture and self-verifying chains
                 </h3>
-                <p className="text-xs text-neutral-400">Research Paper • August 2026</p>
+                <p className="text-md text-neutral-400">Research Paper • August 2026</p>
               </div>
             </Link>
 
@@ -365,14 +437,14 @@ export default function LandingPage() {
               href="/research/overview"
               className="group rounded-3xl p-7 border border-border/50 bg-[#16140e] text-white flex flex-col justify-between min-h-[300px] hover:border-border transition-all"
             >
-              <div className="w-10 h-10 rounded-2xl bg-amber-500/20 text-amber-400 flex items-center justify-center mb-4 font-mono font-bold text-sm">
+              <div className="w-10 h-10 rounded-2xl bg-amber-500/20 text-amber-400 flex items-center justify-center mb-4 font-mono font-bold text-md">
                 n²·Δ
               </div>
               <div>
                 <h3 className="text-lg font-semibold text-white group-hover:underline leading-snug mb-2">
                   Unit Distance Problem & Discrete Mathematics Optimization
                 </h3>
-                <p className="text-xs text-neutral-400">Research Paper • July 2026</p>
+                <p className="text-md text-neutral-400">Research Paper • July 2026</p>
               </div>
             </Link>
 
@@ -380,21 +452,21 @@ export default function LandingPage() {
               href="/research/overview"
               className="group rounded-3xl p-7 border border-border/50 bg-[#0e1713] text-white flex flex-col justify-between min-h-[300px] hover:border-border transition-all"
             >
-              <div className="w-10 h-10 rounded-2xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center mb-4 font-mono font-bold text-xs">
+              <div className="w-10 h-10 rounded-2xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center mb-4 font-mono font-bold text-md">
                 DNA·8
               </div>
               <div>
                 <h3 className="text-lg font-semibold text-white group-hover:underline leading-snug mb-2">
                   Introducing ayoAI-Rosalind for Molecular Biology & Therapeutics
                 </h3>
-                <p className="text-xs text-neutral-400">Research Paper • July 2026</p>
+                <p className="text-md text-neutral-400">Research Paper • July 2026</p>
               </div>
             </Link>
           </div>
         </section>
 
         {/* ---------------------------------------------------------------- */}
-        {/* BUSINESS & ENTERPRISE PARTNERS (OpenAI Style Textured Cards)    */}
+        {/* BUSINESS & ENTERPRISE PARTNERS */}
         {/* ---------------------------------------------------------------- */}
         <section className="px-6 sm:px-8 max-w-[1400px] mx-auto py-12 border-t border-border/40">
           <div className="flex items-center justify-between mb-8">
@@ -403,7 +475,7 @@ export default function LandingPage() {
             </h2>
             <Link
               href="/business/enterprise"
-              className="group inline-flex items-center text-xs font-semibold text-foreground uppercase tracking-wider"
+              className="group inline-flex items-center text-md font-semibold text-foreground uppercase tracking-wider"
             >
               <span>Explore enterprise</span>
               <AnimatedArrow size={14} />
@@ -413,61 +485,61 @@ export default function LandingPage() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <Link
               href="/business/enterprise"
-              className="group rounded-3xl p-8 border border-border/50 bg-gradient-to-br from-[#7a6438] via-[#4d3d1f] to-[#1e1709] text-white flex flex-col justify-between min-h-[280px] hover:scale-[1.01] transition-all shadow-lg"
+              className="group rounded-3xl p-8 border border-border/50 bg-gradient-to-br from-[#7a6438] via-[#4d3d1f] to-[#1e1709] text-white flex flex-col justify-between min-h-[280px] transition-all"
             >
               <span className="text-2xl font-bold tracking-tight">Model ML</span>
               <div>
-                <p className="text-sm font-medium text-neutral-200 group-hover:underline mb-1">
+                <p className="text-md font-medium text-neutral-200 group-hover:underline mb-1">
                   Accelerating deep learning experimentation with ayoAI infrastructure
                 </p>
-                <p className="text-xs text-neutral-300">Case study</p>
+                <p className="text-md text-neutral-300">Case study</p>
               </div>
             </Link>
 
             <Link
               href="/business/enterprise"
-              className="group rounded-3xl p-8 border border-border/50 bg-gradient-to-br from-[#2e333d] via-[#1a1d24] to-[#0c0e12] text-white flex flex-col justify-between min-h-[280px] hover:scale-[1.01] transition-all shadow-lg"
+              className="group rounded-3xl p-8 border border-border/50 bg-gradient-to-br from-[#2e333d] via-[#1a1d24] to-[#0c0e12] text-white flex flex-col justify-between min-h-[280px] transition-all"
             >
               <span className="text-2xl font-bold tracking-tight">Global Bank</span>
               <div>
-                <p className="text-sm font-medium text-neutral-200 group-hover:underline mb-1">
+                <p className="text-md font-medium text-neutral-200 group-hover:underline mb-1">
                   Scaling private institutional financial analysis with frontier security
                 </p>
-                <p className="text-xs text-neutral-300">Case study</p>
+                <p className="text-md text-neutral-300">Case study</p>
               </div>
             </Link>
 
             <Link
               href="/business/enterprise"
-              className="group rounded-3xl p-8 border border-border/50 bg-gradient-to-br from-[#d95d1e] via-[#8c350a] to-[#2b0f02] text-white flex flex-col justify-between min-h-[280px] hover:scale-[1.01] transition-all shadow-lg"
+              className="group rounded-3xl p-8 border border-border/50 bg-gradient-to-br from-[#d95d1e] via-[#8c350a] to-[#2b0f02] text-white flex flex-col justify-between min-h-[280px] transition-all"
             >
               <span className="text-2xl font-bold tracking-tight">_zapier</span>
               <div>
-                <p className="text-sm font-medium text-neutral-200 group-hover:underline mb-1">
+                <p className="text-md font-medium text-neutral-200 group-hover:underline mb-1">
                   Empowering millions with autonomous multi-agent task execution
                 </p>
-                <p className="text-xs text-neutral-300">Case study</p>
+                <p className="text-md text-neutral-300">Case study</p>
               </div>
             </Link>
           </div>
         </section>
 
         {/* ---------------------------------------------------------------- */}
-        {/* BOTTOM CALL TO ACTION BANNER (Dark OpenAI Container)             */}
+        {/* BOTTOM CALL TO ACTION BANNER */}
         {/* ---------------------------------------------------------------- */}
         <section className="px-6 sm:px-8 max-w-[1400px] mx-auto py-16">
-          <div className="rounded-3xl border border-border/60 bg-card p-12 sm:p-16 text-center flex flex-col items-center justify-center space-y-6 shadow-2xl">
+          <div className="rounded-3xl border border-border/60 bg-card p-12 sm:p-16 text-center flex flex-col items-center justify-center space-y-6">
             <h2 className="text-3xl sm:text-5xl font-semibold tracking-tight text-foreground">
               Get started with ayoAI
             </h2>
-            <p className="text-muted-foreground text-sm sm:text-base max-w-md">
+            <p className="text-muted-foreground text-md sm:text-base max-w-md">
               Experience the frontier intelligence designed to think, create, and build alongside you.
             </p>
             <div className="pt-2">
               <Button
                 asChild
                 size="lg"
-                className="group rounded-full px-8 h-12 text-sm font-medium bg-foreground text-background hover:opacity-90 transition-opacity cursor-pointer"
+                className="group rounded-full px-8 h-12 text-md font-medium bg-foreground text-background hover:opacity-90 transition-opacity cursor-pointer"
               >
                 <Link href="/c" className="flex items-center">
                   <span>Start chatting</span>

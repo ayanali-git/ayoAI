@@ -37,7 +37,7 @@ export default function SafetyPage() {
     <div className="py-20 max-w-5xl mx-auto select-none">
       {/* Header */}
       <div className="max-w-3xl mb-16">
-        <p className="text-xs font-semibold text-muted-foreground tracking-wider uppercase mb-3">
+        <p className="text-md font-semibold text-muted-foreground tracking-wider uppercase mb-3">
           Safety & Alignment
         </p>
         <h1 className="text-4xl sm:text-6xl font-semibold tracking-tight text-foreground mb-6 leading-[1.1]">
@@ -64,7 +64,7 @@ export default function SafetyPage() {
                 <h3 className="text-xl font-semibold text-foreground mb-3">
                   {pillar.title}
                 </h3>
-                <p className="text-sm text-muted-foreground leading-relaxed">
+                <p className="text-md text-muted-foreground leading-relaxed">
                   {pillar.description}
                 </p>
               </div>
@@ -78,12 +78,12 @@ export default function SafetyPage() {
         <h2 className="text-2xl sm:text-3xl font-semibold text-foreground mb-3">
           Review our Model System Cards
         </h2>
-        <p className="text-muted-foreground text-sm max-w-lg mb-6">
+        <p className="text-muted-foreground text-md max-w-lg mb-6">
           Detailed technical reports on training mitigations, bias benchmarks, and safety evaluation suites across our model family.
         </p>
         <Link
           href="/research/overview"
-          className="group inline-flex items-center text-xs font-semibold uppercase tracking-wider text-foreground hover:underline"
+          className="group inline-flex items-center text-md font-semibold uppercase tracking-wider text-foreground hover:underline"
         >
           <span>Explore system cards</span>
           <AnimatedArrow size={14} />

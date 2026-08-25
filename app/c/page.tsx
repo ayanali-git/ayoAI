@@ -9,46 +9,50 @@ import { Sidebar } from "@/components/chat/sidebar";
 import { WelcomeScreen } from "@/components/chat/welcome-screen";
 import { ChatInput } from "@/components/chat/chat-input";
 import { AyoAIIcon } from "@/components/brand/logo";
-import {
-  ChevronDown,
-  Sparkles,
-  Share2,
-  MoreHorizontal,
-  Loader,
-  PanelLeft,
-} from "lucide-react";
-import { Button } from "@/components/ui/button";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import toast from "react-hot-toast";
+import { Loader, PanelLeft, PanelRight, Plus } from "lucide-react";
+import toast from "@/lib/toast";
 
 export default function NewChatPage() {
   const { user, loading } = useAuth();
   const router = useRouter();
 
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [chats, setChats] = useState<Chat[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [message, setMessage] = useState("");
   const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
   const [isTyping, setIsTyping] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
-  const [selectedModel, setSelectedModel] = useState("ayoAI 4o");
 
   useEffect(() => {
-    if (user) {
+    if (typeof window !== "undefined") {
+      const isMobile = window.innerWidth < 768;
+      if (isMobile) {
+        setSidebarOpen(false);
+      } else {
+        const saved = localStorage.getItem("ayoai_sidebar_open");
+        setSidebarOpen(saved !== null ? saved === "true" : true);
+      }
+    }
+  }, []);
+
+  const handleToggleSidebar = () => {
+    setSidebarOpen((prev) => {
+      const next = !prev;
+      if (typeof window !== "undefined") {
+        localStorage.setItem("ayoai_sidebar_open", String(next));
+      }
+      return next;
+    });
+  };
+
+  useEffect(() => {
+    if (!loading && !user) {
+      router.push("/auth/login");
+    } else if (user) {
       loadChats();
     }
-  }, [user]);
+  }, [user, loading, router]);
 
   const loadChats = async () => {
     if (!user) return;
@@ -92,14 +96,7 @@ export default function NewChatPage() {
         throw new Error(chatError?.message || "Failed to create chat");
       }
 
-      // 2. Insert user message in Supabase immediately
-      await supabase.from("messages").insert({
-        chat_id: newChat.id,
-        role: "user",
-        content: messageText,
-      });
-
-      // 3. Mark pending prompt for immediate AI trigger in [id]/page
+      // 2. Mark pending prompt for immediate AI trigger in [id]/page
       if (typeof window !== "undefined") {
         sessionStorage.setItem(
           `auto_send_${newChat.id}`,
@@ -109,7 +106,7 @@ export default function NewChatPage() {
         );
       }
 
-      // 4. Instantly navigate to the active chat!
+      // 3. Instantly navigate to the active chat!
       router.push(`/c/${newChat.id}`);
     } catch (error: any) {
       console.error("Error sending message:", error);
@@ -127,6 +124,10 @@ export default function NewChatPage() {
         <Loader className="w-6 h-6 animate-spin text-muted-foreground" />
       </div>
     );
+  }
+
+  if (!user) {
+    return null;
   }
 
   return (
@@ -152,74 +153,25 @@ export default function NewChatPage() {
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
         isOpen={sidebarOpen}
-        onToggle={() => setSidebarOpen(!sidebarOpen)}
+        onToggle={handleToggleSidebar}
       />
 
       {/* Main Chat Workspace */}
       <div className="flex-1 flex flex-col min-w-0 h-full relative">
-        {/* Top Header */}
-        <header className="h-14 px-4 flex items-center justify-between border-b border-border/40 shrink-0 select-none">
-          <div className="flex items-center gap-2">
-            {/* Model Selector Dropdown */}
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <button className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl hover:bg-secondary text-sm font-semibold text-foreground transition-colors">
-                  <span>{selectedModel}</span>
-                  <ChevronDown className="w-4 h-4 text-muted-foreground" />
-                </button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent
-                align="start"
-                className="w-60 rounded-2xl p-1.5"
-              >
-                <DropdownMenuItem
-                  onClick={() => setSelectedModel("ayoAI 4o")}
-                  className="flex items-center justify-between p-2.5 rounded-xl cursor-pointer"
-                >
-                  <div>
-                    <p className="font-medium text-sm">ayoAI 4o</p>
-                    <p className="text-xs text-muted-foreground">
-                      Fast and intelligent for everyday tasks
-                    </p>
-                  </div>
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  onClick={() => setSelectedModel("ayoAI Pro (o1)")}
-                  className="flex items-center justify-between p-2.5 rounded-xl cursor-pointer"
-                >
-                  <div>
-                    <p className="font-medium text-sm">ayoAI Pro (o1)</p>
-                    <p className="text-xs text-muted-foreground">
-                      Advanced reasoning and complex problems
-                    </p>
-                  </div>
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => toast.success("Link copied")}
-                  className="h-8 px-3 rounded-full border-border text-xs font-medium"
-                >
-                  <Share2 className="w-3.5 h-3.5 mr-1.5" />
-                  Share
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent className="text-xs">
-                Share conversation
-              </TooltipContent>
-            </Tooltip>
-          </div>
-        </header>
+        {/* Mobile Header when sidebar is closed */}
+        <div className="md:hidden flex items-center justify-between px-3 py-2.5 border-b border-border/40 shrink-0 select-none">
+          <button
+            type="button"
+            onClick={handleToggleSidebar}
+            className="p-1.5 rounded-xl text-foreground hover:bg-secondary transition-colors cursor-pointer"
+            aria-label="Open sidebar"
+          >
+            <PanelRight className="w-4 h-4" />
+          </button>
+        </div>
 
         {/* Content Stream (Welcome Zero State) */}
-        <div className="flex-1 flex flex-col justify-center overflow-y-auto px-2">
+        <div className="flex-1 flex flex-col justify-center overflow-y-auto px-2 sm:px-4">
           <WelcomeScreen
             user={user}
             onPromptSelect={(prompt) => setMessage(prompt)}

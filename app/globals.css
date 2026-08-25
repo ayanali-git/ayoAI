@@ -59,8 +59,10 @@
   * {
     @apply border-border;
   }
+  html,
   body {
     @apply bg-background text-foreground antialiased selection:bg-foreground selection:text-background;
+    overflow-x: clip;
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   }
 }
@@ -120,3 +122,92 @@
   font-size: 0.875em;
   font-family: monospace;
 }
+
+@layer components {
+  .hover-box {
+    position: relative;
+    isolation: isolate;
+    border-radius: 0.75rem;
+  }
+
+  .hover-box::before {
+    content: "";
+    position: absolute;
+    z-index: -1;
+    inset: 0;
+    border-radius: inherit;
+    background-color: hsl(var(--foreground) / 0.05);
+    opacity: 0;
+    transition: opacity 150ms cubic-bezier(0.16, 1, 0.3, 1),
+      background-color 150ms cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  /* Desktop: show on hover */
+  @media (hover: hover) and (pointer: fine) {
+    .hover-box:hover::before {
+      opacity: 1;
+      background-color: hsl(var(--foreground) / 0.06);
+    }
+  }
+
+  /* Touch: show only while finger is pressed */
+  @media (hover: none), (pointer: coarse) {
+    .hover-box:active::before {
+      opacity: 1;
+      background-color: hsl(var(--foreground) / 0.06);
+    }
+  }
+
+  /* Keyboard-selected or hovered item */
+  .hover-box[data-hovered="true"]::before {
+    opacity: 1;
+    background-color: hsl(var(--foreground) / 0.06);
+  }
+
+  /* Active / Selected item: subtle refined highlight */
+  .hover-box[data-selected="true"]::before,
+  .hover-box[data-selected="true"]:hover::before,
+  .hover-box[data-selected="true"][data-hovered="true"]::before {
+    opacity: 1;
+    background-color: hsl(var(--foreground) / 0.1);
+  }
+}
+
+/* Gooey Toast Light & Dark Mode Enhancements */
+.dark .gooey-wrapper {
+  color: #ededed !important;
+}
+.dark .gooey-blobSvg path {
+  fill: #121212 !important;
+  stroke: #262626 !important;
+}
+.dark .gooey-titleDefault,
+.dark .gooey-title {
+  color: #ffffff !important;
+}
+
+html:not(.dark) .gooey-wrapper {
+  color: #111111 !important;
+}
+html:not(.dark) .gooey-blobSvg path {
+  fill: #ffffff !important;
+  stroke: #e5e5e5 !important;
+}
+html:not(.dark) .gooey-titleDefault,
+html:not(.dark) .gooey-title {
+  color: #111111 !important;
+}
+
+/* Dropdown Menu Separator Visibility */
+[data-radix-dropdown-menu-separator] {
+  height: 1px !important;
+  background-color: #e5e5e5 !important;
+  margin: 6px -6px !important;
+  display: block !important;
+  opacity: 1 !important;
+}
+
+.dark [data-radix-dropdown-menu-separator] {
+  background-color: #383838 !important;
+}
+

@@ -29,33 +29,31 @@ export default function BlogPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-background">
-      <main className="mx-auto max-w-4xl px-4 py-24 sm:px-6 lg:px-8">
-        <header className="mb-16">
-          <h1 className="text-4xl font-semibold tracking-tight text-foreground sm:text-5xl mb-6">Blog</h1>
-          <p className="text-xl text-muted-foreground">The latest news, announcements, and research from the ayoAI team.</p>
-        </header>
+    <div className="py-12 sm:py-16 w-full max-w-4xl mx-auto min-w-0">
+      <header className="mb-12 sm:mb-16">
+        <h1 className="text-3xl sm:text-5xl font-semibold tracking-tight text-foreground mb-4 sm:mb-6">Blog</h1>
+        <p className="text-base sm:text-xl text-muted-foreground">The latest news, announcements, and research from the ayoAI team.</p>
+      </header>
 
-        <div className="space-y-12">
-          {posts.map((post, i) => (
-            <article key={i} className="group cursor-pointer">
-              <div className="flex items-center gap-4 text-sm text-muted-foreground mb-3">
-                <span className="font-medium text-foreground">{post.category}</span>
-                <span>•</span>
-                <span>{post.date}</span>
-                <span>•</span>
-                <span>{post.readTime}</span>
-              </div>
-              <h2 className="text-2xl font-semibold mb-3 group-hover:underline">{post.title}</h2>
-              <p className="text-muted-foreground text-lg mb-4">{post.excerpt}</p>
-              <div className="inline-flex items-center text-sm font-medium hover:underline">
-                <span>Read article</span>
-                <AnimatedArrow size={14} />
-              </div>
-            </article>
-          ))}
-        </div>
-      </main>
+      <div className="space-y-10 sm:space-y-12">
+        {posts.map((post, i) => (
+          <article key={i} className="group cursor-pointer pb-8 border-b border-border/40 last:border-b-0">
+            <div className="flex flex-wrap items-center gap-2 sm:gap-4 text-xs sm:text-sm text-muted-foreground mb-2 sm:mb-3">
+              <span className="font-medium text-foreground">{post.category}</span>
+              <span>•</span>
+              <span>{post.date}</span>
+              <span>•</span>
+              <span>{post.readTime}</span>
+            </div>
+            <h2 className="text-xl sm:text-2xl font-semibold mb-2 sm:mb-3 group-hover:underline">{post.title}</h2>
+            <p className="text-muted-foreground text-sm sm:text-base mb-4 leading-relaxed">{post.excerpt}</p>
+            <div className="inline-flex items-center text-sm sm:text-base font-medium hover:underline">
+              <span>Read article</span>
+              <AnimatedArrow size={14} />
+            </div>
+          </article>
+        ))}
+      </div>
     </div>
   );
 }

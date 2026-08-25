@@ -34,7 +34,7 @@ export default function EnterprisePage() {
     <div className="py-20 max-w-5xl mx-auto select-none">
       {/* Header */}
       <div className="max-w-3xl mb-16">
-        <p className="text-xs font-semibold text-muted-foreground tracking-wider uppercase mb-3">
+        <p className="text-md font-semibold text-muted-foreground tracking-wider uppercase mb-3">
           ayoAI for Business
         </p>
         <h1 className="text-4xl sm:text-6xl font-semibold tracking-tight text-foreground mb-6 leading-[1.1]">
@@ -67,7 +67,7 @@ export default function EnterprisePage() {
                   <Icon className="w-6 h-6 text-foreground" />
                 </div>
                 <h3 className="text-xl font-semibold text-foreground mb-2">{feat.title}</h3>
-                <p className="text-sm text-muted-foreground leading-relaxed">{feat.description}</p>
+                <p className="text-md text-muted-foreground leading-relaxed">{feat.description}</p>
               </div>
             </div>
           );
@@ -79,7 +79,7 @@ export default function EnterprisePage() {
         <h2 className="text-2xl sm:text-4xl font-semibold text-foreground mb-4">
           Trusted by high-growth engineering and creative teams worldwide
         </h2>
-        <p className="text-muted-foreground text-sm max-w-lg mx-auto mb-8">
+        <p className="text-muted-foreground text-md max-w-lg mx-auto mb-8">
           Join thousands of enterprises transforming productivity with ayoAI's secure reasoning infrastructure.
         </p>
         <Button asChild className="group rounded-full px-8 h-12 bg-foreground text-background hover:opacity-90">

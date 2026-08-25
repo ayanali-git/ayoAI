@@ -1,6 +1,7 @@
 import './globals.css';
+import 'goey-toast/styles.css';
 import type { Metadata } from 'next';
-import { Toaster } from 'react-hot-toast';
+import { ToasterProvider } from '@/components/ui/toaster';
 import { AuthProvider } from '@/components/auth-provider';
 import { SubscriptionProvider } from '@/components/subscription-provider';
 import { ThemeProvider } from '@/components/theme-provider';
@@ -49,40 +50,7 @@ export default function RootLayout({
             <AuthProvider>
               <SubscriptionProvider>
                 {children}
-                <Toaster
-                  position="top-right"
-                  containerStyle={{
-                    top: 20,
-                    right: 20,
-                    zIndex: 99999,
-                  }}
-                  toastOptions={{
-                    duration: 3500,
-                    style: {
-                      background: 'hsl(var(--popover))',
-                      color: 'hsl(var(--popover-foreground))',
-                      border: '1px solid hsl(var(--border))',
-                      borderRadius: '12px',
-                      padding: '12px 16px',
-                      fontSize: '14px',
-                      fontWeight: '500',
-                      boxShadow: '0 8px 30px rgba(0, 0, 0, 0.12)',
-                      maxWidth: '400px',
-                    },
-                    success: {
-                      iconTheme: {
-                        primary: 'hsl(var(--emerald))',
-                        secondary: '#ffffff',
-                      },
-                    },
-                    error: {
-                      iconTheme: {
-                        primary: '#ef4444',
-                        secondary: '#ffffff',
-                      },
-                    },
-                  }}
-                />
+                <ToasterProvider />
               </SubscriptionProvider>
             </AuthProvider>
           </TooltipProvider>

@@ -1,27 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
+import { getServerAuthUser, supabaseAdmin } from '@/lib/supabase-server';
 import { createPortalSession } from '@/lib/stripe';
-
-// Create admin client
-const supabaseAdmin = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+import { getAppUrl } from '@/lib/url';
 
 export async function POST(request: NextRequest) {
     try {
-        // Get authorization header
-        const authHeader = request.headers.get('authorization');
-        if (!authHeader || !authHeader.startsWith('Bearer ')) {
-            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-        }
-
-        const token = authHeader.split(' ')[1];
-
-        // Verify user
-        const { data: { user }, error: authError } = await supabaseAdmin.auth.getUser(token);
+        const { user, error: authError } = await getServerAuthUser(request);
         if (authError || !user) {
-            return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
         // Get customer ID from profile
@@ -39,7 +25,7 @@ export async function POST(request: NextRequest) {
         }
 
         // Create portal session
-        const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+        const appUrl = getAppUrl(request);
         const session = await createPortalSession(
             profile.customer_id,
             `${appUrl}/upgrade`

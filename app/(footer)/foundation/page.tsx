@@ -29,7 +29,7 @@ export default function FoundationPage() {
     <div className="py-20 max-w-5xl mx-auto select-none">
       {/* Header */}
       <div className="max-w-3xl mb-16">
-        <p className="text-xs font-semibold text-muted-foreground tracking-wider uppercase mb-3">
+        <p className="text-md font-semibold text-muted-foreground tracking-wider uppercase mb-3">
           ayoAI Foundation
         </p>
         <h1 className="text-4xl sm:text-6xl font-semibold tracking-tight text-foreground mb-6 leading-[1.1]">
@@ -54,7 +54,7 @@ export default function FoundationPage() {
                   <Icon className="w-6 h-6 text-foreground" />
                 </div>
                 <h3 className="text-xl font-semibold text-foreground mb-3">{item.title}</h3>
-                <p className="text-sm text-muted-foreground leading-relaxed">{item.description}</p>
+                <p className="text-md text-muted-foreground leading-relaxed">{item.description}</p>
               </div>
             </div>
           );
@@ -66,7 +66,7 @@ export default function FoundationPage() {
         <h2 className="text-2xl sm:text-4xl font-semibold text-foreground mb-4">
           Apply for Academic & Non-Profit Grants
         </h2>
-        <p className="text-muted-foreground text-sm max-w-lg mb-8">
+        <p className="text-muted-foreground text-md max-w-lg mb-8">
           Researchers and educational institutions can apply for subsidized API access and direct engineering mentorship.
         </p>
         <Button asChild className="group rounded-full px-8 h-12 bg-foreground text-background hover:opacity-90">

@@ -66,7 +66,7 @@ export default function PricingPage() {
     <div className="py-20 max-w-6xl mx-auto select-none">
       {/* Header */}
       <div className="text-center max-w-3xl mx-auto mb-16">
-        <p className="text-xs font-semibold text-muted-foreground tracking-wider uppercase mb-3">
+        <p className="text-md font-semibold text-muted-foreground tracking-wider uppercase mb-3">
           Pricing Plans
         </p>
         <h1 className="text-4xl sm:text-6xl font-semibold tracking-tight text-foreground mb-6">
@@ -84,12 +84,12 @@ export default function PricingPage() {
             key={plan.id}
             className={`relative rounded-3xl p-8 flex flex-col justify-between border transition-all ${
               plan.popular
-                ? "bg-card border-foreground/30 shadow-2xl scale-[1.02]"
-                : "bg-card/60 border-border/70 hover:border-border shadow-lg"
+                ? "bg-card border-foreground/30 scale-[1.02]"
+                : "bg-card/60 border-border/70 hover:border-border"
             }`}
           >
             {plan.popular && (
-              <span className="absolute -top-3 left-1/2 -translate-x-1/2 px-3.5 py-0.5 rounded-full bg-foreground text-background text-[11px] font-semibold tracking-wide uppercase">
+              <span className="absolute -top-3 left-1/2 -translate-x-1/2 px-3.5 py-0.5 rounded-full bg-foreground text-background text-[13px] font-semibold tracking-wide uppercase">
                 Most Popular
               </span>
             )}
@@ -97,7 +97,7 @@ export default function PricingPage() {
             <div>
               <div className="mb-6">
                 <h3 className="text-xl font-semibold text-foreground mb-1">{plan.name}</h3>
-                <p className="text-xs text-muted-foreground min-h-[32px]">{plan.description}</p>
+                <p className="text-md text-muted-foreground min-h-[32px]">{plan.description}</p>
               </div>
 
               <div className="flex items-baseline gap-1 mb-8">
@@ -105,16 +105,16 @@ export default function PricingPage() {
                   {plan.price}
                 </span>
                 {plan.period && (
-                  <span className="text-sm text-muted-foreground">{plan.period}</span>
+                  <span className="text-md text-muted-foreground">{plan.period}</span>
                 )}
               </div>
 
               <div className="space-y-3 mb-8">
-                <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                <p className="text-md font-semibold uppercase tracking-wider text-muted-foreground">
                   Included features
                 </p>
                 {plan.features.map((feat, i) => (
-                  <div key={i} className="flex items-center gap-2.5 text-sm text-foreground">
+                  <div key={i} className="flex items-center gap-2.5 text-md text-foreground">
                     <Check className="w-4 h-4 text-emerald-500 shrink-0" />
                     <span>{feat}</span>
                   </div>
@@ -124,9 +124,9 @@ export default function PricingPage() {
 
             <Button
               asChild
-              className={`w-full h-11 rounded-full text-sm font-medium transition-all ${
+              className={`w-full h-11 rounded-full text-md font-medium transition-all ${
                 plan.popular
-                  ? "bg-foreground text-background hover:opacity-90 shadow-md"
+                  ? "bg-foreground text-background hover:opacity-90"
                   : "bg-secondary text-foreground hover:bg-secondary/80 border border-border"
               }`}
             >

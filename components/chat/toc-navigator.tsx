@@ -1,10 +1,14 @@
 "use client";
 
-import React, { useEffect, useRef, useState, type MouseEvent } from "react";
-import { motion, useReducedMotion } from "framer-motion";
-import { Message } from "@/lib/chat-service";
+import {
+  useEffect,
+  useRef,
+  useState,
+  type MouseEvent,
+} from "react";
 import { cn } from "@/lib/utils";
 import BlurFade from "@/components/ui/blur-fade";
+import { Message } from "@/lib/chat-service";
 
 export type Heading = {
   id: string;
@@ -12,14 +16,7 @@ export type Heading = {
   level?: number;
 };
 
-const SPRING_LAYOUT = {
-  type: "spring",
-  stiffness: 420,
-  damping: 34,
-  mass: 0.85,
-} as const;
-
-/** Full TOC popup — shows all headings as a list with consistent hover box */
+/** full TOC popup — shows all headings as a list with refined hover box */
 function TocPopup({
   headings,
   scrollActiveSectionId,
@@ -30,11 +27,8 @@ function TocPopup({
   onNavigate: (event: MouseEvent<HTMLAnchorElement>, id: string) => void;
 }) {
   return (
-    <div className="w-[min(22rem,calc(100vw-2rem))] rounded-2xl border border-border/80 bg-popover/95 backdrop-blur-xl py-2.5 animate-in fade-in-0 zoom-in-95 duration-150">
-      <p className="mb-1.5 px-3.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground select-none">
-        ON THIS PAGE
-      </p>
-      <nav className="flex flex-col max-h-[360px] overflow-y-auto px-1">
+    <div className="w-[min(20rem,calc(100vw-2rem))] rounded-2xl border border-border/80 dark:border-neutral-700/80 bg-background dark:bg-[#212121] py-2">
+      <nav className="flex flex-col max-h-[360px] overflow-y-auto p-1">
         {headings.map((heading) => {
           const isActive = heading.id === scrollActiveSectionId;
 
@@ -45,11 +39,9 @@ function TocPopup({
               onClick={(event) => onNavigate(event, heading.id)}
               data-selected={isActive ? "true" : undefined}
               className={cn(
-                "relative isolate mx-1 rounded-xl px-3 py-2 text-[13px] leading-snug cursor-pointer transition-all duration-150",
-                "overflow-hidden text-ellipsis whitespace-nowrap text-left",
-                isActive
-                  ? "bg-secondary text-foreground font-medium"
-                  : "text-muted-foreground hover:bg-secondary/60 hover:text-foreground"
+                "hover-box relative isolate mx-1 rounded-xl px-3 py-2 text-[15px] leading-snug cursor-pointer transition-colors duration-150",
+                "overflow-hidden text-ellipsis whitespace-nowrap text-left hover:bg-secondary dark:hover:bg-[#2f2f2f]",
+                isActive ? "bg-secondary dark:bg-[#2f2f2f] text-foreground font-medium" : "text-muted-foreground"
               )}
             >
               <span className="relative z-10">{heading.text}</span>
@@ -61,17 +53,26 @@ function TocPopup({
   );
 }
 
-/** How far from top of viewport a heading counts as "currently reading" */
+/** How far from the top of the viewport a heading counts as "currently reading". */
 const READING_LINE_VIEWPORT_RATIO = 0.45;
 const READING_LINE_MAX_PX = 220;
 
-/** Pill width scales: active -> nearby -> far */
+/** How close to the page bottom counts as "fully scrolled". */
+const PAGE_BOTTOM_MIN_PX = 96;
+const PAGE_BOTTOM_VIEWPORT_RATIO = 0.08;
+
+/** Pill width scales: active → nearby → far. */
 const PILL_SCALE = {
-  active: 0.85,
-  oneStepAway: 0.6,
-  twoStepsAway: 0.45,
-  resting: 0.35,
+  active: 1,
+  oneStepAway: 0.75,
+  twoStepsAway: 0.50,
+  resting: 0.25,
 } as const;
+
+type ScrollSectionState = {
+  scrollActiveSectionId: string;
+  readingSectionId: string;
+};
 
 function getReadingLinePx() {
   if (typeof window === "undefined") return 200;
@@ -91,21 +92,109 @@ function getPillScaleForIndex(pillIndex: number, focalIndex: number) {
   return PILL_SCALE.resting;
 }
 
+function isPageFullyScrolled() {
+  if (typeof window === "undefined" || typeof document === "undefined") return false;
+  const maxScrollY = Math.max(
+    0,
+    document.documentElement.scrollHeight - window.innerHeight
+  );
+  const pixelsFromBottom =
+    document.documentElement.scrollHeight -
+    (window.scrollY + window.innerHeight);
+  const scrollProgress = maxScrollY > 0 ? window.scrollY / maxScrollY : 1;
+
+  return (
+    pixelsFromBottom <=
+      Math.max(
+        PAGE_BOTTOM_MIN_PX,
+        window.innerHeight * PAGE_BOTTOM_VIEWPORT_RATIO
+      ) ||
+    window.scrollY >= maxScrollY - 12 ||
+    scrollProgress >= 0.985
+  );
+}
+
+function isPostFooterVisible() {
+  if (typeof document === "undefined") return false;
+  const postSection =
+    document.querySelector("#posts") ?? document.querySelector("post");
+  const sectionBottom = postSection?.getBoundingClientRect().bottom ?? Infinity;
+  return sectionBottom <= window.innerHeight + 48;
+}
+
+function getScrollSectionState({
+  headingElements,
+  parsedHeadings,
+}: {
+  headingElements: Element[];
+  parsedHeadings: Heading[];
+  isScrolling?: boolean;
+}): ScrollSectionState {
+  const firstSectionId = parsedHeadings[0]?.id ?? "";
+  const lastSectionId = parsedHeadings[parsedHeadings.length - 1]?.id ?? "";
+  const readingLinePx = getReadingLinePx();
+
+  // Pin the bottom tail when at the page end.
+  const shouldHighlightBottomTail =
+    (isPageFullyScrolled() || isPostFooterVisible()) && lastSectionId;
+
+  if (shouldHighlightBottomTail) {
+    return {
+      scrollActiveSectionId: lastSectionId,
+      readingSectionId: lastSectionId,
+    };
+  }
+
+  let scrollActiveIndex = -1;
+
+  for (let index = 0; index < headingElements.length; index++) {
+    const headingTop = (
+      headingElements[index] as HTMLElement
+    ).getBoundingClientRect().top;
+    if (headingTop <= readingLinePx) {
+      scrollActiveIndex = index;
+    }
+  }
+
+  const firstHeading = headingElements[0] as HTMLElement | undefined;
+  const firstHeadingTop = firstHeading?.getBoundingClientRect().top ?? Infinity;
+  const isBeforeFirstSection =
+    scrollActiveIndex < 0 ||
+    (typeof window !== "undefined" && window.scrollY <= 24 && firstHeadingTop > readingLinePx);
+
+  if (isBeforeFirstSection) {
+    return {
+      scrollActiveSectionId: firstSectionId,
+      readingSectionId: firstSectionId,
+    };
+  }
+
+  const scrollActiveSectionId = parsedHeadings[scrollActiveIndex]?.id ?? firstSectionId;
+  return {
+    scrollActiveSectionId,
+    readingSectionId: scrollActiveSectionId || firstSectionId,
+  };
+}
+
 function PreviewRail({
   headings,
   scrollActiveSectionId,
+  orientation = "vertical",
+  showPreview = true,
   onNavigate,
   className,
 }: {
   headings: Heading[];
   scrollActiveSectionId: string;
+  orientation?: "vertical" | "horizontal";
+  showPreview?: boolean;
   onNavigate: (event: MouseEvent<HTMLAnchorElement>, id: string) => void;
   className?: string;
 }) {
-  const reduce = useReducedMotion();
   const [focusedSectionId, setFocusedSectionId] = useState<string | null>(null);
   const [isRailHovered, setIsRailHovered] = useState(false);
   const hoverLeaveTimer = useRef<number | null>(null);
+  const isHorizontal = orientation === "horizontal";
 
   const validScrollActiveSectionId =
     scrollActiveSectionId &&
@@ -113,26 +202,40 @@ function PreviewRail({
       ? scrollActiveSectionId
       : headings[0]?.id ?? "";
 
+  // Priority: hover → keyboard focus → live scroll position.
   const focalSectionId = focusedSectionId ?? validScrollActiveSectionId;
+
   const focalSectionIndex = headings.findIndex(
     (heading) => heading.id === focalSectionId
   );
 
-  const showTocPopup = isRailHovered || focusedSectionId !== null;
+  const showTocPopup =
+    showPreview &&
+    !isHorizontal &&
+    (isRailHovered || focusedSectionId !== null);
+
+  const gridTemplate = headings.length
+    ? isHorizontal
+      ? `repeat(${headings.length}, minmax(0.1rem, 1fr))`
+      : `repeat(${headings.length}, minmax(0.55rem, 0.35rem))`
+    : undefined;
 
   return (
-    <motion.div
+    <div
       onBlur={(event) => {
         if (!event.currentTarget.contains(event.relatedTarget)) {
           setFocusedSectionId(null);
         }
       }}
       className={cn(
-        "isolate relative flex w-full overflow-visible pointer-events-none min-h-80 justify-end",
+        "isolate relative flex overflow-visible pointer-events-none justify-end",
+        isHorizontal
+          ? "w-full min-h-48 flex-col items-center justify-center"
+          : "h-fit w-fit",
         className
       )}
     >
-      {/* Hover wrapper — covers the nav rail area */}
+      {/* Hover wrapper — covers only the nav rail area */}
       <div
         onPointerEnter={() => {
           if (hoverLeaveTimer.current) {
@@ -147,11 +250,24 @@ function PreviewRail({
             hoverLeaveTimer.current = null;
           }, 300);
         }}
-        className="pointer-events-auto relative my-auto ml-auto h-fit w-12 py-2 flex justify-end"
+        className={cn(
+          "pointer-events-auto relative my-auto py-2",
+          isHorizontal ? "w-full" : "ml-auto h-fit w-8 flex justify-end items-center"
+        )}
       >
         <nav
           aria-label="ON THIS PAGE"
-          className="relative z-10 flex flex-col gap-2 shrink-0 h-fit w-10 content-center justify-items-end items-end"
+          style={
+            isHorizontal
+              ? { gridTemplateColumns: gridTemplate }
+              : { gridTemplateRows: gridTemplate }
+          }
+          className={cn(
+            "relative z-10 grid shrink-0",
+            isHorizontal
+              ? "h-12 w-full max-w-full justify-center"
+              : "h-fit w-7 content-center justify-items-end"
+          )}
         >
           {headings.map((heading, index) => {
             const isScrollActive = heading.id === validScrollActiveSectionId;
@@ -170,17 +286,23 @@ function PreviewRail({
                   }
                 }}
                 onClick={(event) => onNavigate(event, heading.id)}
-                className="relative flex items-center justify-end h-4 w-10 focus-visible:outline-none group cursor-pointer"
+                className={cn(
+                  "relative flex focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background cursor-pointer",
+                  isHorizontal
+                    ? "h-13 w-full min-w-2 items-end justify-center"
+                    : "h-5 w-5 items-center justify-end"
+                )}
               >
-                <motion.span
+                <span
                   aria-hidden="true"
-                  animate={{ scaleX: pillScale }}
-                  transition={reduce ? { duration: 0 } : SPRING_LAYOUT}
                   className={cn(
-                    "block rounded-full h-1 w-10 origin-right transition-colors duration-150",
+                    "block rounded-full transition-colors duration-150",
+                    isHorizontal
+                      ? "h-8 w-0.5 origin-bottom"
+                      : "h-[2px] w-7 origin-right",
                     isFocalSection
                       ? "bg-foreground"
-                      : "bg-muted-foreground/35 group-hover:bg-muted-foreground/70"
+                      : "bg-neutral-400/80 dark:bg-neutral-600 group-hover:bg-neutral-500"
                   )}
                 />
               </a>
@@ -188,9 +310,9 @@ function PreviewRail({
           })}
         </nav>
 
-        {/* TOC popup — only on pill rail hover, overlays to the left of the rail */}
+        {/* TOC popup — opens directly aligned to the rail on hover */}
         {showTocPopup && (
-          <div className="absolute top-1/2 right-12 z-50 -translate-y-1/2 mr-2">
+          <div className="absolute top-1/2 right-0 z-50 -translate-y-1/2">
             <TocPopup
               headings={headings}
               scrollActiveSectionId={validScrollActiveSectionId}
@@ -199,11 +321,11 @@ function PreviewRail({
           </div>
         )}
       </div>
-    </motion.div>
+    </div>
   );
 }
 
-interface TocNavigatorProps {
+export interface TocNavigatorProps {
   messages?: Message[];
   containerRef?: React.RefObject<HTMLDivElement>;
   customHeadings?: Heading[];
@@ -218,9 +340,15 @@ export function TocNavigator({
   const [scrollActiveSectionId, setScrollActiveSectionId] =
     useState<string>("");
 
+  const headingElementsRef = useRef<Element[]>([]);
+  const parsedHeadingsRef = useRef<Heading[]>([]);
+  const userClickedSectionIdRef = useRef<string | null>(null);
+  const clickLockTimerRef = useRef<number | null>(null);
+
   useEffect(() => {
     if (customHeadings && customHeadings.length > 0) {
       setHeadings(customHeadings);
+      parsedHeadingsRef.current = customHeadings;
       setScrollActiveSectionId(customHeadings[0]?.id || "");
       return;
     }
@@ -238,16 +366,18 @@ export function TocNavigator({
           level: 2,
         }));
       setHeadings(userPrompts);
+      parsedHeadingsRef.current = userPrompts;
       if (userPrompts.length > 0) {
         setScrollActiveSectionId(userPrompts[0].id);
       }
       return;
     }
 
-    // Default DOM search for #posts h2
-    const post = document.querySelector("#posts");
+    // Default DOM search for #posts or h2
+    const post = document.querySelector("#posts") || document.querySelector("main");
     if (post) {
       const headingElements = Array.from(post.querySelectorAll("h2"));
+      headingElementsRef.current = headingElements;
       const parsed = headingElements.map((el) => {
         if (!el.id) {
           el.id =
@@ -263,6 +393,7 @@ export function TocNavigator({
         };
       });
       setHeadings(parsed);
+      parsedHeadingsRef.current = parsed;
       if (parsed.length > 0) {
         setScrollActiveSectionId(parsed[0].id);
       }
@@ -273,7 +404,12 @@ export function TocNavigator({
   useEffect(() => {
     if (headings.length === 0) return;
 
-    const handleScrollSync = () => {
+    const syncScrollState = () => {
+      if (userClickedSectionIdRef.current) {
+        setScrollActiveSectionId(userClickedSectionIdRef.current);
+        return;
+      }
+
       const readingLinePx = getReadingLinePx();
 
       if (containerRef?.current) {
@@ -289,29 +425,30 @@ export function TocNavigator({
         }
         setScrollActiveSectionId(headings[0]?.id || "");
       } else {
-        // Window scroll
-        let activeId = headings[0]?.id || "";
-        for (const heading of headings) {
-          const elem = document.getElementById(heading.id);
-          if (elem) {
-            const top = elem.getBoundingClientRect().top;
-            if (top <= readingLinePx) {
-              activeId = heading.id;
-            }
-          }
-        }
-        setScrollActiveSectionId(activeId);
+        const {
+          scrollActiveSectionId: nextScrollActiveSectionId,
+        } = getScrollSectionState({
+          headingElements: headingElementsRef.current,
+          parsedHeadings: parsedHeadingsRef.current,
+        });
+        setScrollActiveSectionId(nextScrollActiveSectionId);
       }
     };
 
     const target = containerRef?.current || window;
-    target.addEventListener("scroll", handleScrollSync, { passive: true });
-    return () => target.removeEventListener("scroll", handleScrollSync);
+    target.addEventListener("scroll", syncScrollState, { passive: true });
+    window.addEventListener("resize", syncScrollState);
+    syncScrollState();
+
+    return () => {
+      target.removeEventListener("scroll", syncScrollState);
+      window.removeEventListener("resize", syncScrollState);
+    };
   }, [headings, containerRef]);
 
   if (headings.length < 2) return null;
 
-  const handleNavigate = (e: MouseEvent<HTMLAnchorElement>, id: string) => {
+  const handleLinkClick = (e: MouseEvent<HTMLAnchorElement>, id: string) => {
     e.preventDefault();
     const elem = document.getElementById(id);
     if (!elem) return;
@@ -328,17 +465,24 @@ export function TocNavigator({
     }
 
     setScrollActiveSectionId(id);
+
+    userClickedSectionIdRef.current = id;
+    if (clickLockTimerRef.current)
+      window.clearTimeout(clickLockTimerRef.current);
+    clickLockTimerRef.current = window.setTimeout(() => {
+      userClickedSectionIdRef.current = null;
+    }, 250);
+
     window.history.pushState(null, "", `#${id}`);
   };
 
-  // Only show on desktop (hidden on small screen devices as requested)
   return (
-    <aside className="pointer-events-none fixed top-1/2 right-3 z-30 hidden h-[min(460px,70vh)] w-[min(17rem,calc(100vw-0.5rem))] -translate-y-1/2 select-none min-[1200px]:block">
+    <aside className="pointer-events-none fixed top-1/2 right-5 z-30 hidden h-[min(460px,70vh)] w-fit -translate-y-1/2 select-none md:block">
       <BlurFade delay={0.12} duration={0.4}>
         <PreviewRail
           headings={headings}
           scrollActiveSectionId={scrollActiveSectionId}
-          onNavigate={handleNavigate}
+          onNavigate={handleLinkClick}
           className="h-[min(460px,70vh)]"
         />
       </BlurFade>
@@ -346,4 +490,6 @@ export function TocNavigator({
   );
 }
 
+export const OnThisPage = TocNavigator;
 export default TocNavigator;
+

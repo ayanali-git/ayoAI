@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import { useRouter, useParams } from "next/navigation";
+import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/lib/supabase";
 import { chatService, Chat, Message } from "@/lib/chat-service";
@@ -12,7 +13,13 @@ import { TocNavigator } from "@/components/chat/toc-navigator";
 import {
   ChevronDown,
   Share2,
+  Upload,
   MoreHorizontal,
+  Folder,
+  Pin,
+  PinOff,
+  Archive,
+  Trash2,
   Loader,
   PanelLeft,
   ArrowDown,
@@ -29,15 +36,15 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import toast from "react-hot-toast";
+import toast from "@/lib/toast";
 
 export default function ActiveChatPage() {
-  const { user, loading } = useAuth();
+  const { user, token, loading } = useAuth();
   const router = useRouter();
   const params = useParams();
   const chatId = params.id as string;
 
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [chats, setChats] = useState<Chat[]>([]);
   const [messages, setMessages] = useState<Message[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
@@ -55,11 +62,35 @@ export default function ActiveChatPage() {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (user && chatId) {
+    if (typeof window !== "undefined") {
+      const isMobile = window.innerWidth < 768;
+      if (isMobile) {
+        setSidebarOpen(false);
+      } else {
+        const saved = localStorage.getItem("ayoai_sidebar_open");
+        setSidebarOpen(saved !== null ? saved === "true" : true);
+      }
+    }
+  }, []);
+
+  const handleToggleSidebar = () => {
+    setSidebarOpen((prev) => {
+      const next = !prev;
+      if (typeof window !== "undefined") {
+        localStorage.setItem("ayoai_sidebar_open", String(next));
+      }
+      return next;
+    });
+  };
+
+  useEffect(() => {
+    if (!loading && !user) {
+      router.push("/auth/login");
+    } else if (user && chatId) {
       loadChat();
       loadChats();
     }
-  }, [user, chatId]);
+  }, [user, loading, chatId, router]);
 
   // Handle scroll events to show/hide scroll-to-bottom button
   const handleScroll = () => {
@@ -97,7 +128,21 @@ export default function ActiveChatPage() {
         router.push("/c");
         return;
       }
-      setMessages(details.messages || []);
+      // Deduplicate consecutive identical user messages (in case past legacy chats had duplicates)
+      const rawMessages = details.messages || [];
+      const cleanMessages = rawMessages.filter((msg, idx, arr) => {
+        if (idx === 0) return true;
+        const prevMsg = arr[idx - 1];
+        if (
+          msg.role === "user" &&
+          prevMsg.role === "user" &&
+          msg.content.trim() === prevMsg.content.trim()
+        ) {
+          return false;
+        }
+        return true;
+      });
+      setMessages(cleanMessages);
 
       // Check if this chat was just created with a pending auto-send prompt
       if (typeof window !== "undefined") {
@@ -121,14 +166,11 @@ export default function ActiveChatPage() {
   const triggerAiGeneration = async (promptText: string) => {
     setIsTyping(true);
     try {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
       const headers: Record<string, string> = {
         "Content-Type": "application/json",
       };
-      if (session?.access_token) {
-        headers["Authorization"] = `Bearer ${session.access_token}`;
+      if (token) {
+        headers["Authorization"] = `Bearer ${token}`;
       }
 
       const response = await fetch("/api/chat", {
@@ -147,16 +189,16 @@ export default function ActiveChatPage() {
       }
 
       const result = await response.json();
-      if (result.assistantMessage) {
+      if (result.assistantMessage && result.userMessage) {
         setMessages((prev) => {
-          // Avoid duplicate user message if it already exists
-          const hasUser = prev.some(
-            (m) => m.id === result.userMessage?.id || m.content === promptText
+          const withoutDuplicate = prev.filter(
+            (m) => m.id !== result.userMessage.id && m.content !== promptText
           );
-          if (!hasUser && result.userMessage) {
-            return [...prev, result.userMessage, result.assistantMessage];
-          }
-          return [...prev, result.assistantMessage];
+          return [
+            ...withoutDuplicate,
+            result.userMessage,
+            result.assistantMessage,
+          ];
         });
       } else {
         const details = await chatService.getChatDetails(supabase, chatId);
@@ -186,14 +228,11 @@ export default function ActiveChatPage() {
     setIsTyping(true);
 
     try {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
       const headers: Record<string, string> = {
         "Content-Type": "application/json",
       };
-      if (session?.access_token) {
-        headers["Authorization"] = `Bearer ${session.access_token}`;
+      if (token) {
+        headers["Authorization"] = `Bearer ${token}`;
       }
 
       let fileData: any[] = [];
@@ -203,8 +242,8 @@ export default function ActiveChatPage() {
           const formData = new FormData();
           formData.append("file", file);
           const uploadHeaders: Record<string, string> = {};
-          if (session?.access_token) {
-            uploadHeaders["Authorization"] = `Bearer ${session.access_token}`;
+          if (token) {
+            uploadHeaders["Authorization"] = `Bearer ${token}`;
           }
 
           const uploadRes = await fetch("/api/upload", {
@@ -267,6 +306,10 @@ export default function ActiveChatPage() {
     );
   }
 
+  if (!user) {
+    return null;
+  }
+
   return (
     <div className="flex h-screen bg-background text-foreground overflow-hidden">
       {/* Sidebar */}
@@ -288,125 +331,195 @@ export default function ActiveChatPage() {
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
         isOpen={sidebarOpen}
-        onToggle={() => setSidebarOpen(!sidebarOpen)}
+        onToggle={handleToggleSidebar}
       />
 
       {/* Main Chat Area */}
-      <div className="flex-1 flex flex-col min-w-0 h-full relative">
-        {/* Top Header */}
-        <header className="h-14 px-4 flex items-center justify-between border-b border-border/40 shrink-0 select-none">
-          <div className="flex items-center gap-2">
-            {/* Model Selector Dropdown */}
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <button className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl hover:bg-secondary text-sm font-semibold text-foreground transition-colors">
-                  <span>{selectedModel}</span>
-                  <ChevronDown className="w-4 h-4 text-muted-foreground" />
-                </button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent
-                align="start"
-                className="w-60 rounded-2xl p-1.5"
-              >
-                <DropdownMenuItem
-                  onClick={() => setSelectedModel("ayoAI 4o")}
-                  className="flex items-center justify-between p-2.5 rounded-xl cursor-pointer"
-                >
-                  <div>
-                    <p className="font-medium text-sm">ayoAI 4o</p>
-                    <p className="text-xs text-muted-foreground">
-                      Fast and intelligent for everyday tasks
-                    </p>
-                  </div>
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  onClick={() => setSelectedModel("ayoAI Pro (o1)")}
-                  className="flex items-center justify-between p-2.5 rounded-xl cursor-pointer"
-                >
-                  <div>
-                    <p className="font-medium text-sm">ayoAI Pro (o1)</p>
-                    <p className="text-xs text-muted-foreground">
-                      Advanced reasoning and complex problems
-                    </p>
-                  </div>
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => {
-                    navigator.clipboard.writeText(window.location.href);
-                    toast.success("Chat link copied");
-                  }}
-                  className="h-8 px-3 rounded-full border-border text-xs font-medium"
-                >
-                  <Share2 className="w-3.5 h-3.5 mr-1.5" />
-                  Share
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent className="text-xs">
-                Share conversation
-              </TooltipContent>
-            </Tooltip>
-          </div>
-        </header>
-
-        {/* Message Stream */}
+      <div className="flex-1 flex flex-col min-w-0 h-full relative overflow-hidden">
+        {/* Full-height Scrollable Message Stream */}
         <div
           ref={scrollContainerRef}
           onScroll={handleScroll}
-          className="flex-1 overflow-y-auto relative"
+          className="h-full w-full overflow-y-auto overflow-x-hidden relative"
         >
-          <MessageList
-            messages={messages}
-            user={user}
-            isTyping={isTyping}
-            pendingMessage={pendingMessage}
-            onRegenerate={handleSend}
-            onEditMessage={(content) => setInputValue(content)}
-          />
+          {/* Transparent Top Floating Header */}
+          <header className="sticky top-0 z-20 h-14 px-3 sm:px-4 flex items-center justify-between select-none pointer-events-none">
+            <div className="flex items-center gap-2 pointer-events-auto">
+              {!sidebarOpen && (
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <button
+                      type="button"
+                      onClick={handleToggleSidebar}
+                      className="h-8 w-8 rounded-xl bg-background dark:bg-[#212121] text-foreground hover:bg-secondary dark:hover:bg-[#2f2f2f] flex items-center justify-center cursor-pointer transition-colors"
+                      aria-label="Open sidebar"
+                    >
+                      <PanelLeft className="w-4 h-4" />
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent className="text-md">Open sidebar</TooltipContent>
+                </Tooltip>
+              )}
+            </div>
 
-          {/* Right-Edge TOC Navigator (Screenshots 3, 4, 5) */}
+            <div className="flex items-center gap-1.5 sm:gap-2 pointer-events-auto">
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      navigator.clipboard.writeText(window.location.href);
+                      toast.success("Chat link copied");
+                    }}
+                    className="h-8 px-2.5 sm:px-3.5 rounded-xl bg-background dark:bg-[#212121] border-0 text-xs sm:text-sm font-medium text-foreground hover:bg-secondary dark:hover:bg-[#2f2f2f] cursor-pointer flex items-center gap-1.5 transition-colors outline-none focus:outline-none"
+                  >
+                    <Upload className="w-4 h-4" />
+                    <span className="hidden min-[400px]:inline">Share</span>
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent className="text-md">
+                  Share conversation
+                </TooltipContent>
+              </Tooltip>
+
+              {/* Three Dots Options Menu (Image 2, 3, 4) */}
+              <DropdownMenu>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <DropdownMenuTrigger asChild>
+                      <button
+                        className="w-8 h-8 rounded-xl flex items-center justify-center text-muted-foreground hover:text-foreground bg-background dark:bg-[#212121] border-0 hover:bg-secondary dark:hover:bg-[#2f2f2f] transition-colors cursor-pointer outline-none focus:outline-none"
+                        aria-label="Chat options"
+                      >
+                        <MoreHorizontal className="w-4 h-4" />
+                      </button>
+                    </DropdownMenuTrigger>
+                  </TooltipTrigger>
+                  <TooltipContent className="text-md">More options</TooltipContent>
+                </Tooltip>
+
+                <DropdownMenuContent
+                  align="end"
+                  className="w-52 rounded-2xl p-1.5 bg-background dark:bg-[#212121] border border-border/80 dark:border-neutral-700/80"
+                >
+                  <DropdownMenuItem
+                    onClick={() => toast("No files attached to this chat")}
+                    className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-[13px] font-normal cursor-pointer text-foreground hover:bg-secondary dark:hover:bg-[#2f2f2f] transition-colors"
+                  >
+                    <Folder className="w-4 h-4 text-muted-foreground" />
+                    <span>View files in chat</span>
+                  </DropdownMenuItem>
+
+                  <DropdownMenuItem
+                    onClick={async () => {
+                      const currentChat = chats.find((c) => c.id === chatId);
+                      const isStarred = currentChat?.starred;
+                      await chatService.toggleChatStar(
+                        supabase,
+                        chatId,
+                        !isStarred
+                      );
+                      loadChats();
+                      toast.success(isStarred ? "Chat unpinned" : "Chat pinned");
+                    }}
+                    className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-[13px] font-normal cursor-pointer text-foreground hover:bg-secondary dark:hover:bg-[#2f2f2f] transition-colors"
+                  >
+                    {chats.find((c) => c.id === chatId)?.starred ? (
+                      <>
+                        <PinOff className="w-4 h-4 text-muted-foreground" />
+                        <span>Unpin chat</span>
+                      </>
+                    ) : (
+                      <>
+                        <Pin className="w-4 h-4 text-muted-foreground" />
+                        <span>Pin chat</span>
+                      </>
+                    )}
+                  </DropdownMenuItem>
+
+                  <DropdownMenuItem
+                    onClick={() => toast.success("Chat archived")}
+                    className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-[13px] font-normal cursor-pointer text-foreground hover:bg-secondary dark:hover:bg-[#2f2f2f] transition-colors"
+                  >
+                    <Archive className="w-4 h-4 text-muted-foreground" />
+                    <span>Archive</span>
+                  </DropdownMenuItem>
+
+                  <DropdownMenuItem
+                    onClick={async () => {
+                      await chatService.deleteChat(supabase, chatId);
+                      router.push("/c");
+                    }}
+                    className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-[13px] font-normal cursor-pointer text-red-500 hover:bg-red-500/10 focus:text-red-500 transition-colors"
+                  >
+                    <Trash2 className="w-4 h-4 text-red-500" />
+                    <span>Delete</span>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+          </header>
+
+          {/* Messages Container with clean spacing above input dock */}
+          <div className="pb-4">
+            <MessageList
+              messages={messages}
+              user={user}
+              isTyping={isTyping}
+              pendingMessage={pendingMessage}
+              onRegenerate={handleSend}
+              onEditMessage={(content) => setInputValue(content)}
+            />
+          </div>
+
+          {/* Right-Edge TOC Navigator */}
           <TocNavigator messages={messages} containerRef={scrollContainerRef} />
         </div>
 
-        {/* Scroll-to-Bottom Button */}
-        {showScrollBottom && (
-          <div className="absolute bottom-24 right-1/2 translate-x-1/2 z-30">
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <button
-                  onClick={scrollToBottom}
-                  className="w-8 h-8 rounded-full bg-background border border-border flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-secondary transition-all"
-                  aria-label="Scroll to bottom"
-                >
-                  <ArrowDown className="w-4 h-4" />
-                </button>
-              </TooltipTrigger>
-              <TooltipContent className="text-xs">
-                Scroll to bottom
-              </TooltipContent>
-            </Tooltip>
-          </div>
-        )}
+        {/* Floating Scroll-to-Bottom Button with Smooth Up/Down Slide Animation */}
+        <AnimatePresence>
+          {showScrollBottom && (
+            <motion.div
+              initial={{ opacity: 0, y: 14, scale: 0.92 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 14, scale: 0.92 }}
+              transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
+              className="absolute bottom-[92px] left-1/2 -translate-x-1/2 z-30 pointer-events-auto"
+            >
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button
+                    type="button"
+                    onClick={scrollToBottom}
+                    className="w-8 h-8 rounded-full bg-background dark:bg-[#212121] border border-border/80 dark:border-neutral-700/80 flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-secondary dark:hover:bg-[#2f2f2f] transition-all cursor-pointer hover:scale-105 active:scale-95"
+                    aria-label="Scroll to bottom"
+                  >
+                    <ArrowDown className="w-4 h-4" />
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent side="top" sideOffset={8} className="text-md">
+                  Scroll to bottom
+                </TooltipContent>
+              </Tooltip>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
-        {/* Floating Input Dock */}
-        <ChatInput
-          message={inputValue}
-          onMessageChange={setInputValue}
-          onSend={handleSend}
-          uploadedFiles={uploadedFiles}
-          onFilesChange={setUploadedFiles}
-          isTyping={isTyping}
-          isUploading={isUploading}
-          showDisclaimer={true}
-        />
+        {/* Floating Input Dock with Transparent / Soft Fade Gradient */}
+        <div className="absolute bottom-0 inset-x-0 z-20 pointer-events-none bg-gradient-to-t from-background via-background/85 to-transparent pt-3 pb-3">
+          <div className="pointer-events-auto">
+            <ChatInput
+              message={inputValue}
+              onMessageChange={setInputValue}
+              onSend={handleSend}
+              uploadedFiles={uploadedFiles}
+              onFilesChange={setUploadedFiles}
+              isTyping={isTyping}
+              isUploading={isUploading}
+              showDisclaimer={true}
+            />
+          </div>
+        </div>
       </div>
     </div>
   );

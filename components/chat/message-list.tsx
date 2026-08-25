@@ -19,7 +19,7 @@ import {
   Pencil
 } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
-import toast from 'react-hot-toast';
+import toast from '@/lib/toast';
 
 interface MessageListProps {
   messages: Message[];
@@ -66,7 +66,7 @@ export function MessageList({
   let userMessageCounter = 0;
 
   return (
-    <div className="max-w-3xl mx-auto py-8 space-y-8 px-4 sm:px-6">
+    <div className="max-w-3xl mx-auto py-6 sm:py-8 space-y-6 sm:space-y-8 px-3 sm:px-6">
       {messages.map((msg, index) => {
         const isUser = msg.role === 'user';
         const userMsgIndex = isUser ? userMessageCounter++ : null;
@@ -86,10 +86,10 @@ export function MessageList({
                   {msg.files.map((file: any, i: number) => (
                     <div
                       key={i}
-                      className="flex items-center gap-1.5 bg-secondary text-foreground text-xs px-3 py-1.5 rounded-full border border-border"
+                      className="flex items-center gap-1.5 bg-secondary text-foreground text-xs sm:text-sm px-3 py-1.5 rounded-full border border-border"
                     >
-                      <Paperclip className="w-3.5 h-3.5 text-muted-foreground" />
-                      <span className="truncate max-w-[150px] font-medium">
+                      <Paperclip className="w-4 h-4 text-muted-foreground" />
+                      <span className="truncate max-w-[120px] sm:max-w-[150px] font-medium">
                         {file.filename || file.name || 'File'}
                       </span>
                     </div>
@@ -98,7 +98,7 @@ export function MessageList({
               )}
 
               {/* User Bubble Capsule */}
-              <div className="bg-bubble dark:bg-[#2F2F2F] text-foreground text-[15px] leading-relaxed rounded-3xl px-5 py-3 max-w-[80%] shadow-sm whitespace-pre-wrap select-text">
+              <div className="bg-bubble dark:bg-[#2F2F2F] text-foreground text-[14.5px] sm:text-[15px] leading-relaxed rounded-2xl sm:rounded-3xl px-4 sm:px-5 py-2.5 sm:py-3 max-w-[90%] sm:max-w-[80%] whitespace-pre-wrap select-text break-words">
                 {msg.content}
               </div>
 
@@ -111,10 +111,10 @@ export function MessageList({
                       className="p-1.5 rounded-lg hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors"
                       aria-label="Copy prompt"
                     >
-                      {isCopied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
+                      {isCopied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
                     </button>
                   </TooltipTrigger>
-                  <TooltipContent className="text-xs">Copy</TooltipContent>
+                  <TooltipContent className="text-md">Copy</TooltipContent>
                 </Tooltip>
 
                 {onEditMessage && (
@@ -123,12 +123,12 @@ export function MessageList({
                       <button
                         onClick={() => onEditMessage(msg.content)}
                         className="p-1.5 rounded-lg hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors"
-                        aria-label="Edit prompt"
+                        aria-label="Edit message"
                       >
-                        <Pencil className="w-3.5 h-3.5" />
+                        <Pencil className="w-4 h-4" />
                       </button>
                     </TooltipTrigger>
-                    <TooltipContent className="text-xs">Edit</TooltipContent>
+                    <TooltipContent className="text-md">Edit</TooltipContent>
                   </Tooltip>
                 )}
               </div>
@@ -136,17 +136,17 @@ export function MessageList({
           );
         }
 
-        // Assistant Message
+        // Assistant Message View
         return (
-          <div key={msgId} className="flex gap-4 items-start group">
+          <div key={msgId} className="flex gap-2.5 sm:gap-4 items-start group">
             {/* Assistant Avatar Emblem */}
-            <div className="w-7 h-7 rounded-full bg-foreground text-background flex items-center justify-center shrink-0 mt-0.5 shadow-sm">
+            <div className="w-7 h-7 rounded-full bg-foreground text-background flex items-center justify-center shrink-0 mt-0.5">
               <AyoAIIcon size={16} className="text-background" />
             </div>
 
             <div className="flex-1 min-w-0 space-y-3">
               {/* Message Content */}
-              <div className="chat-markdown text-foreground select-text">
+              <div className="chat-markdown text-foreground select-text text-[14.5px] sm:text-[15px] leading-relaxed break-words overflow-hidden">
                 <ReactMarkdown>{msg.content}</ReactMarkdown>
               </div>
 
@@ -159,10 +159,10 @@ export function MessageList({
                       className="p-1.5 rounded-lg hover:bg-secondary hover:text-foreground transition-colors"
                       aria-label="Copy response"
                     >
-                      {isCopied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
+                      {isCopied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
                     </button>
                   </TooltipTrigger>
-                  <TooltipContent className="text-xs">Copy</TooltipContent>
+                  <TooltipContent className="text-md">Copy</TooltipContent>
                 </Tooltip>
 
                 <Tooltip>
@@ -174,10 +174,10 @@ export function MessageList({
                       }`}
                       aria-label="Good response"
                     >
-                      <ThumbsUp className="w-3.5 h-3.5" />
+                      <ThumbsUp className="w-4 h-4" />
                     </button>
                   </TooltipTrigger>
-                  <TooltipContent className="text-xs">Good response</TooltipContent>
+                  <TooltipContent className="text-md">Good response</TooltipContent>
                 </Tooltip>
 
                 <Tooltip>
@@ -189,10 +189,10 @@ export function MessageList({
                       }`}
                       aria-label="Bad response"
                     >
-                      <ThumbsDown className="w-3.5 h-3.5" />
+                      <ThumbsDown className="w-4 h-4" />
                     </button>
                   </TooltipTrigger>
-                  <TooltipContent className="text-xs">Bad response</TooltipContent>
+                  <TooltipContent className="text-md">Bad response</TooltipContent>
                 </Tooltip>
 
                 <Tooltip>
@@ -205,10 +205,10 @@ export function MessageList({
                       className="p-1.5 rounded-lg hover:bg-secondary hover:text-foreground transition-colors"
                       aria-label="Read aloud"
                     >
-                      <Volume2 className="w-3.5 h-3.5" />
+                      <Volume2 className="w-4 h-4" />
                     </button>
                   </TooltipTrigger>
-                  <TooltipContent className="text-xs">Read aloud</TooltipContent>
+                  <TooltipContent className="text-md">Read aloud</TooltipContent>
                 </Tooltip>
 
                 {onRegenerate && (
@@ -219,10 +219,10 @@ export function MessageList({
                         className="p-1.5 rounded-lg hover:bg-secondary hover:text-foreground transition-colors"
                         aria-label="Regenerate response"
                       >
-                        <RotateCcw className="w-3.5 h-3.5" />
+                        <RotateCcw className="w-4 h-4" />
                       </button>
                     </TooltipTrigger>
-                    <TooltipContent className="text-xs">Regenerate</TooltipContent>
+                    <TooltipContent className="text-md">Regenerate</TooltipContent>
                   </Tooltip>
                 )}
 
@@ -233,10 +233,10 @@ export function MessageList({
                       className="p-1.5 rounded-lg hover:bg-secondary hover:text-foreground transition-colors"
                       aria-label="Share"
                     >
-                      <Share2 className="w-3.5 h-3.5" />
+                      <Share2 className="w-4 h-4" />
                     </button>
                   </TooltipTrigger>
-                  <TooltipContent className="text-xs">Share</TooltipContent>
+                  <TooltipContent className="text-md">Share</TooltipContent>
                 </Tooltip>
               </div>
             </div>
@@ -252,15 +252,15 @@ export function MessageList({
               {pendingMessage.files.map((file, i) => (
                 <div
                   key={i}
-                  className="flex items-center gap-1.5 bg-secondary text-foreground text-xs px-3 py-1.5 rounded-full border border-border"
+                  className="flex items-center gap-1.5 bg-secondary text-foreground text-md px-3 py-1.5 rounded-full border border-border"
                 >
-                  <Paperclip className="w-3.5 h-3.5 text-muted-foreground" />
+                  <Paperclip className="w-4 h-4 text-muted-foreground" />
                   <span className="truncate max-w-[150px] font-medium">{file.name}</span>
                 </div>
               ))}
             </div>
           )}
-          <div className="bg-bubble dark:bg-[#2F2F2F] text-foreground text-[15px] leading-relaxed rounded-3xl px-5 py-3 max-w-[80%] shadow-sm whitespace-pre-wrap">
+          <div className="bg-bubble dark:bg-[#2F2F2F] text-foreground text-[15px] leading-relaxed rounded-3xl px-5 py-3 max-w-[80%] whitespace-pre-wrap">
             {pendingMessage.content}
           </div>
         </div>
@@ -269,17 +269,26 @@ export function MessageList({
       {/* Typing Indicator */}
       {isTyping && (
         <div className="flex gap-4 items-start animate-in fade-in-0 duration-150">
-          <div className="w-7 h-7 rounded-full bg-foreground text-background flex items-center justify-center shrink-0 mt-0.5 shadow-sm">
+          <div className="w-7 h-7 rounded-full bg-foreground text-background flex items-center justify-center shrink-0 mt-0.5">
             <AyoAIIcon size={16} className="text-background" />
           </div>
-          <div className="flex items-center gap-2 text-sm text-muted-foreground py-1">
+          <div className="flex items-center gap-2 text-md text-muted-foreground py-1">
             <div className="flex space-x-1 items-center">
               <span className="w-1.5 h-1.5 bg-muted-foreground/60 rounded-full animate-pulse" style={{ animationDelay: '0ms' }} />
               <span className="w-1.5 h-1.5 bg-muted-foreground/60 rounded-full animate-pulse" style={{ animationDelay: '150ms' }} />
               <span className="w-1.5 h-1.5 bg-muted-foreground/60 rounded-full animate-pulse" style={{ animationDelay: '300ms' }} />
             </div>
-            <span className="text-xs">Thinking...</span>
+            <span className="text-md">Thinking...</span>
           </div>
+        </div>
+      )}
+
+      {/* Centered Disclaimer at the bottom of the conversation */}
+      {messages.length > 0 && (
+        <div className="pt-3 pb-1 text-center select-none animate-in fade-in-0 duration-200">
+          <p className="text-[15px] text-muted-foreground/75 font-normal">
+            ayoAI can make mistakes. Verify important info.
+          </p>
         </div>
       )}
 
