@@ -9,7 +9,7 @@ import { Sidebar } from "@/components/chat/sidebar";
 import { WelcomeScreen } from "@/components/chat/welcome-screen";
 import { ChatInput } from "@/components/chat/chat-input";
 import { AyoAIIcon } from "@/components/brand/logo";
-import { Loader, PanelLeft, PanelRight, Plus } from "lucide-react";
+import { Loader, PanelRight, Plus } from "lucide-react";
 import toast from "@/lib/toast";
 
 export default function NewChatPage() {

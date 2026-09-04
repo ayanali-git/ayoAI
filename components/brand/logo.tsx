@@ -1,29 +1,56 @@
 import React from 'react';
+import { cn } from '@/lib/utils';
 
 interface LogoProps {
   className?: string;
   size?: number;
+  inverted?: boolean;
 }
 
-export function AyoAIIcon({ className = 'w-6 h-6 text-foreground', size = 24 }: LogoProps) {
+export function AyoAIIcon({ className = 'w-6 h-6', size = 24, inverted = false }: LogoProps) {
+  const isInverted = inverted || className.includes('text-background');
+
   return (
-    <svg
-      width={size}
-      height={size}
-      viewBox="0 0 24 24"
-      fill="none"
-      xmlns="http://www.w3.org/2000/svg"
-      className={className}
+    <span
+      style={{ width: size, height: size }}
+      className={cn("inline-flex items-center justify-center shrink-0 select-none", className)}
     >
-      <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="1.75" />
-      <path
-        d="M12 4.5C14.5 7.5 17 9.5 19.5 12C17 14.5 14.5 16.5 12 19.5C9.5 16.5 7 14.5 4.5 12C7 9.5 9.5 7.5 12 4.5Z"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinejoin="round"
-      />
-      <circle cx="12" cy="12" r="3" fill="currentColor" />
-    </svg>
+      {isInverted ? (
+        <>
+          <img
+            src="/ayoai-icon-white.png"
+            alt="ayoAI"
+            width={size}
+            height={size}
+            className="w-full h-full object-contain dark:hidden"
+          />
+          <img
+            src="/ayoai-icon.png"
+            alt="ayoAI"
+            width={size}
+            height={size}
+            className="w-full h-full object-contain hidden dark:block"
+          />
+        </>
+      ) : (
+        <>
+          <img
+            src="/ayoai-icon.png"
+            alt="ayoAI"
+            width={size}
+            height={size}
+            className="w-full h-full object-contain dark:hidden"
+          />
+          <img
+            src="/ayoai-icon-white.png"
+            alt="ayoAI"
+            width={size}
+            height={size}
+            className="w-full h-full object-contain hidden dark:block"
+          />
+        </>
+      )}
+    </span>
   );
 }
 

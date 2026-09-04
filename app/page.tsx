@@ -24,10 +24,10 @@ export default function LandingPage() {
   };
 
   const quickPills = [
-    { label: "Talk with ChatGPT", prompt: "Explain the latest frontier AI models and reasoning capabilities" },
     { label: "Research", prompt: "Summarize recent breakthrough papers in AI alignment and safety" },
-    { label: "API Platform", prompt: "How do I get started with the API and developer platform?" },
+    { label: "Talk with ChatGPT", prompt: "Explain the latest frontier AI models and reasoning capabilities" },
     { label: "Stories", prompt: "Showcase customer success stories and real-world applications" },
+    { label: "API Platform", prompt: "How do I get started with the API and developer platform?" },
     { label: "More", prompt: "Explore all ayoAI features, enterprise solutions, and tools" },
   ];
 

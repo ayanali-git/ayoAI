@@ -183,7 +183,6 @@ export function MarketingHeader() {
               }}
               className="flex items-center gap-2 hover:opacity-85 transition-opacity"
             >
-              <AyoAIIcon size={20} />
               <span className="font-bold text-[17px] tracking-tight text-foreground">
                 ayoAI
               </span>
@@ -644,7 +643,7 @@ export function MarketingHeader() {
                           className="group inline-flex items-center text-2xl font-medium text-foreground hover:opacity-70 transition-opacity"
                         >
                           <span>ayoAI Chat</span>
-                          <ArrowUpRight className="w-4 h-4 ml-1.5 text-muted-foreground group-hover:text-foreground" />
+                          <ArrowUpRight className="w-4 h-4 ml-1.5 text-foreground group-hover:text-foreground" />
                         </Link>
                       </li>
                       <li>
@@ -920,7 +919,7 @@ export function MarketingHeader() {
                           className="group inline-flex items-center text-2xl font-medium text-foreground hover:opacity-70 transition-opacity"
                         >
                           <span>Autonomous Agents</span>
-                          <ArrowUpRight className="w-4 h-4 ml-1.5 text-muted-foreground group-hover:text-foreground" />
+                          <ArrowUpRight className="w-4 h-4 ml-1.5 text-foreground group-hover:text-foreground" />
                         </Link>
                       </li>
                       <li>
@@ -939,7 +938,7 @@ export function MarketingHeader() {
                           className="group inline-flex items-center text-2xl font-medium text-foreground hover:opacity-70 transition-opacity"
                         >
                           <span>Apps SDK</span>
-                          <ArrowUpRight className="w-4 h-4 ml-1.5 text-muted-foreground group-hover:text-foreground" />
+                          <ArrowUpRight className="w-4 h-4 ml-1.5 text-foreground group-hover:text-foreground" />
                         </Link>
                       </li>
                     </ul>

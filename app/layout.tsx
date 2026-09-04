@@ -1,5 +1,3 @@
-import './globals.css';
-import 'goey-toast/styles.css';
 import type { Metadata } from 'next';
 import { ToasterProvider } from '@/components/ui/toaster';
 import { AuthProvider } from '@/components/auth-provider';
@@ -13,9 +11,7 @@ export const metadata: Metadata = {
   keywords: 'AI assistant, artificial intelligence, chat, productivity, generative AI',
   authors: [{ name: 'ayoAI' }],
   icons: {
-    icon: '/favicon.svg',
-    shortcut: '/favicon.svg',
-    apple: '/favicon.svg',
+    icon: '/favicon.ico',
   },
   openGraph: {
     title: 'ayoAI',

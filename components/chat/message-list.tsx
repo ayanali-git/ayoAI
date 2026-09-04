@@ -283,14 +283,6 @@ export function MessageList({
         </div>
       )}
 
-      {/* Centered Disclaimer at the bottom of the conversation */}
-      {messages.length > 0 && (
-        <div className="pt-3 pb-1 text-center select-none animate-in fade-in-0 duration-200">
-          <p className="text-[15px] text-muted-foreground/75 font-normal">
-            ayoAI can make mistakes. Verify important info.
-          </p>
-        </div>
-      )}
 
       <div ref={scrollBottomRef} />
     </div>

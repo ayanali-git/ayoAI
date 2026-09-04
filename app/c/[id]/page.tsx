@@ -21,7 +21,6 @@ import {
   Archive,
   Trash2,
   Loader,
-  PanelLeft,
   ArrowDown,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -36,6 +35,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { cn } from "@/lib/utils";
 import toast from "@/lib/toast";
 
 export default function ActiveChatPage() {
@@ -344,23 +344,7 @@ export default function ActiveChatPage() {
         >
           {/* Transparent Top Floating Header */}
           <header className="sticky top-0 z-20 h-14 px-3 sm:px-4 flex items-center justify-between select-none pointer-events-none">
-            <div className="flex items-center gap-2 pointer-events-auto">
-              {!sidebarOpen && (
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <button
-                      type="button"
-                      onClick={handleToggleSidebar}
-                      className="h-8 w-8 rounded-xl bg-background dark:bg-[#212121] text-foreground hover:bg-secondary dark:hover:bg-[#2f2f2f] flex items-center justify-center cursor-pointer transition-colors"
-                      aria-label="Open sidebar"
-                    >
-                      <PanelLeft className="w-4 h-4" />
-                    </button>
-                  </TooltipTrigger>
-                  <TooltipContent className="text-md">Open sidebar</TooltipContent>
-                </Tooltip>
-              )}
-            </div>
+            <div className="flex items-center gap-2 pointer-events-auto" />
 
             <div className="flex items-center gap-1.5 sm:gap-2 pointer-events-auto">
               <Tooltip>
@@ -460,8 +444,8 @@ export default function ActiveChatPage() {
             </div>
           </header>
 
-          {/* Messages Container with clean spacing above input dock */}
-          <div className="pb-4">
+          {/* Messages Container */}
+          <div className={cn("transition-all duration-200", uploadedFiles.length > 0 ? "pb-[130px]" : "pb-[68px]")}>
             <MessageList
               messages={messages}
               user={user}
@@ -470,43 +454,21 @@ export default function ActiveChatPage() {
               onRegenerate={handleSend}
               onEditMessage={(content) => setInputValue(content)}
             />
+            {/* Disclaimer — scrolls with chat, sits just above input when at bottom */}
+            {messages.length > 0 && (
+              <div className="text-center py-2 select-none">
+                <p className="text-xs sm:text-[13px] text-muted-foreground/60 font-normal">
+                  ayoAI can make mistakes. Verify important info.
+                </p>
+              </div>
+            )}
           </div>
-
           {/* Right-Edge TOC Navigator */}
           <TocNavigator messages={messages} containerRef={scrollContainerRef} />
         </div>
 
-        {/* Floating Scroll-to-Bottom Button with Smooth Up/Down Slide Animation */}
-        <AnimatePresence>
-          {showScrollBottom && (
-            <motion.div
-              initial={{ opacity: 0, y: 14, scale: 0.92 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: 14, scale: 0.92 }}
-              transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
-              className="absolute bottom-[92px] left-1/2 -translate-x-1/2 z-30 pointer-events-auto"
-            >
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <button
-                    type="button"
-                    onClick={scrollToBottom}
-                    className="w-8 h-8 rounded-full bg-background dark:bg-[#212121] border border-border/80 dark:border-neutral-700/80 flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-secondary dark:hover:bg-[#2f2f2f] transition-all cursor-pointer hover:scale-105 active:scale-95"
-                    aria-label="Scroll to bottom"
-                  >
-                    <ArrowDown className="w-4 h-4" />
-                  </button>
-                </TooltipTrigger>
-                <TooltipContent side="top" sideOffset={8} className="text-md">
-                  Scroll to bottom
-                </TooltipContent>
-              </Tooltip>
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        {/* Floating Input Dock with Transparent / Soft Fade Gradient */}
-        <div className="absolute bottom-0 inset-x-0 z-20 pointer-events-none bg-gradient-to-t from-background via-background/85 to-transparent pt-3 pb-3">
+        {/* Floating Input Dock */}
+        <div className="absolute bottom-0 left-0 right-0 sm:right-3 z-20 pointer-events-none pb-2">
           <div className="pointer-events-auto">
             <ChatInput
               message={inputValue}
@@ -516,8 +478,36 @@ export default function ActiveChatPage() {
               onFilesChange={setUploadedFiles}
               isTyping={isTyping}
               isUploading={isUploading}
-              showDisclaimer={true}
-            />
+            >
+              {/* Dynamic Floating Scroll-to-Bottom Button — stays right above input pill */}
+              <AnimatePresence>
+                {showScrollBottom && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 10, scale: 0.92 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: 10, scale: 0.92 }}
+                    transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
+                    className="absolute bottom-full mb-3 left-1/2 -translate-x-1/2 z-30 pointer-events-auto"
+                  >
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <button
+                          type="button"
+                          onClick={scrollToBottom}
+                          className="w-9 h-9 rounded-full bg-white/90 dark:bg-neutral-800/80 backdrop-blur-sm border border-neutral-200/90 dark:border-neutral-700/60 flex items-center justify-center text-neutral-700 dark:text-neutral-200 hover:text-neutral-950 dark:hover:text-white hover:bg-white dark:hover:bg-neutral-700 transition-all cursor-pointer shadow-md"
+                          aria-label="Scroll to bottom"
+                        >
+                          <ArrowDown className="w-4 h-4" />
+                        </button>
+                      </TooltipTrigger>
+                      <TooltipContent side="top" sideOffset={8} className="text-md">
+                        Scroll to bottom
+                      </TooltipContent>
+                    </Tooltip>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </ChatInput>
           </div>
         </div>
       </div>
