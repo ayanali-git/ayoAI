@@ -8,7 +8,7 @@ export default function StatusPage() {
       <header className="mb-10 sm:mb-12">
         <h1 className="text-3xl sm:text-5xl font-semibold tracking-tight text-foreground mb-4 sm:mb-6">System Status</h1>
         <p className="text-base sm:text-xl text-muted-foreground">
-          Real-time status of ayoAI services and APIs.
+          Real-time status of closeAI services and APIs.
         </p>
       </header>
 

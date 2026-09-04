@@ -22,7 +22,7 @@ const plans = [
   {
     id: 'free',
     name: 'Free',
-    description: 'Perfect for trying out ayoAI',
+    description: 'Perfect for trying out closeAI',
     monthlyPrice: 0,
     yearlyPrice: 0,
     features: [

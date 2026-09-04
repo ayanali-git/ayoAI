@@ -1,6 +1,6 @@
 import type { CookieOptions } from '@supabase/ssr';
 
-export const AUTH_COOKIE_NAME = 'ayoai-access';
+export const AUTH_COOKIE_NAME = 'closeai-access';
 
 /** Persistent cookies max age: ~30 days (maximum browser supported). */
 export const AUTH_COOKIE_MAX_AGE = 30 * 24 * 60 * 60;

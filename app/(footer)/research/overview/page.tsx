@@ -9,7 +9,7 @@ export default function ResearchOverviewPage() {
   const researchPapers = [
     {
       title: "Frontier Reasoning with Hierarchical Self-Consistency Chains",
-      authors: "ayoAI Research Team",
+      authors: "closeAI Research Team",
       date: "August 2026",
       tag: "Reasoning",
       abstract: "We introduce a novel architecture for multi-turn deductive reasoning that evaluates candidate proof steps through parallel search trees.",
@@ -42,7 +42,7 @@ export default function ResearchOverviewPage() {
       {/* Header */}
       <div className="max-w-3xl mb-16">
         <p className="text-md font-semibold text-muted-foreground tracking-wider uppercase mb-3">
-          ayoAI Research
+          closeAI Research
         </p>
         <h1 className="text-4xl sm:text-6xl font-semibold tracking-tight text-foreground mb-6 leading-[1.1]">
           Pioneering safe, beneficial artificial general intelligence.
@@ -61,7 +61,7 @@ export default function ResearchOverviewPage() {
           </span>
         </div>
         <h2 className="text-2xl sm:text-3xl font-semibold text-foreground mb-4">
-          ayoAI-5.6: The Next Paradigm in Multistep Deductive Inference
+          closeAI-5.6: The Next Paradigm in Multistep Deductive Inference
         </h2>
         <p className="text-muted-foreground text-md sm:text-base max-w-2xl mb-8 leading-relaxed">
           Delivering 3x faster chain-of-thought verification with 94.2% accuracy on competitive Olympiad mathematics and complex algorithmic engineering benchmarks.
@@ -70,7 +70,7 @@ export default function ResearchOverviewPage() {
           href="/c"
           className="group inline-flex items-center text-md font-semibold uppercase tracking-wider text-foreground hover:underline"
         >
-          <span>Try in ayoAI Chat</span>
+          <span>Try in closeAI Chat</span>
           <AnimatedArrow size={14} />
         </Link>
       </div>

@@ -32,7 +32,7 @@ export default function BlogPage() {
     <div className="py-12 sm:py-16 w-full max-w-4xl mx-auto min-w-0">
       <header className="mb-12 sm:mb-16">
         <h1 className="text-3xl sm:text-5xl font-semibold tracking-tight text-foreground mb-4 sm:mb-6">Blog</h1>
-        <p className="text-base sm:text-xl text-muted-foreground">The latest news, announcements, and research from the ayoAI team.</p>
+        <p className="text-base sm:text-xl text-muted-foreground">The latest news, announcements, and research from the closeAI team.</p>
       </header>
 
       <div className="space-y-10 sm:space-y-12">

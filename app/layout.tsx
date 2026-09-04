@@ -1,3 +1,5 @@
+import './globals.css';
+import 'goey-toast/styles.css';
 import type { Metadata } from 'next';
 import { ToasterProvider } from '@/components/ui/toaster';
 import { AuthProvider } from '@/components/auth-provider';
@@ -6,24 +8,24 @@ import { ThemeProvider } from '@/components/theme-provider';
 import { TooltipProvider } from '@/components/ui/tooltip';
 
 export const metadata: Metadata = {
-  title: 'ayoAI',
+  title: 'closeAI',
   description: 'AI assistant for research, coding, writing, and creating.',
   keywords: 'AI assistant, artificial intelligence, chat, productivity, generative AI',
-  authors: [{ name: 'ayoAI' }],
+  authors: [{ name: 'closeAI' }],
   icons: {
     icon: '/favicon.ico',
   },
   openGraph: {
-    title: 'ayoAI',
+    title: 'closeAI',
     description: 'AI assistant for research, coding, writing, and creating.',
-    url: 'https://ayoai.com',
-    siteName: 'ayoAI',
+    url: 'https://closeai.com',
+    siteName: 'closeAI',
     locale: 'en_US',
     type: 'website',
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'ayoAI',
+    title: 'closeAI',
     description: 'AI assistant for research, coding, writing, and creating.',
   },
 };

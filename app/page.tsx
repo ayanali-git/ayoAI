@@ -28,7 +28,7 @@ export default function LandingPage() {
     { label: "Talk with ChatGPT", prompt: "Explain the latest frontier AI models and reasoning capabilities" },
     { label: "Stories", prompt: "Showcase customer success stories and real-world applications" },
     { label: "API Platform", prompt: "How do I get started with the API and developer platform?" },
-    { label: "More", prompt: "Explore all ayoAI features, enterprise solutions, and tools" },
+    { label: "More", prompt: "Explore all closeAI features, enterprise solutions, and tools" },
   ];
 
   return (
@@ -371,7 +371,7 @@ export default function LandingPage() {
                 date: "July 2026",
               },
               {
-                title: "Next-generation motorsport aerodynamic engineering with ayoAI",
+                title: "Next-generation motorsport aerodynamic engineering with closeAI",
                 category: "Industry",
                 gradient: "from-red-950 via-neutral-950 to-black",
                 date: "June 2026",
@@ -457,7 +457,7 @@ export default function LandingPage() {
               </div>
               <div>
                 <h3 className="text-lg font-semibold text-white group-hover:underline leading-snug mb-2">
-                  Introducing ayoAI-Rosalind for Molecular Biology & Therapeutics
+                  Introducing closeAI-Rosalind for Molecular Biology & Therapeutics
                 </h3>
                 <p className="text-md text-neutral-400">Research Paper • July 2026</p>
               </div>
@@ -471,7 +471,7 @@ export default function LandingPage() {
         <section className="px-6 sm:px-8 max-w-[1400px] mx-auto py-12 border-t border-border/40">
           <div className="flex items-center justify-between mb-8">
             <h2 className="text-xl sm:text-2xl font-semibold tracking-tight text-foreground">
-              ayoAI for Business
+              closeAI for Business
             </h2>
             <Link
               href="/business/enterprise"
@@ -490,7 +490,7 @@ export default function LandingPage() {
               <span className="text-2xl font-bold tracking-tight">Model ML</span>
               <div>
                 <p className="text-md font-medium text-neutral-200 group-hover:underline mb-1">
-                  Accelerating deep learning experimentation with ayoAI infrastructure
+                  Accelerating deep learning experimentation with closeAI infrastructure
                 </p>
                 <p className="text-md text-neutral-300">Case study</p>
               </div>
@@ -530,7 +530,7 @@ export default function LandingPage() {
         <section className="px-6 sm:px-8 max-w-[1400px] mx-auto py-16">
           <div className="rounded-3xl border border-border/60 bg-card p-12 sm:p-16 text-center flex flex-col items-center justify-center space-y-6">
             <h2 className="text-3xl sm:text-5xl font-semibold tracking-tight text-foreground">
-              Get started with ayoAI
+              Get started with closeAI
             </h2>
             <p className="text-muted-foreground text-md sm:text-base max-w-md">
               Experience the frontier intelligence designed to think, create, and build alongside you.

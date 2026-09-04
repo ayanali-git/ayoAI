@@ -5,7 +5,7 @@ import { User } from '@supabase/supabase-js';
 import { Chat } from '@/lib/chat-service';
 import { useAuth } from '@/hooks/use-auth';
 import { useSubscription } from '@/components/subscription-provider';
-import { AyoAIIcon } from '@/components/brand/logo';
+import { CloseAIIcon } from '@/components/brand/logo';
 import {
   Plus,
   Search,
@@ -580,7 +580,7 @@ export function Sidebar({
                 {isLogoHovered ? (
                   <PanelRight className="w-4 h-4 text-foreground pointer-events-none" />
                 ) : (
-                  <AyoAIIcon size={22} className="pointer-events-none" />
+                  <CloseAIIcon size={22} className="pointer-events-none" />
                 )}
               </button>
             </TooltipTrigger>
@@ -692,8 +692,8 @@ export function Sidebar({
         {/* Top Header */}
         <div className="p-3 pb-2 flex items-center justify-between relative z-20">
           <Link href="/" className="flex items-center gap-2 px-1 hover:opacity-85 transition-opacity">
-            <AyoAIIcon size={20} />
-            <span className="font-semibold text-base tracking-tight text-foreground">ayoAI</span>
+            <CloseAIIcon size={20} />
+            <span className="font-semibold text-base tracking-tight text-foreground">closeAI</span>
           </Link>
 
           <div className="flex items-center gap-0.5">

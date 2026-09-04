@@ -8,7 +8,7 @@ export default function ContactPage() {
       <header className="mb-12 sm:mb-16">
         <h1 className="text-3xl sm:text-5xl font-semibold tracking-tight text-foreground mb-4 sm:mb-6">Contact Us</h1>
         <p className="text-base sm:text-xl text-muted-foreground">
-          Get in touch with the ayoAI team for support, press inquiries, or partnerships.
+          Get in touch with the closeAI team for support, press inquiries, or partnerships.
         </p>
       </header>
 
@@ -42,14 +42,14 @@ export default function ContactPage() {
                 <Mail className="h-5 w-5 text-muted-foreground mt-0.5 shrink-0" />
                 <div>
                   <div className="font-medium">General Support</div>
-                  <div className="text-muted-foreground break-all">support@ayoai.example.com</div>
+                  <div className="text-muted-foreground break-all">support@closeai.example.com</div>
                 </div>
               </div>
               <div className="flex items-start gap-3">
                 <Mail className="h-5 w-5 text-muted-foreground mt-0.5 shrink-0" />
                 <div>
                   <div className="font-medium">Press & Media</div>
-                  <div className="text-muted-foreground break-all">press@ayoai.example.com</div>
+                  <div className="text-muted-foreground break-all">press@closeai.example.com</div>
                 </div>
               </div>
             </div>
@@ -60,7 +60,7 @@ export default function ContactPage() {
             <div className="flex items-start gap-3 text-sm sm:text-base">
               <MapPin className="h-5 w-5 text-muted-foreground mt-0.5 shrink-0" />
               <div className="text-muted-foreground">
-                ayoAI Inc.<br />
+                closeAI Inc.<br />
                 548 Market Street, Suite 48211<br />
                 San Francisco, CA 94104
               </div>

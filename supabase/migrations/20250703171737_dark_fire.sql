@@ -1,5 +1,5 @@
 /*
-# Initial Schema Setup for ayoAI
+# Initial Schema Setup for closeAI
 
 1. New Tables
    - `profiles` - Extended user profile information

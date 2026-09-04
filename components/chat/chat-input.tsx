@@ -177,6 +177,7 @@ export const ChatInput = forwardRef<HTMLDivElement, ChatInputProps>(function Cha
     isTyping,
     isUploading,
     centered = false,
+    showDisclaimer = false,
     children,
   },
   ref
@@ -387,7 +388,7 @@ export const ChatInput = forwardRef<HTMLDivElement, ChatInputProps>(function Cha
               placeholder="Ask anything"
               rows={1}
               disabled={isTyping || isUploading}
-              className="w-full min-w-0 bg-transparent border-0 px-2 py-1.5 sm:py-2 text-[14.5px] sm:text-[15px] text-foreground placeholder:text-muted-foreground/70 focus:outline-none focus:ring-0 resize-none min-h-[34px] max-h-[200px] leading-relaxed"
+              className="w-full min-w-0 bg-transparent border-0 px-2 py-1.5 text-[14.5px] sm:text-[15px] text-foreground placeholder:text-muted-foreground/70 focus:outline-none focus:ring-0 resize-none min-h-[34px] max-h-[200px] leading-relaxed"
             />
           </div>
 
@@ -468,6 +469,15 @@ export const ChatInput = forwardRef<HTMLDivElement, ChatInputProps>(function Cha
           </div>
         </div>
       </div>
+
+      {/* Responsive Disclaimer — ChatGPT style */}
+      {showDisclaimer && (
+        <div className="text-center pt-2 pb-0.5 px-3 select-none">
+          <p className="text-[11px] sm:text-xs text-muted-foreground/60 font-normal tracking-tight leading-tight">
+            closeAI can make mistakes. Verify important info.
+          </p>
+        </div>
+      )}
     </div>
   );
 });

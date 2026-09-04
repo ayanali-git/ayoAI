@@ -3,7 +3,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { User } from '@supabase/supabase-js';
 import { Message } from '@/lib/chat-service';
-import { AyoAIIcon } from '@/components/brand/logo';
+import { CloseAIIcon } from '@/components/brand/logo';
 import ReactMarkdown from 'react-markdown';
 import {
   Copy,
@@ -139,9 +139,9 @@ export function MessageList({
         // Assistant Message View
         return (
           <div key={msgId} className="flex gap-2.5 sm:gap-4 items-start group">
-            {/* Assistant Avatar Emblem */}
-            <div className="w-7 h-7 rounded-full bg-foreground text-background flex items-center justify-center shrink-0 mt-0.5">
-              <AyoAIIcon size={16} className="text-background" />
+            {/* Assistant Avatar Emblem — only logo without bg like ChatGPT */}
+            <div className="w-7 h-7 flex items-center justify-center shrink-0 mt-0.5 select-none">
+              <CloseAIIcon size={22} />
             </div>
 
             <div className="flex-1 min-w-0 space-y-3">
@@ -269,8 +269,8 @@ export function MessageList({
       {/* Typing Indicator */}
       {isTyping && (
         <div className="flex gap-4 items-start animate-in fade-in-0 duration-150">
-          <div className="w-7 h-7 rounded-full bg-foreground text-background flex items-center justify-center shrink-0 mt-0.5">
-            <AyoAIIcon size={16} className="text-background" />
+          <div className="w-7 h-7 flex items-center justify-center shrink-0 mt-0.5 select-none">
+            <CloseAIIcon size={22} />
           </div>
           <div className="flex items-center gap-2 text-md text-muted-foreground py-1">
             <div className="flex space-x-1 items-center">

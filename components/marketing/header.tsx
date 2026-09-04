@@ -14,7 +14,7 @@ import {
   PanelLeft,
   Menu,
 } from "lucide-react";
-import { AyoAIIcon } from "@/components/brand/logo";
+import { CloseAIIcon } from "@/components/brand/logo";
 import { AnimatedArrow } from "@/components/ui/animated-arrow";
 import { useAuth } from "@/hooks/use-auth";
 import {
@@ -184,7 +184,7 @@ export function MarketingHeader() {
               className="flex items-center gap-2 hover:opacity-85 transition-opacity"
             >
               <span className="font-bold text-[17px] tracking-tight text-foreground">
-                ayoAI
+                CloseAI
               </span>
             </Link>
 
@@ -414,9 +414,9 @@ export function MarketingHeader() {
                   asChild
                   className="group rounded-full px-4 h-8 text-[13px] font-medium bg-foreground text-background hover:opacity-90 transition-opacity cursor-pointer"
                 >
-                  <Link href="/c" className="flex items-center">
+                  <Link href="/c" className="flex items-center gap-1">
                     <span>Go to Chat</span>
-                    <AnimatedArrow size={13} />
+                    <AnimatedArrow size={16} />
                   </Link>
                 </Button>
               </>
@@ -454,7 +454,7 @@ export function MarketingHeader() {
                           onClick={() => setLoginMenuOpen(false)}
                           className="flex items-center gap-2 px-3 py-2 text-md rounded-xl text-foreground hover:bg-secondary dark:hover:bg-[#2f2f2f] transition-colors"
                         >
-                          Log in to ayoAI
+                          Log in to closeAI
                         </Link>
                         <Link
                           href="/auth/login?type=enterprise"
@@ -584,7 +584,7 @@ export function MarketingHeader() {
                           onClick={() => setActiveMenu(null)}
                           className="hover:text-foreground transition-colors"
                         >
-                          ayoAI-5.6
+                          closeAI-5.6
                         </Link>
                       </li>
                       <li>
@@ -593,7 +593,7 @@ export function MarketingHeader() {
                           onClick={() => setActiveMenu(null)}
                           className="hover:text-foreground transition-colors"
                         >
-                          ayoAI-5.5
+                          closeAI-5.5
                         </Link>
                       </li>
                       <li>
@@ -602,7 +602,7 @@ export function MarketingHeader() {
                           onClick={() => setActiveMenu(null)}
                           className="hover:text-foreground transition-colors"
                         >
-                          ayoAI-5.4
+                          closeAI-5.4
                         </Link>
                       </li>
                       <li>
@@ -611,7 +611,7 @@ export function MarketingHeader() {
                           onClick={() => setActiveMenu(null)}
                           className="hover:text-foreground transition-colors"
                         >
-                          ayoAI-5.3 Instant
+                          closeAI-5.3 Instant
                         </Link>
                       </li>
                       <li>
@@ -620,7 +620,7 @@ export function MarketingHeader() {
                           onClick={() => setActiveMenu(null)}
                           className="hover:text-foreground transition-colors"
                         >
-                          ayoAI-5.3-Codex
+                          closeAI-5.3-Codex
                         </Link>
                       </li>
                     </ul>
@@ -642,7 +642,7 @@ export function MarketingHeader() {
                           onClick={() => setActiveMenu(null)}
                           className="group inline-flex items-center text-2xl font-medium text-foreground hover:opacity-70 transition-opacity"
                         >
-                          <span>ayoAI Chat</span>
+                          <span>closeAI Chat</span>
                           <ArrowUpRight className="w-4 h-4 ml-1.5 text-foreground group-hover:text-foreground" />
                         </Link>
                       </li>
@@ -687,7 +687,7 @@ export function MarketingHeader() {
                           onClick={() => setActiveMenu(null)}
                           className="hover:text-foreground transition-colors"
                         >
-                          ayoAI Academy & Guides
+                          closeAI Academy & Guides
                         </Link>
                       </li>
                     </ul>
@@ -771,7 +771,7 @@ export function MarketingHeader() {
                           onClick={() => setActiveMenu(null)}
                           className="hover:text-foreground transition-colors"
                         >
-                          ayoAI Work & Teams
+                          closeAI Work & Teams
                         </Link>
                       </li>
                       <li>
@@ -798,7 +798,7 @@ export function MarketingHeader() {
                           onClick={() => setActiveMenu(null)}
                           className="hover:text-foreground transition-colors"
                         >
-                          ayoAI Frontier
+                          closeAI Frontier
                         </Link>
                       </li>
                       <li>
@@ -807,7 +807,7 @@ export function MarketingHeader() {
                           onClick={() => setActiveMenu(null)}
                           className="hover:text-foreground transition-colors"
                         >
-                          ayoAI Presence
+                          closeAI Presence
                         </Link>
                       </li>
                       <li>
@@ -1280,7 +1280,7 @@ export function MarketingHeader() {
                     <div className="space-y-6">
                       <div className="space-y-3">
                         {[
-                          { label: "ayoAI Web & Chat", href: "/c" },
+                          { label: "closeAI Web & Chat", href: "/c" },
                           {
                             label: "Canvas & Studio",
                             href: "/product/features",
@@ -1457,7 +1457,7 @@ export function MarketingHeader() {
                     <div className="space-y-6">
                       <div className="space-y-3">
                         {[
-                          { label: "About ayoAI", href: "/company/about" },
+                          { label: "About closeAI", href: "/company/about" },
                           { label: "News & Releases", href: "/company/blog" },
                           { label: "Careers", href: "/company/careers" },
                           { label: "Security", href: "/company/contact" },
@@ -1507,7 +1507,7 @@ export function MarketingHeader() {
                     <div className="space-y-6">
                       <div className="space-y-3">
                         {[
-                          { label: "Log in to ayoAI", href: "/auth/login" },
+                          { label: "Log in to closeAI", href: "/auth/login" },
                           {
                             label: "Log in to Enterprise",
                             href: "/auth/login?type=enterprise",

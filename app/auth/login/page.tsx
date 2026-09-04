@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Eye, EyeOff } from 'lucide-react';
-import { AyoAIIcon } from '@/components/brand/logo';
+import { CloseAIIcon } from '@/components/brand/logo';
 import toast from '@/lib/toast';
 import { getAuthCallbackUrl } from '@/lib/url';
 
@@ -79,10 +79,10 @@ export default function LoginPage() {
         {/* Header */}
         <div className="text-center mb-8 flex flex-col items-center">
           <div className="w-12 h-12 rounded-2xl bg-secondary flex items-center justify-center mb-4 border border-border/80">
-            <AyoAIIcon size={26} />
+            <CloseAIIcon size={26} />
           </div>
           <h1 className="text-2xl font-bold tracking-tight text-foreground mb-1">Welcome back</h1>
-          <p className="text-md text-muted-foreground">Sign in to continue to ayoAI</p>
+          <p className="text-md text-muted-foreground">Sign in to continue to closeAI</p>
         </div>
 
         {/* OAuth Buttons */}

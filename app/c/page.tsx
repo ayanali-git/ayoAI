@@ -8,8 +8,13 @@ import { chatService, Chat } from "@/lib/chat-service";
 import { Sidebar } from "@/components/chat/sidebar";
 import { WelcomeScreen } from "@/components/chat/welcome-screen";
 import { ChatInput } from "@/components/chat/chat-input";
-import { AyoAIIcon } from "@/components/brand/logo";
+import { CloseAIIcon } from "@/components/brand/logo";
 import { Loader, PanelRight, Plus } from "lucide-react";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import toast from "@/lib/toast";
 
 export default function NewChatPage() {
@@ -30,7 +35,7 @@ export default function NewChatPage() {
       if (isMobile) {
         setSidebarOpen(false);
       } else {
-        const saved = localStorage.getItem("ayoai_sidebar_open");
+        const saved = localStorage.getItem("closeai_sidebar_open");
         setSidebarOpen(saved !== null ? saved === "true" : true);
       }
     }
@@ -40,7 +45,7 @@ export default function NewChatPage() {
     setSidebarOpen((prev) => {
       const next = !prev;
       if (typeof window !== "undefined") {
-        localStorage.setItem("ayoai_sidebar_open", String(next));
+        localStorage.setItem("closeai_sidebar_open", String(next));
       }
       return next;
     });
@@ -158,17 +163,26 @@ export default function NewChatPage() {
 
       {/* Main Chat Workspace */}
       <div className="flex-1 flex flex-col min-w-0 h-full relative">
-        {/* Mobile Header when sidebar is closed */}
-        <div className="md:hidden flex items-center justify-between px-3 py-2.5 border-b border-border/40 shrink-0 select-none">
-          <button
-            type="button"
-            onClick={handleToggleSidebar}
-            className="p-1.5 rounded-xl text-foreground hover:bg-secondary transition-colors cursor-pointer"
-            aria-label="Open sidebar"
-          >
-            <PanelRight className="w-4 h-4" />
-          </button>
-        </div>
+        {/* Transparent Top Floating Header */}
+        <header className="sticky top-0 z-20 h-14 px-3 sm:px-4 flex items-center justify-between select-none pointer-events-none">
+          <div className="flex items-center gap-2 pointer-events-auto">
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button
+                  type="button"
+                  onClick={handleToggleSidebar}
+                  className="md:hidden w-8 h-8 rounded-xl bg-background dark:bg-[#212121] flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-secondary dark:hover:bg-[#2f2f2f] transition-colors cursor-pointer outline-none focus:outline-none"
+                  aria-label="Toggle sidebar"
+                >
+                  <PanelRight className="w-4 h-4" />
+                </button>
+              </TooltipTrigger>
+              <TooltipContent className="text-md">
+                Toggle sidebar
+              </TooltipContent>
+            </Tooltip>
+          </div>
+        </header>
 
         {/* Content Stream (Welcome Zero State) */}
         <div className="flex-1 flex flex-col justify-center overflow-y-auto px-2 sm:px-4">
@@ -185,6 +199,7 @@ export default function NewChatPage() {
               isTyping={isTyping}
               isUploading={isUploading}
               centered={true}
+              showDisclaimer={true}
             />
           </WelcomeScreen>
         </div>

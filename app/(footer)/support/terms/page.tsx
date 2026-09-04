@@ -10,7 +10,7 @@ export default function TermsPage() {
         <section>
           <h2 className="text-xl sm:text-2xl font-semibold text-foreground mb-3 sm:mb-4">1. Agreement to Terms</h2>
           <p>
-            By accessing or using the services provided by ayoAI, you agree to be bound by these Terms of Service. If you disagree with any part of the terms, you may not access the service.
+            By accessing or using the services provided by closeAI, you agree to be bound by these Terms of Service. If you disagree with any part of the terms, you may not access the service.
           </p>
         </section>
 

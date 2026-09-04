@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { AyoAIIcon } from "@/components/brand/logo";
+import { CloseAIIcon } from "@/components/brand/logo";
 import { Globe, ArrowUpRight } from "lucide-react";
 
 export function Footer() {
@@ -98,25 +98,25 @@ export function Footer() {
               <ul className="space-y-2.5 text-md">
                 <li>
                   <Link href="/c" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-muted-foreground hover:text-foreground transition-colors">
-                    <span>ayoAI Chat</span>
+                    <span>closeAI Chat</span>
                     <ArrowUpRight className="w-4 h-4 stroke-[2.5]" />
                   </Link>
                 </li>
                 <li>
                   <Link href="/business/enterprise" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-muted-foreground hover:text-foreground transition-colors">
-                    <span>ayoAI Business</span>
+                    <span>closeAI Business</span>
                     <ArrowUpRight className="w-4 h-4 stroke-[2.5]" />
                   </Link>
                 </li>
                 <li>
                   <Link href="/business/enterprise" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-muted-foreground hover:text-foreground transition-colors">
-                    <span>ayoAI Enterprise</span>
+                    <span>closeAI Enterprise</span>
                     <ArrowUpRight className="w-4 h-4 stroke-[2.5]" />
                   </Link>
                 </li>
                 <li>
                   <Link href="/business/enterprise" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-muted-foreground hover:text-foreground transition-colors">
-                    <span>ayoAI for Education</span>
+                    <span>closeAI for Education</span>
                     <ArrowUpRight className="w-4 h-4 stroke-[2.5]" />
                   </Link>
                 </li>
@@ -354,16 +354,12 @@ export function Footer() {
         <div className="pt-8 flex flex-col md:flex-row items-center justify-between gap-6 text-[13.5px] text-muted-foreground">
           {/* Left: Brand & Copyright */}
           <div className="flex flex-wrap items-center justify-center md:justify-start gap-x-3 gap-y-1.5 text-center md:text-left">
-            <Link href="/" className="flex items-center gap-2 hover:opacity-85 transition-opacity">
-              <AyoAIIcon size={20} />
-              <span className="font-semibold text-[14px] text-foreground">ayoAI</span>
-            </Link>
-            <span className="text-muted-foreground/80">© 2026 ayoAI. All rights reserved.</span>
+            <span className="text-muted-foreground/80">© 2026 closeAI. All rights reserved.</span>
           </div>
 
           {/* Center: Language Switcher */}
           <div className="flex items-center justify-center">
-            <button className="flex items-center gap-1.5 px-3 py-1.5 rounded-full hover:bg-secondary hover:text-foreground transition-colors cursor-pointer whitespace-nowrap">
+            <button className="flex items-center gap-1.5 px-3 py-3 rounded-full bg-secondary/50 hover:bg-secondary hover:text-foreground transition-colors cursor-pointer whitespace-nowrap">
               <Globe className="w-4 h-4 shrink-0" />
               <span>English (United States)</span>
             </button>

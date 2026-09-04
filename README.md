@@ -1,4 +1,4 @@
-# ayoAI - AI-Powered Assistant
+# closeAI - AI-Powered Assistant
 
 A comprehensive AI-powered assistant web application built with Next.js, Supabase, and modern AI APIs.
 
@@ -38,7 +38,7 @@ A comprehensive AI-powered assistant web application built with Next.js, Supabas
 
 ```bash
 git clone <your-repo>
-cd ayoAI
+cd closeAI
 npm install
 ```
 

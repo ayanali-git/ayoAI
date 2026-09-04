@@ -8,7 +8,7 @@ export default function FeaturesPage() {
       <header className="mb-12 sm:mb-16">
         <h1 className="text-3xl sm:text-5xl font-semibold tracking-tight text-foreground mb-4 sm:mb-6">Product Features</h1>
         <p className="text-base sm:text-xl text-muted-foreground">
-          Explore the core capabilities of the ayoAI platform, designed to bring powerful AI to your fingertips.
+          Explore the core capabilities of the closeAI platform, designed to bring powerful AI to your fingertips.
         </p>
       </header>
 

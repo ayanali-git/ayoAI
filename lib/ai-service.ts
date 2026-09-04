@@ -53,7 +53,7 @@ export class AIService {
       }
 
       // Prepare messages with system prompt
-      const systemPrompt = `You are ayoAI, a helpful and intelligent AI assistant. You can help with various tasks including:
+      const systemPrompt = `You are closeAI, a helpful and intelligent AI assistant. You can help with various tasks including:
 - Answering questions and providing information
 - Analyzing uploaded files and images
 - Converting images to Ghibli-style art
@@ -107,7 +107,7 @@ Please provide helpful, accurate, and engaging responses.`;
     // Use gemini-3.6-flash as the latest model (supports vision)
     const model = genAI.getGenerativeModel({ model: "gemini-3.6-flash" });
 
-    let systemPrompt = `You are ayoAI, a helpful and intelligent AI assistant.
+    let systemPrompt = `You are closeAI, a helpful and intelligent AI assistant.
 ${fileContext ? `\n\nFile Context:\n${fileContext}` : ''}
 `;
 

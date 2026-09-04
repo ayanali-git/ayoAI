@@ -6,7 +6,7 @@ export default function ApiDocsPage() {
       <header className="mb-12 sm:mb-16">
         <h1 className="text-3xl sm:text-5xl font-semibold tracking-tight text-foreground mb-4 sm:mb-6">API Reference</h1>
         <p className="text-base sm:text-xl text-muted-foreground">
-          Complete documentation for the ayoAI REST API. Learn how to authenticate, make requests, and integrate our models into your applications.
+          Complete documentation for the closeAI REST API. Learn how to authenticate, make requests, and integrate our models into your applications.
         </p>
       </header>
 
@@ -29,14 +29,14 @@ export default function ApiDocsPage() {
         <h3 className="text-base sm:text-lg font-medium mb-3">Endpoint</h3>
         <div className="bg-card border border-border rounded-xl p-3 sm:p-4 mb-6 font-mono text-xs sm:text-sm overflow-x-auto break-all text-foreground">
           <span className="font-bold text-emerald-500 mr-2">POST</span>
-          <span>https://api.ayoai.example.com/v1/chat/completions</span>
+          <span>https://api.closeai.example.com/v1/chat/completions</span>
         </div>
 
         <h3 className="text-base sm:text-lg font-medium mb-3">Example Request</h3>
         <pre className="bg-card border border-border rounded-xl p-3 sm:p-4 overflow-x-auto text-xs sm:text-sm text-muted-foreground w-full max-w-full font-mono">
-          <code>{`curl https://api.ayoai.example.com/v1/chat/completions \\
+          <code>{`curl https://api.closeai.example.com/v1/chat/completions \\
   -H "Content-Type: application/json" \\
-  -H "Authorization: Bearer $AYOAI_API_KEY" \\
+  -H "Authorization: Bearer $CLOSEAI_API_KEY" \\
   -d '{
     "model": "frontier-chat-v1",
     "messages": [

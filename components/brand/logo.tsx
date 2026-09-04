@@ -7,7 +7,7 @@ interface LogoProps {
   inverted?: boolean;
 }
 
-export function AyoAIIcon({ className = 'w-6 h-6', size = 24, inverted = false }: LogoProps) {
+export function CloseAIIcon({ className = 'w-6 h-6', size = 24, inverted = false }: LogoProps) {
   const isInverted = inverted || className.includes('text-background');
 
   return (
@@ -18,15 +18,15 @@ export function AyoAIIcon({ className = 'w-6 h-6', size = 24, inverted = false }
       {isInverted ? (
         <>
           <img
-            src="/ayoai-icon-white.png"
-            alt="ayoAI"
+            src="/closeai-icon-white.png"
+            alt="closeAI"
             width={size}
             height={size}
             className="w-full h-full object-contain dark:hidden"
           />
           <img
-            src="/ayoai-icon.png"
-            alt="ayoAI"
+            src="/closeai-icon.png"
+            alt="closeAI"
             width={size}
             height={size}
             className="w-full h-full object-contain hidden dark:block"
@@ -35,15 +35,15 @@ export function AyoAIIcon({ className = 'w-6 h-6', size = 24, inverted = false }
       ) : (
         <>
           <img
-            src="/ayoai-icon.png"
-            alt="ayoAI"
+            src="/closeai-icon.png"
+            alt="closeAI"
             width={size}
             height={size}
             className="w-full h-full object-contain dark:hidden"
           />
           <img
-            src="/ayoai-icon-white.png"
-            alt="ayoAI"
+            src="/closeai-icon-white.png"
+            alt="closeAI"
             width={size}
             height={size}
             className="w-full h-full object-contain hidden dark:block"
@@ -54,12 +54,12 @@ export function AyoAIIcon({ className = 'w-6 h-6', size = 24, inverted = false }
   );
 }
 
-export function AyoAILogo({ className = 'flex items-center gap-2.5', iconSize = 22 }: { className?: string; iconSize?: number }) {
+export function CloseAILogo({ className = 'flex items-center gap-2.5', iconSize = 22 }: { className?: string; iconSize?: number }) {
   return (
     <div className={className}>
-      <AyoAIIcon size={iconSize} />
+      <CloseAIIcon size={iconSize} />
       <span className="font-semibold text-[17px] tracking-tight text-foreground select-none">
-        ayoAI
+        closeAI
       </span>
     </div>
   );

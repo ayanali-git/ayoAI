@@ -22,6 +22,7 @@ import {
   Trash2,
   Loader,
   ArrowDown,
+  PanelRight,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -56,7 +57,7 @@ export default function ActiveChatPage() {
     content: string;
     files: File[];
   } | null>(null);
-  const [selectedModel, setSelectedModel] = useState("ayoAI 4o");
+  const [selectedModel, setSelectedModel] = useState("closeAI 4o");
   const [showScrollBottom, setShowScrollBottom] = useState(false);
 
   const scrollContainerRef = useRef<HTMLDivElement>(null);
@@ -67,7 +68,7 @@ export default function ActiveChatPage() {
       if (isMobile) {
         setSidebarOpen(false);
       } else {
-        const saved = localStorage.getItem("ayoai_sidebar_open");
+        const saved = localStorage.getItem("closeai_sidebar_open");
         setSidebarOpen(saved !== null ? saved === "true" : true);
       }
     }
@@ -77,7 +78,7 @@ export default function ActiveChatPage() {
     setSidebarOpen((prev) => {
       const next = !prev;
       if (typeof window !== "undefined") {
-        localStorage.setItem("ayoai_sidebar_open", String(next));
+        localStorage.setItem("closeai_sidebar_open", String(next));
       }
       return next;
     });
@@ -344,7 +345,23 @@ export default function ActiveChatPage() {
         >
           {/* Transparent Top Floating Header */}
           <header className="sticky top-0 z-20 h-14 px-3 sm:px-4 flex items-center justify-between select-none pointer-events-none">
-            <div className="flex items-center gap-2 pointer-events-auto" />
+            <div className="flex items-center gap-2 pointer-events-auto">
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button
+                    type="button"
+                    onClick={handleToggleSidebar}
+                    className="md:hidden w-8 h-8 rounded-xl bg-background dark:bg-[#212121] flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-secondary dark:hover:bg-[#2f2f2f] transition-colors cursor-pointer outline-none focus:outline-none"
+                    aria-label="Toggle sidebar"
+                  >
+                    <PanelRight className="w-4 h-4" />
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent className="text-md">
+                  Toggle sidebar
+                </TooltipContent>
+              </Tooltip>
+            </div>
 
             <div className="flex items-center gap-1.5 sm:gap-2 pointer-events-auto">
               <Tooltip>
@@ -445,7 +462,7 @@ export default function ActiveChatPage() {
           </header>
 
           {/* Messages Container */}
-          <div className={cn("transition-all duration-200", uploadedFiles.length > 0 ? "pb-[130px]" : "pb-[68px]")}>
+          <div className={cn("transition-all duration-200", uploadedFiles.length > 0 ? "pb-[150px]" : "pb-[92px] sm:pb-[98px]")}>
             <MessageList
               messages={messages}
               user={user}
@@ -454,21 +471,13 @@ export default function ActiveChatPage() {
               onRegenerate={handleSend}
               onEditMessage={(content) => setInputValue(content)}
             />
-            {/* Disclaimer — scrolls with chat, sits just above input when at bottom */}
-            {messages.length > 0 && (
-              <div className="text-center py-2 select-none">
-                <p className="text-xs sm:text-[13px] text-muted-foreground/60 font-normal">
-                  ayoAI can make mistakes. Verify important info.
-                </p>
-              </div>
-            )}
           </div>
           {/* Right-Edge TOC Navigator */}
           <TocNavigator messages={messages} containerRef={scrollContainerRef} />
         </div>
 
         {/* Floating Input Dock */}
-        <div className="absolute bottom-0 left-0 right-0 sm:right-3 z-20 pointer-events-none pb-2">
+        <div className="absolute bottom-0 left-0 right-0 sm:right-3 z-20 pointer-events-none pb-2 bg-gradient-to-t from-background via-background/90 to-transparent pt-4">
           <div className="pointer-events-auto">
             <ChatInput
               message={inputValue}
@@ -478,6 +487,7 @@ export default function ActiveChatPage() {
               onFilesChange={setUploadedFiles}
               isTyping={isTyping}
               isUploading={isUploading}
+              showDisclaimer={true}
             >
               {/* Dynamic Floating Scroll-to-Bottom Button — stays right above input pill */}
               <AnimatePresence>

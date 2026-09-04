@@ -35,7 +35,7 @@ export default function EnterprisePage() {
       {/* Header */}
       <div className="max-w-3xl mb-16">
         <p className="text-md font-semibold text-muted-foreground tracking-wider uppercase mb-3">
-          ayoAI for Business
+          closeAI for Business
         </p>
         <h1 className="text-4xl sm:text-6xl font-semibold tracking-tight text-foreground mb-6 leading-[1.1]">
           Supercharge your organization with frontier AI.
@@ -80,7 +80,7 @@ export default function EnterprisePage() {
           Trusted by high-growth engineering and creative teams worldwide
         </h2>
         <p className="text-muted-foreground text-md max-w-lg mx-auto mb-8">
-          Join thousands of enterprises transforming productivity with ayoAI's secure reasoning infrastructure.
+          Join thousands of enterprises transforming productivity with closeAI's secure reasoning infrastructure.
         </p>
         <Button asChild className="group rounded-full px-8 h-12 bg-foreground text-background hover:opacity-90">
           <Link href="/company/contact" className="flex items-center">

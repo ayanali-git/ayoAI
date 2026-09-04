@@ -9,7 +9,7 @@ export default function DocsPage() {
       <header className="mb-12 sm:mb-16">
         <h1 className="text-3xl sm:text-5xl font-semibold tracking-tight text-foreground mb-4 sm:mb-6">Documentation</h1>
         <p className="text-base sm:text-xl text-muted-foreground">
-          Guides, concepts, and technical references to help you build with ayoAI.
+          Guides, concepts, and technical references to help you build with closeAI.
         </p>
       </header>
 

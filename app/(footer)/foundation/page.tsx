@@ -30,13 +30,13 @@ export default function FoundationPage() {
       {/* Header */}
       <div className="max-w-3xl mb-16">
         <p className="text-md font-semibold text-muted-foreground tracking-wider uppercase mb-3">
-          ayoAI Foundation
+          closeAI Foundation
         </p>
         <h1 className="text-4xl sm:text-6xl font-semibold tracking-tight text-foreground mb-6 leading-[1.1]">
           Advancing AI for the benefit of humanity.
         </h1>
         <p className="text-lg sm:text-xl text-muted-foreground leading-relaxed">
-          The ayoAI Foundation supports open academic research, educational accessibility, and community grants to ensure frontier intelligence elevates society.
+          The closeAI Foundation supports open academic research, educational accessibility, and community grants to ensure frontier intelligence elevates society.
         </p>
       </div>
 
