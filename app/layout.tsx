@@ -1,4 +1,5 @@
 import './globals.css';
+import 'katex/dist/katex.min.css';
 import 'goey-toast/styles.css';
 import type { Metadata } from 'next';
 import { ToasterProvider } from '@/components/ui/toaster';
@@ -13,7 +14,15 @@ export const metadata: Metadata = {
   keywords: 'AI assistant, artificial intelligence, chat, productivity, generative AI',
   authors: [{ name: 'closeAI' }],
   icons: {
-    icon: '/favicon.ico',
+    icon: [
+      { url: '/favicon.ico', sizes: 'any' },
+      { url: '/favicon.svg', type: 'image/svg+xml' },
+      { url: '/favicon-32x32.png', sizes: '32x32', type: 'image/png' },
+      { url: '/favicon-16x16.png', sizes: '16x16', type: 'image/png' },
+      { url: '/closeai-app-icon.png', sizes: '192x192', type: 'image/png' },
+    ],
+    shortcut: '/favicon.ico',
+    apple: '/apple-touch-icon.png',
   },
   openGraph: {
     title: 'closeAI',

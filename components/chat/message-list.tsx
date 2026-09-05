@@ -1,10 +1,28 @@
 'use client';
 
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { User } from '@supabase/supabase-js';
 import { Message } from '@/lib/chat-service';
 import { CloseAIIcon } from '@/components/brand/logo';
 import ReactMarkdown from 'react-markdown';
+import remarkMath from 'remark-math';
+import rehypeKatex from 'rehype-katex';
+import Prism from 'prismjs';
+import 'prismjs/components/prism-c';
+import 'prismjs/components/prism-cpp';
+import 'prismjs/components/prism-python';
+import 'prismjs/components/prism-javascript';
+import 'prismjs/components/prism-typescript';
+import 'prismjs/components/prism-jsx';
+import 'prismjs/components/prism-tsx';
+import 'prismjs/components/prism-bash';
+import 'prismjs/components/prism-json';
+import 'prismjs/components/prism-sql';
+import 'prismjs/components/prism-css';
+import 'prismjs/components/prism-java';
+import 'prismjs/components/prism-csharp';
+import 'prismjs/components/prism-go';
+import 'prismjs/components/prism-rust';
 import {
   Copy,
   Check,
@@ -19,15 +37,226 @@ import {
   Pencil
 } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { cn } from '@/lib/utils';
 import toast from '@/lib/toast';
 
-interface MessageListProps {
+export interface MessageListProps {
   messages: Message[];
   user: User | null;
   isTyping: boolean;
-  pendingMessage: { content: string; files: File[] } | null;
-  onRegenerate?: () => void;
+  pendingMessage: { content: string; files: any[] } | null;
+  onRegenerate?: (message?: Message, index?: number) => void;
   onEditMessage?: (content: string) => void;
+  onEditAndResend?: (messageId: string, newContent: string, messageIndex: number) => void;
+}
+
+const LANG_ALIAS: Record<string, string> = {
+  'c++': 'cpp',
+  'cpp': 'cpp',
+  'c': 'c',
+  'py': 'python',
+  'python': 'python',
+  'js': 'javascript',
+  'javascript': 'javascript',
+  'ts': 'typescript',
+  'typescript': 'typescript',
+  'jsx': 'jsx',
+  'tsx': 'tsx',
+  'sh': 'bash',
+  'shell': 'bash',
+  'bash': 'bash',
+  'zsh': 'bash',
+  'json': 'json',
+  'sql': 'sql',
+  'css': 'css',
+  'html': 'markup',
+  'xml': 'markup',
+  'svg': 'markup',
+  'markup': 'markup',
+  'java': 'java',
+  'cs': 'csharp',
+  'csharp': 'csharp',
+  'c#': 'csharp',
+  'go': 'go',
+  'golang': 'go',
+  'rust': 'rust',
+  'rs': 'rust',
+};
+
+function highlightCode(code: string, lang: string): string {
+  const cleanLang = (lang || '').toLowerCase().trim();
+  const normalized = LANG_ALIAS[cleanLang] || cleanLang;
+  const grammar = Prism.languages[normalized] || Prism.languages.clike || Prism.languages.javascript;
+  if (!grammar) {
+    return code
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;');
+  }
+  try {
+    return Prism.highlight(code, grammar, normalized);
+  } catch (e) {
+    return code
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;');
+  }
+}
+
+/** Preprocesses LaTeX formula markers and unescaped characters so KaTeX parses smoothly */
+function preprocessContent(text: string): string {
+  if (!text) return '';
+
+  // 1. Normalize LaTeX display/inline brackets \[ \] and \( \)
+  let result = text
+    .replace(/\\\[([\s\S]*?)\\\]/g, '$$$$$1$$$$')
+    .replace(/\\\(([\s\S]*?)\\\)/g, '$$$1$$');
+
+  // 2. Fix unescaped underscores inside \text{...} in math formulas
+  result = result.replace(/\\text\{([^}]+)\}/g, (_, inner) => {
+    return `\\text{${inner.replace(/(?<!\\)_/g, '\\_')}}`;
+  });
+
+  return result;
+}
+
+function CodeBlock({ language, code }: { language: string; code: string }) {
+  const [copied, setCopied] = useState(false);
+
+  const handleCopy = () => {
+    navigator.clipboard.writeText(code);
+    setCopied(true);
+    toast.success("Code copied to clipboard");
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  let displayLang = language ? language.toLowerCase().trim() : "";
+  if (!displayLang) {
+    const firstLine = code.trim().split("\n")[0].trim();
+    if (
+      /^(sudo|brew|apt|dnf|pacman|yum|npm|npx|pnpm|yarn|git|docker|curl|wget|cd|mkdir|chmod|chown|systemctl|export|source|sh|bash)\b/.test(
+        firstLine
+      )
+    ) {
+      displayLang = "bash";
+    } else {
+      displayLang = "code";
+    }
+  }
+
+  const highlightedHtml = useMemo(() => {
+    return highlightCode(code, displayLang);
+  }, [code, displayLang]);
+
+  return (
+    <div className="relative my-3 sm:my-4 rounded-xl overflow-hidden border border-neutral-200/90 dark:border-neutral-700/60 bg-neutral-50 dark:bg-[#141414] text-left">
+      {/* Header bar: language + copy button */}
+      <div className="flex items-center justify-between px-4 py-2 bg-neutral-100 dark:bg-[#1f1f1f] text-xs font-sans text-neutral-600 dark:text-neutral-300 select-none border-b border-neutral-200/80 dark:border-neutral-700/60">
+        <span className="font-mono text-[13px] lowercase font-medium tracking-wide">
+          {displayLang}
+        </span>
+        <button
+          type="button"
+          onClick={handleCopy}
+          className="flex items-center gap-1.5 px-2 py-2 rounded-2xl text-[12px] text-neutral-600 hover:text-neutral-900 hover:bg-neutral-200/70 dark:text-neutral-300 dark:hover:text-white dark:hover:bg-white/10 transition-colors cursor-pointer outline-none"
+        >
+          {copied ? (
+            <>
+              <Check className="w-3.5 h-3.5" />
+              <span className="font-medium">Copied!</span>
+            </>
+          ) : (
+            <>
+              <Copy className="w-3.5 h-3.5" />
+              <span className="font-medium">Copy</span>
+            </>
+          )}
+        </button>
+      </div>
+
+      {/* Code content with integrated dynamic horizontal scrollbar and rich syntax colors */}
+      <div className="p-3.5 sm:p-4 code-scroll text-[14px] sm:text-[14.5px] font-mono leading-relaxed bg-neutral-100 dark:bg-[#1f1f1f] select-text">
+        <pre className="!m-0 !p-0 bg-transparent border-0 font-mono whitespace-pre w-max min-w-full">
+          <code
+            className={`!bg-transparent !p-0 font-mono whitespace-pre block language-${displayLang}`}
+            dangerouslySetInnerHTML={{ __html: highlightedHtml }}
+          />
+        </pre>
+      </div>
+    </div>
+  );
+}
+
+function isImageFile(file: any): boolean {
+  if (file?.type && typeof file.type === 'string' && file.type.toLowerCase().startsWith('image/')) {
+    return true;
+  }
+  const name = file?.filename || file?.name || file?.url || '';
+  if (typeof name === 'string') {
+    return (
+      /\.(png|jpe?g|webp|gif|svg|bmp|ico|avif)(\?.*)?$/i.test(name) ||
+      /^pasted_image/i.test(name)
+    );
+  }
+  return false;
+}
+
+function MessageAttachmentItem({ file }: { file: any }) {
+  const isImg = isImageFile(file);
+  const [imgSrc, setImgSrc] = useState<string>(() => {
+    if (file?.url && typeof file.url === 'string') return file.url;
+    if (typeof window !== 'undefined' && file instanceof File) {
+      try {
+        return URL.createObjectURL(file);
+      } catch (e) {
+        return '';
+      }
+    }
+    return '';
+  });
+
+  useEffect(() => {
+    if (file?.url && typeof file.url === 'string') {
+      setImgSrc(file.url);
+    } else if (file instanceof File) {
+      const url = URL.createObjectURL(file);
+      setImgSrc(url);
+      return () => {
+        URL.revokeObjectURL(url);
+      };
+    }
+  }, [file]);
+
+  const displayName = file?.filename || file?.name || 'File';
+
+  if (isImg && imgSrc) {
+    return (
+      <a
+        href={imgSrc}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="group relative block overflow-hidden rounded-xl bg-neutral-100 dark:bg-[#262626] transition-all max-w-[100px] sm:max-w-[150px] shadow-xs cursor-pointer select-none"
+        title={displayName}
+      >
+        <img
+          src={imgSrc}
+          alt={displayName}
+          className="w-full max-h-[180px] sm:max-h-[220px] object-cover rounded-xl transition-transform"
+          loading="lazy"
+        />
+      </a>
+    );
+  }
+
+  // Non-image file pill
+  return (
+    <div className="flex items-center gap-1.5 bg-secondary text-foreground text-sm sm:text-[14px] px-3 py-1.5 rounded-full border border-border">
+      <Paperclip className="w-4 h-4 text-muted-foreground" />
+      <span className="truncate max-w-[130px] sm:max-w-[160px] font-medium">
+        {displayName}
+      </span>
+    </div>
+  );
 }
 
 export function MessageList({
@@ -36,13 +265,50 @@ export function MessageList({
   isTyping,
   pendingMessage,
   onRegenerate,
-  onEditMessage
+  onEditMessage,
+  onEditAndResend,
 }: MessageListProps) {
   const scrollBottomRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [showScrollBottom, setShowScrollBottom] = useState(false);
   const [feedback, setFeedback] = useState<Record<string, 'up' | 'down'>>({});
+  const [editingMessageId, setEditingMessageId] = useState<string | null>(null);
+  const [editDraftText, setEditDraftText] = useState<string>('');
+  const editTextareaRef = useRef<HTMLTextAreaElement>(null);
+
+  // Auto-focus and resize textarea when entering edit mode
+  useEffect(() => {
+    if (editingMessageId && editTextareaRef.current) {
+      editTextareaRef.current.focus();
+      const valLength = editTextareaRef.current.value.length;
+      editTextareaRef.current.setSelectionRange(valLength, valLength);
+      editTextareaRef.current.style.height = 'auto';
+      editTextareaRef.current.style.height = `${Math.min(editTextareaRef.current.scrollHeight, 280)}px`;
+    }
+  }, [editingMessageId]);
+
+  const startEditing = (msgId: string, content: string) => {
+    setEditingMessageId(msgId);
+    setEditDraftText(content);
+  };
+
+  const cancelEditing = () => {
+    setEditingMessageId(null);
+    setEditDraftText('');
+  };
+
+  const submitEdit = (msg: Message, index: number) => {
+    if (!editDraftText.trim() || isTyping) return;
+    const newContent = editDraftText.trim();
+    setEditingMessageId(null);
+    setEditDraftText('');
+    if (onEditAndResend) {
+      onEditAndResend(msg.id, newContent, index);
+    } else if (onEditMessage) {
+      onEditMessage(newContent);
+    }
+  };
 
   // Auto-scroll on new messages or typing
   useEffect(() => {
@@ -66,179 +332,249 @@ export function MessageList({
   let userMessageCounter = 0;
 
   return (
-    <div className="max-w-3xl mx-auto py-6 sm:py-8 space-y-6 sm:space-y-8 px-3 sm:px-6">
+    <div className="w-full max-w-3xl mx-auto py-6 sm:py-8 space-y-6 sm:space-y-8 px-2 sm:px-4">
       {messages.map((msg, index) => {
         const isUser = msg.role === 'user';
         const userMsgIndex = isUser ? userMessageCounter++ : null;
         const msgId = msg.id || `msg-${index}`;
         const isCopied = copiedId === msgId;
+        const targetDomId = msg.id ? `msg-user-${msg.id}` : `message-user-${userMsgIndex}`;
 
         if (isUser) {
+          const isEditing = editingMessageId === msgId;
           return (
             <div
               key={msgId}
-              id={`message-user-${userMsgIndex}`}
-              className="flex flex-col items-end group"
+              id={targetDomId}
+              className={cn("flex flex-col group transition-all", isEditing ? "w-full items-stretch" : "items-end")}
             >
-              {/* Attached Files */}
+              {/* Attached Files & Image Previews */}
               {msg.files && msg.files.length > 0 && (
-                <div className="flex flex-wrap gap-2 mb-2 justify-end">
+                <div className="flex flex-wrap gap-2.5 mb-2.5 justify-end items-end">
                   {msg.files.map((file: any, i: number) => (
-                    <div
-                      key={i}
-                      className="flex items-center gap-1.5 bg-secondary text-foreground text-xs sm:text-sm px-3 py-1.5 rounded-full border border-border"
-                    >
-                      <Paperclip className="w-4 h-4 text-muted-foreground" />
-                      <span className="truncate max-w-[120px] sm:max-w-[150px] font-medium">
-                        {file.filename || file.name || 'File'}
-                      </span>
-                    </div>
+                    <MessageAttachmentItem key={file.id || file.url || i} file={file} />
                   ))}
                 </div>
               )}
 
-              {/* User Bubble Capsule */}
-              <div className="bg-bubble dark:bg-[#2F2F2F] text-foreground text-[14.5px] sm:text-[15px] leading-relaxed rounded-2xl sm:rounded-3xl px-4 sm:px-5 py-2.5 sm:py-3 max-w-[90%] sm:max-w-[80%] whitespace-pre-wrap select-text break-words">
-                {msg.content}
-              </div>
-
-              {/* User Hover Actions Toolbar */}
-              <div className="flex items-center gap-1 mt-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
-                <Tooltip>
-                  <TooltipTrigger asChild>
+              {isEditing ? (
+                /* Inline Editor */
+                <div className="w-full bg-secondary dark:bg-[#2F2F2F] rounded-2xl sm:rounded-3xl p-3 sm:p-4 border border-border/60 dark:border-neutral-700/60 animate-in fade-in-0 duration-150">
+                  <textarea
+                    ref={editTextareaRef}
+                    value={editDraftText}
+                    onChange={(e) => {
+                      setEditDraftText(e.target.value);
+                      e.target.style.height = 'auto';
+                      e.target.style.height = `${Math.min(e.target.scrollHeight, 280)}px`;
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        submitEdit(msg, index);
+                      } else if (e.key === 'Escape') {
+                        cancelEditing();
+                      }
+                    }}
+                    rows={Math.min(Math.max(editDraftText.split('\n').length, 2), 8)}
+                    className="w-full bg-transparent border-0 outline-none focus:outline-none focus:ring-0 resize-none text-[14.5px] sm:text-[15px] leading-relaxed text-foreground placeholder:text-muted-foreground select-text"
+                    autoFocus
+                  />
+                  <div className="flex items-center justify-end gap-2 mt-2 pt-1 select-none">
                     <button
-                      onClick={() => copyToClipboard(msg.content, msgId)}
-                      className="p-1.5 rounded-lg hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors"
-                      aria-label="Copy prompt"
+                      type="button"
+                      onClick={cancelEditing}
+                      className="px-3 py-1.5 rounded-full text-[15px] font-medium bg-neutral-200 dark:bg-neutral-800 hover:bg-neutral-300 dark:hover:bg-neutral-700 text-foreground transition-colors cursor-pointer"
                     >
-                      {isCopied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                      Cancel
                     </button>
-                  </TooltipTrigger>
-                  <TooltipContent className="text-md">Copy</TooltipContent>
-                </Tooltip>
+                    <button
+                      type="button"
+                      onClick={() => submitEdit(msg, index)}
+                      disabled={!editDraftText.trim() || isTyping}
+                      className={cn(
+                        "px-4 py-1.5 rounded-full text-[15px] font-medium transition-all cursor-pointer",
+                        editDraftText.trim() && !isTyping
+                          ? "bg-foreground text-background hover:opacity-90 active:scale-95"
+                          : "bg-neutral-300 dark:bg-[#484848] text-muted-foreground/60 cursor-not-allowed opacity-60"
+                      )}
+                    >
+                      Send
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <>
+                  {/* User Bubble Capsule */}
+                  <div className="bg-bubble dark:bg-[#2F2F2F] text-foreground text-[14.5px] sm:text-[15px] leading-relaxed rounded-2xl sm:rounded-3xl px-4 sm:px-5 py-2.5 sm:py-3 max-w-[85%] sm:max-w-[75%] whitespace-pre-wrap select-text break-words">
+                    {msg.content}
+                  </div>
 
-                {onEditMessage && (
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <button
-                        onClick={() => onEditMessage(msg.content)}
-                        className="p-1.5 rounded-lg hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors"
-                        aria-label="Edit message"
-                      >
-                        <Pencil className="w-4 h-4" />
-                      </button>
-                    </TooltipTrigger>
-                    <TooltipContent className="text-md">Edit</TooltipContent>
-                  </Tooltip>
-                )}
-              </div>
+                  {/* User Hover Actions Toolbar */}
+                  <div className="flex items-center gap-1 mt-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <button
+                          onClick={() => copyToClipboard(msg.content, msgId)}
+                          className="p-1.5 rounded-lg hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors"
+                          aria-label="Copy prompt"
+                        >
+                          {isCopied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                        </button>
+                      </TooltipTrigger>
+                      <TooltipContent side="bottom" sideOffset={4} className="text-md">Copy</TooltipContent>
+                    </Tooltip>
+
+                    {(onEditAndResend || onEditMessage) && (
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <button
+                            onClick={() => startEditing(msgId, msg.content)}
+                            className="p-1.5 rounded-lg hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors"
+                            aria-label="Edit message"
+                          >
+                            <Pencil className="w-4 h-4" />
+                          </button>
+                        </TooltipTrigger>
+                        <TooltipContent side="bottom" sideOffset={4} className="text-md">Edit</TooltipContent>
+                      </Tooltip>
+                    )}
+                  </div>
+                </>
+              )}
             </div>
           );
         }
 
         // Assistant Message View
         return (
-          <div key={msgId} className="flex gap-2.5 sm:gap-4 items-start group">
-            {/* Assistant Avatar Emblem — only logo without bg like ChatGPT */}
-            <div className="w-7 h-7 flex items-center justify-center shrink-0 mt-0.5 select-none">
-              <CloseAIIcon size={22} />
-            </div>
+          <div key={msgId} className="w-full group space-y-2">
 
-            <div className="flex-1 min-w-0 space-y-3">
+            <div className="w-full space-y-3">
               {/* Message Content */}
-              <div className="chat-markdown text-foreground select-text text-[14.5px] sm:text-[15px] leading-relaxed break-words overflow-hidden">
-                <ReactMarkdown>{msg.content}</ReactMarkdown>
+              <div className="chat-markdown text-foreground select-text text-[14.5px] sm:text-[15px] leading-relaxed break-words overflow-hidden w-full">
+                <ReactMarkdown
+                  remarkPlugins={[remarkMath]}
+                  rehypePlugins={[[rehypeKatex, { strict: false, throwOnError: false }]]}
+                  components={{
+                    pre({ children }: any) {
+                      if (React.isValidElement(children)) {
+                        const childProps: any = children.props || {};
+                        const match = /language-(\w+)/.exec(childProps.className || "");
+                        const lang = match ? match[1] : "";
+                        const rawCode = Array.isArray(childProps.children)
+                          ? childProps.children.join("")
+                          : String(childProps.children || "");
+                        return (
+                          <CodeBlock
+                            language={lang}
+                            code={rawCode.replace(/\n$/, "")}
+                          />
+                        );
+                      }
+                      return (
+                        <div className="my-3 sm:my-4 rounded-xl overflow-hidden border border-neutral-200/90 dark:border-neutral-700/60 bg-neutral-50 dark:bg-[#1e1e1e] p-3 code-scroll">
+                          <pre className="text-[13.5px] font-mono text-neutral-900 dark:text-neutral-100 whitespace-pre w-max min-w-full">
+                            {children}
+                          </pre>
+                        </div>
+                      );
+                    },
+                    code({ className, children, ...props }: any) {
+                      return (
+                        <code
+                          className="bg-neutral-100 dark:bg-[#282828] text-neutral-900 dark:text-foreground px-1.5 py-0.5 rounded-md font-mono text-[13px] border border-neutral-200/80 dark:border-border/50 select-text"
+                          {...props}
+                        >
+                          {children}
+                        </code>
+                      );
+                    },
+                  }}
+                >
+                  {preprocessContent(msg.content)}
+                </ReactMarkdown>
               </div>
 
-              {/* Assistant Action Toolbar */}
-              <div className="flex items-center gap-1.5 pt-1 text-muted-foreground">
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <button
-                      onClick={() => copyToClipboard(msg.content, msgId)}
-                      className="p-1.5 rounded-lg hover:bg-secondary hover:text-foreground transition-colors"
-                      aria-label="Copy response"
-                    >
-                      {isCopied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
-                    </button>
-                  </TooltipTrigger>
-                  <TooltipContent className="text-md">Copy</TooltipContent>
-                </Tooltip>
-
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <button
-                      onClick={() => handleFeedback(msgId, 'up')}
-                      className={`p-1.5 rounded-lg hover:bg-secondary hover:text-foreground transition-colors ${
-                        feedback[msgId] === 'up' ? 'text-foreground font-bold' : ''
-                      }`}
-                      aria-label="Good response"
-                    >
-                      <ThumbsUp className="w-4 h-4" />
-                    </button>
-                  </TooltipTrigger>
-                  <TooltipContent className="text-md">Good response</TooltipContent>
-                </Tooltip>
-
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <button
-                      onClick={() => handleFeedback(msgId, 'down')}
-                      className={`p-1.5 rounded-lg hover:bg-secondary hover:text-foreground transition-colors ${
-                        feedback[msgId] === 'down' ? 'text-foreground font-bold' : ''
-                      }`}
-                      aria-label="Bad response"
-                    >
-                      <ThumbsDown className="w-4 h-4" />
-                    </button>
-                  </TooltipTrigger>
-                  <TooltipContent className="text-md">Bad response</TooltipContent>
-                </Tooltip>
-
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <button
-                      onClick={() => {
-                        const utterance = new SpeechSynthesisUtterance(msg.content);
-                        window.speechSynthesis.speak(utterance);
-                      }}
-                      className="p-1.5 rounded-lg hover:bg-secondary hover:text-foreground transition-colors"
-                      aria-label="Read aloud"
-                    >
-                      <Volume2 className="w-4 h-4" />
-                    </button>
-                  </TooltipTrigger>
-                  <TooltipContent className="text-md">Read aloud</TooltipContent>
-                </Tooltip>
-
-                {onRegenerate && (
+              {/* Assistant Action Toolbar — revealed when typing completes */}
+              {(!isTyping || index !== messages.length - 1) && (
+                <div className="flex items-center gap-1.5 pt-1 text-muted-foreground animate-in fade-in-0 duration-200">
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <button
-                        onClick={onRegenerate}
+                        onClick={() => copyToClipboard(msg.content, msgId)}
                         className="p-1.5 rounded-lg hover:bg-secondary hover:text-foreground transition-colors"
-                        aria-label="Regenerate response"
+                        aria-label="Copy response"
                       >
-                        <RotateCcw className="w-4 h-4" />
+                        {isCopied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
                       </button>
                     </TooltipTrigger>
-                    <TooltipContent className="text-md">Regenerate</TooltipContent>
+                    <TooltipContent side="bottom" sideOffset={4} className="text-md">Copy</TooltipContent>
                   </Tooltip>
-                )}
 
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <button
-                      onClick={() => copyToClipboard(window.location.href, `share-${msgId}`)}
-                      className="p-1.5 rounded-lg hover:bg-secondary hover:text-foreground transition-colors"
-                      aria-label="Share"
-                    >
-                      <Share2 className="w-4 h-4" />
-                    </button>
-                  </TooltipTrigger>
-                  <TooltipContent className="text-md">Share</TooltipContent>
-                </Tooltip>
-              </div>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <button
+                        onClick={() => handleFeedback(msgId, 'up')}
+                        className={`p-1.5 rounded-lg hover:bg-secondary hover:text-foreground transition-colors ${
+                          feedback[msgId] === 'up' ? 'text-primary bg-secondary' : ''
+                        }`}
+                        aria-label="Good response"
+                      >
+                        <ThumbsUp className="w-4 h-4" />
+                      </button>
+                    </TooltipTrigger>
+                    <TooltipContent side="bottom" sideOffset={4} className="text-md">Good response</TooltipContent>
+                  </Tooltip>
+
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <button
+                        onClick={() => handleFeedback(msgId, 'down')}
+                        className={`p-1.5 rounded-lg hover:bg-secondary hover:text-foreground transition-colors ${
+                          feedback[msgId] === 'down' ? 'text-primary bg-secondary' : ''
+                        }`}
+                        aria-label="Bad response"
+                      >
+                        <ThumbsDown className="w-4 h-4" />
+                      </button>
+                    </TooltipTrigger>
+                    <TooltipContent side="bottom" sideOffset={4} className="text-md">Bad response</TooltipContent>
+                  </Tooltip>
+
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <button
+                        onClick={() => {
+                          const utterance = new SpeechSynthesisUtterance(msg.content);
+                          window.speechSynthesis.speak(utterance);
+                        }}
+                        className="p-1.5 rounded-lg hover:bg-secondary hover:text-foreground transition-colors"
+                        aria-label="Read aloud"
+                      >
+                        <Volume2 className="w-4 h-4" />
+                      </button>
+                    </TooltipTrigger>
+                    <TooltipContent side="bottom" sideOffset={4} className="text-md">Read aloud</TooltipContent>
+                  </Tooltip>
+
+                  {onRegenerate && (
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <button
+                          onClick={() => onRegenerate(msg, index)}
+                          disabled={isTyping}
+                          className="p-1.5 rounded-lg hover:bg-secondary hover:text-foreground transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                          aria-label="Regenerate response"
+                        >
+                          <RotateCcw className="w-4 h-4" />
+                        </button>
+                      </TooltipTrigger>
+                      <TooltipContent side="bottom" sideOffset={4} className="text-md">Regenerate</TooltipContent>
+                    </Tooltip>
+                  )}
+                </div>
+              )}
             </div>
           </div>
         );
@@ -248,40 +584,33 @@ export function MessageList({
       {pendingMessage && (
         <div className="flex flex-col items-end opacity-85 animate-in fade-in-0 duration-150">
           {pendingMessage.files.length > 0 && (
-            <div className="flex flex-wrap gap-2 mb-2 justify-end">
+            <div className="flex flex-wrap gap-2.5 mb-2.5 justify-end items-end">
               {pendingMessage.files.map((file, i) => (
-                <div
-                  key={i}
-                  className="flex items-center gap-1.5 bg-secondary text-foreground text-md px-3 py-1.5 rounded-full border border-border"
-                >
-                  <Paperclip className="w-4 h-4 text-muted-foreground" />
-                  <span className="truncate max-w-[150px] font-medium">{file.name}</span>
-                </div>
+                <MessageAttachmentItem key={i} file={file} />
               ))}
             </div>
           )}
-          <div className="bg-bubble dark:bg-[#2F2F2F] text-foreground text-[15px] leading-relaxed rounded-3xl px-5 py-3 max-w-[80%] whitespace-pre-wrap">
+          <div className="bg-bubble dark:bg-[#2F2F2F] text-foreground text-[14.5px] sm:text-[15px] leading-relaxed rounded-2xl sm:rounded-3xl px-4 sm:px-5 py-2.5 sm:py-3 max-w-[85%] sm:max-w-[75%] whitespace-pre-wrap select-text break-words">
             {pendingMessage.content}
           </div>
         </div>
       )}
 
-      {/* Typing Indicator */}
-      {isTyping && (
-        <div className="flex gap-4 items-start animate-in fade-in-0 duration-150">
-          <div className="w-7 h-7 flex items-center justify-center shrink-0 mt-0.5 select-none">
-            <CloseAIIcon size={22} />
-          </div>
-          <div className="flex items-center gap-2 text-md text-muted-foreground py-1">
-            <div className="flex space-x-1 items-center">
-              <span className="w-1.5 h-1.5 bg-muted-foreground/60 rounded-full animate-pulse" style={{ animationDelay: '0ms' }} />
-              <span className="w-1.5 h-1.5 bg-muted-foreground/60 rounded-full animate-pulse" style={{ animationDelay: '150ms' }} />
-              <span className="w-1.5 h-1.5 bg-muted-foreground/60 rounded-full animate-pulse" style={{ animationDelay: '300ms' }} />
+      {/* Typing / Thinking Indicator — shown while AI is thinking before first token */}
+      {isTyping &&
+        (Boolean(pendingMessage) ||
+          !messages.length ||
+          messages[messages.length - 1]?.role === "user" ||
+          (messages[messages.length - 1]?.role === "assistant" &&
+            !messages[messages.length - 1]?.content)) && (
+          <div className="flex gap-2.5 sm:gap-4 items-start animate-in fade-in-0 duration-150">
+            <div className="flex items-center gap-2 py-1 select-none">
+              <span className="text-[14.5px] sm:text-[15px] font-normal animate-shimmer-text">
+                Thinking...
+              </span>
             </div>
-            <span className="text-md">Thinking...</span>
           </div>
-        </div>
-      )}
+        )}
 
 
       <div ref={scrollBottomRef} />

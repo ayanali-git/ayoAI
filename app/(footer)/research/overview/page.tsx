@@ -68,7 +68,7 @@ export default function ResearchOverviewPage() {
         </p>
         <Link
           href="/c"
-          className="group inline-flex items-center text-md font-semibold uppercase tracking-wider text-foreground hover:underline"
+          className="group inline-flex items-center text-md font-semibold uppercase tracking-wider text-foreground"
         >
           <span>Try in closeAI Chat</span>
           <AnimatedArrow size={14} />

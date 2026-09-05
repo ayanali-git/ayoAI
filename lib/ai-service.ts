@@ -26,52 +26,106 @@ export class AIService {
 
   private getGenAIClient() {
     const key = process.env.GOOGLE_API_KEY;
-    if (key) {
+    if (key && key !== 'dummy-key') {
       return new GoogleGenerativeAI(key);
     }
     return null;
   }
 
-  async generateResponse(messages: Message[], fileContext?: string, imageUrls?: string[]): Promise<AIResponse> {
-    const genAI = this.getGenAIClient();
+  private getOpenAIClient() {
+    const key = process.env.OPENAI_API_KEY;
+    if (key && key !== 'dummy-key') {
+      return new OpenAI({ apiKey: key });
+    }
+    return null;
+  }
 
-    // If Gemini is preferred and available, try it.
-    // If it fails, report THAT error, because likely OpenAI is dead anyway.
-    if (this.useGemini && genAI) {
-      try {
-        return await this.generateGeminiResponse(messages, fileContext, imageUrls);
-      } catch (geminiError: any) {
-        throw new Error(`Gemini Error: ${geminiError.message || geminiError}`);
+  async generateResponse(
+    messages: Message[],
+    fileContext?: string,
+    imageUrls?: string[],
+    modelName: string = "GPT-5.4"
+  ): Promise<AIResponse> {
+    const isGemini = modelName.toLowerCase().includes('gemini');
+
+    if (isGemini) {
+      return await this.generateGeminiResponse(messages, fileContext, imageUrls, modelName);
+    } else {
+      return await this.generateOpenAIResponse(messages, fileContext, imageUrls, modelName);
+    }
+  }
+
+  async generateOpenAIResponse(
+    messages: Message[],
+    fileContext?: string,
+    imageUrls?: string[],
+    modelName: string = "GPT-5.4"
+  ): Promise<AIResponse> {
+    const openaiClient = this.getOpenAIClient();
+    if (!openaiClient) {
+      // If OpenAI key is missing but Gemini is configured, use Gemini with fallback
+      const genAI = this.getGenAIClient();
+      if (genAI) {
+        const fallbackRes = await this.generateGeminiResponse(messages, fileContext, imageUrls, "gemini-3.7-flash");
+        return {
+          ...fallbackRes,
+          content: `> *Note: OpenAI API key is not configured. Responded using Google Gemini instead.*\n\n${fallbackRes.content}`,
+        };
       }
+      throw new Error('OpenAI API key is not configured. Please add OPENAI_API_KEY in your .env file.');
     }
 
-    // Fallback to OpenAI only if Gemini is NOT configured (no key)
+    let openAiModel = 'gpt-4o';
+    const lower = modelName.toLowerCase();
+    if (lower.includes('mini')) {
+      openAiModel = 'gpt-4o-mini';
+    } else if (lower.includes('3.5')) {
+      openAiModel = 'gpt-3.5-turbo';
+    } else if (lower.includes('4o')) {
+      openAiModel = 'gpt-4o';
+    } else {
+      openAiModel = 'gpt-4o';
+    }
+
     try {
-      // Validate API key for OpenAI
-      if (!process.env.OPENAI_API_KEY) {
-        throw new Error('OpenAI API key is not configured');
-      }
+      const systemPrompt = `You are CloseAI, a helpful, thorough, and intelligent AI assistant. Always provide comprehensive, fully detailed answers, complete explanations, and complete code solutions without stopping or truncating prematurely.
+${fileContext ? `\n\nFile Context:\n${fileContext}` : ''}`;
 
-      // Prepare messages with system prompt
-      const systemPrompt = `You are closeAI, a helpful and intelligent AI assistant. You can help with various tasks including:
-- Answering questions and providing information
-- Analyzing uploaded files and images
-- Converting images to Ghibli-style art
-- General conversation and assistance
-
-${fileContext ? `\n\nFile Context:\n${fileContext}` : ''}
-
-Please provide helpful, accurate, and engaging responses.`;
-
-      const fullMessages: Message[] = [
-        { role: 'system', content: systemPrompt },
-        ...messages
+      const fullMessages: any[] = [
+        { role: 'system', content: systemPrompt }
       ];
 
-      const response = await openai.chat.completions.create({
-        model: 'gpt-3.5-turbo',
+      for (let i = 0; i < messages.length - 1; i++) {
+        fullMessages.push({
+          role: messages[i].role,
+          content: messages[i].content
+        });
+      }
+
+      const lastMessage = messages[messages.length - 1];
+      if (imageUrls && imageUrls.length > 0 && (openAiModel.startsWith('gpt-4') || openAiModel.startsWith('gpt-5'))) {
+        const contentParts: any[] = [{ type: 'text', text: lastMessage.content }];
+        for (const url of imageUrls) {
+          contentParts.push({
+            type: 'image_url',
+            image_url: { url }
+          });
+        }
+        fullMessages.push({
+          role: lastMessage.role,
+          content: contentParts
+        });
+      } else {
+        fullMessages.push({
+          role: lastMessage.role,
+          content: lastMessage.content
+        });
+      }
+
+      const response = await openaiClient.chat.completions.create({
+        model: openAiModel,
         messages: fullMessages,
-        max_tokens: 1000,
+        max_tokens: 10000,
         temperature: 0.7,
       });
 
@@ -85,100 +139,173 @@ Please provide helpful, accurate, and engaging responses.`;
           total_tokens: response.usage?.total_tokens || 0,
         }
       };
-
     } catch (error: any) {
-      // Handle specific OpenAI errors
-      if (error.code === 'invalid_api_key') {
-        throw new Error('Invalid OpenAI API key. Please check your configuration.');
-      } else if (error.code === 'insufficient_quota') {
-        throw new Error('OpenAI quota exceeded. Please check your billing.');
-      } else if (error.code === 'rate_limit_exceeded') {
-        throw new Error('Rate limit exceeded. Please try again later.');
+      if (error.code === 'invalid_api_key' || error.status === 401) {
+        throw new Error('Invalid OpenAI API key. Please verify your OPENAI_API_KEY in .env.');
+      } else if (error.code === 'insufficient_quota' || error.status === 429) {
+        const genAI = this.getGenAIClient();
+        if (genAI) {
+          console.warn('OpenAI quota exceeded, falling back to Google Gemini...');
+          const fallbackRes = await this.generateGeminiResponse(messages, fileContext, imageUrls, "gemini-3.7-flash");
+          return {
+            ...fallbackRes,
+            content: `> *Note: OpenAI API credit balance is exhausted (HTTP 429). Responded using Google Gemini instead.*\n\n${fallbackRes.content}`,
+          };
+        }
+        throw new Error('OpenAI quota exceeded (no remaining credits on account). Please check your OpenAI billing or switch to Google Gemini.');
       }
-
-      throw new Error(`AI service error: ${error.message || 'Unknown error occurred'}`);
+      throw new Error(`OpenAI Error: ${error.message || 'Unknown error occurred'}`);
     }
   }
 
-  async generateGeminiResponse(messages: Message[], fileContext?: string, imageUrls?: string[]): Promise<AIResponse> {
+  async generateGeminiResponse(
+    messages: Message[],
+    fileContext?: string,
+    imageUrls?: string[],
+    modelName: string = "gemini-3.7-flash"
+  ): Promise<AIResponse> {
     const genAI = this.getGenAIClient();
-    if (!genAI) throw new Error('Google Generative AI not initialized (Missing API Key)');
+    if (!genAI) {
+      const openaiClient = this.getOpenAIClient();
+      if (openaiClient) {
+        return await this.generateOpenAIResponse(messages, fileContext, imageUrls, "GPT-5.4");
+      }
+      throw new Error('Google Generative AI not initialized (Missing GOOGLE_API_KEY)');
+    }
 
-    // Use gemini-3.6-flash as the latest model (supports vision)
-    const model = genAI.getGenerativeModel({ model: "gemini-3.6-flash" });
+    // Normalize model name (convert spaces to hyphens, lowercase)
+    const cleanModelName = (modelName || "gemini-3.7-flash").trim().toLowerCase().replace(/\s+/g, "-");
 
-    let systemPrompt = `You are closeAI, a helpful and intelligent AI assistant.
-${fileContext ? `\n\nFile Context:\n${fileContext}` : ''}
-`;
+    // Map any deprecated or retired models to supported versions
+    let initialCandidate = cleanModelName;
+    if (
+      initialCandidate.includes("1.5-pro") ||
+      initialCandidate.includes("1.5-flash") ||
+      initialCandidate.includes("2.5-pro") ||
+      initialCandidate.includes("2.5-flash") ||
+      initialCandidate === "gemini-pro"
+    ) {
+      initialCandidate = "gemini-3.7-flash";
+    }
 
-    // Extract the latest user message for the prompt, and history for context
-    const lastMessage = messages[messages.length - 1];
+    // Candidate models to try in order (all live and tested on Google Generative AI v1beta)
+    const candidates = [
+      initialCandidate,
+      "gemini-3.7-flash",
+      "gemini-3.6-flash",
+      "gemini-3.5-flash",
+      "gemini-flash-latest",
+      "gemini-3.1-flash-lite",
+      "gemini-3.8-flash"
+    ];
+    const modelChain = Array.from(new Set(candidates.filter(Boolean)));
 
-    // Map OpenAI roles to Gemini roles
-    // user -> user
-    // assistant -> model
-    // system -> (handled by prepend)
-    const history = messages.slice(0, -1).map(msg => {
-      let role = 'user';
-      if (msg.role === 'assistant') role = 'model';
+    let lastError: any = null;
 
-      // Gemini history cannot contain system messages directly in 'history' usually, 
-      // but we filter them out anyway.
-      return {
-        role: role,
-        parts: [{ text: msg.content }]
-      };
-    }).filter(msg => msg.role === 'user' || msg.role === 'model');
+    for (const candidate of modelChain) {
+      try {
+        const model = genAI.getGenerativeModel({ model: candidate });
 
-    // Build the message parts (text + images if any)
-    const messageParts: any[] = [];
+        const systemPrompt = `You are CloseAI, a helpful, thorough, and intelligent AI assistant. Always provide comprehensive, fully detailed answers, complete explanations, and complete code solutions without stopping or truncating prematurely.
+${fileContext ? `\n\nFile Context:\n${fileContext}` : ''}`;
 
-    // Add the text prompt
-    const promptWithContext = `${systemPrompt}\n\nUser: ${lastMessage.content}`;
-    messageParts.push({ text: promptWithContext });
+        const lastMessage = messages[messages.length - 1];
 
-    // If there are images, fetch and add them
-    if (imageUrls && imageUrls.length > 0) {
-      for (const imageUrl of imageUrls) {
-        try {
-          // Fetch the image and convert to base64
-          const response = await fetch(imageUrl);
-          const arrayBuffer = await response.arrayBuffer();
-          const base64 = Buffer.from(arrayBuffer).toString('base64');
-          const mimeType = response.headers.get('content-type') || 'image/jpeg';
+        // Sanitize conversation history for Gemini:
+        // 1. First message must have role 'user'
+        // 2. Roles must strictly alternate: user -> model -> user -> model
+        // 3. History must end with 'model' (since sendMessage will be the next 'user' turn)
+        const rawHistory = messages.slice(0, -1).map(msg => {
+          let role = 'user';
+          if (msg.role === 'assistant') role = 'model';
+          return {
+            role: role,
+            parts: [{ text: msg.content || '' }]
+          };
+        }).filter(msg => (msg.role === 'user' || msg.role === 'model') && msg.parts[0].text?.trim());
 
-          messageParts.push({
-            inlineData: {
-              mimeType: mimeType,
-              data: base64
+        const sanitizedHistory: any[] = [];
+        for (const item of rawHistory) {
+          if (sanitizedHistory.length === 0) {
+            if (item.role === 'user') {
+              sanitizedHistory.push(item);
             }
-          });
-        } catch (error) {
-          // Silent fail for image fetch errors
+          } else {
+            const prevRole = sanitizedHistory[sanitizedHistory.length - 1].role;
+            if (item.role !== prevRole) {
+              sanitizedHistory.push(item);
+            }
+          }
         }
+        // If sanitizedHistory ends with 'user', pop it so sendMessage provides the user turn
+        if (sanitizedHistory.length > 0 && sanitizedHistory[sanitizedHistory.length - 1].role === 'user') {
+          sanitizedHistory.pop();
+        }
+
+        const messageParts: any[] = [];
+        const promptWithContext = `${systemPrompt}\n\nUser: ${lastMessage.content}`;
+        messageParts.push({ text: promptWithContext });
+
+        if (imageUrls && imageUrls.length > 0) {
+          for (const imageUrl of imageUrls) {
+            try {
+              const response = await fetch(imageUrl);
+              if (!response.ok) {
+                console.warn(`[Gemini] Failed to fetch image ${imageUrl}: HTTP ${response.status}`);
+                continue;
+              }
+              const contentType = response.headers.get('content-type') || '';
+              if (!contentType.toLowerCase().startsWith('image/')) {
+                console.warn(`[Gemini] URL ${imageUrl} returned non-image content type: ${contentType}`);
+                continue;
+              }
+              const arrayBuffer = await response.arrayBuffer();
+              if (arrayBuffer.byteLength === 0) {
+                console.warn(`[Gemini] URL ${imageUrl} returned empty image data`);
+                continue;
+              }
+              const base64 = Buffer.from(arrayBuffer).toString('base64');
+              const cleanMimeType = contentType.split(';')[0].trim();
+              messageParts.push({
+                inlineData: {
+                  mimeType: cleanMimeType,
+                  data: base64
+                }
+              });
+            } catch (error) {
+              console.warn(`[Gemini] Error processing image ${imageUrl}:`, error);
+            }
+          }
+        }
+
+        const chat = model.startChat({
+          history: sanitizedHistory,
+          generationConfig: {
+            maxOutputTokens: 10000,
+          },
+        });
+
+        const result = await chat.sendMessage(messageParts);
+        const response = await result.response;
+        const text = response.text();
+
+        return {
+          content: text,
+          usage: {
+            prompt_tokens: 0,
+            completion_tokens: 0,
+            total_tokens: 0
+          }
+        };
+      } catch (err: any) {
+        lastError = err;
+        console.warn(`Gemini model ${candidate} failed:`, err?.message || err);
+        // Continue and try next candidate model
+        continue;
       }
     }
 
-    // Basic chat session
-    const chat = model.startChat({
-      history: history,
-      generationConfig: {
-        maxOutputTokens: 1000,
-      },
-    });
-
-    const result = await chat.sendMessage(messageParts);
-    const response = await result.response;
-    const text = response.text();
-
-    return {
-      content: text,
-      usage: {
-        prompt_tokens: 0,
-        completion_tokens: 0,
-        total_tokens: 0
-      }
-    };
+    throw new Error(`Gemini Error: ${lastError?.message || 'Failed to generate response with Gemini'}`);
   }
 
   async generateGhibliStyleImage(prompt: string): Promise<string> {

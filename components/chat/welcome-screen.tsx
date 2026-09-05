@@ -47,7 +47,7 @@ export function WelcomeScreen({
   }, []);
 
   return (
-    <div className="flex-1 flex flex-col items-center justify-center min-h-[calc(100vh-3.5rem)] px-4 text-center select-none pb-12">
+    <div className="flex-1 w-full h-full flex flex-col items-center justify-center px-4 text-center select-none pb-6 sm:pb-8">
       <div className="w-full max-w-2xl flex flex-col items-center justify-center space-y-6">
         {/* Dynamic Title */}
         <h1 className="text-2xl sm:text-3xl font-medium tracking-tight text-foreground/90 animate-in fade-in-50 duration-300">

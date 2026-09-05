@@ -26,18 +26,28 @@ function TocPopup({
   scrollActiveSectionId: string;
   onNavigate: (event: MouseEvent<HTMLAnchorElement>, id: string) => void;
 }) {
+  const activeItemRef = useRef<HTMLAnchorElement | null>(null);
+
+  useEffect(() => {
+    if (activeItemRef.current) {
+      activeItemRef.current.scrollIntoView({ block: "nearest" });
+    }
+  }, [scrollActiveSectionId]);
+
   return (
-    <div className="w-[min(20rem,calc(100vw-2rem))] rounded-2xl border border-border/80 dark:border-neutral-700/80 bg-background dark:bg-[#212121] py-2">
-      <nav className="flex flex-col max-h-[360px] overflow-y-auto p-1">
+    <div className="w-[min(20rem,calc(100vw-2rem))] rounded-2xl border border-border/80 dark:border-neutral-700/80 bg-background dark:bg-[#212121] py-2 shadow-xl">
+      <nav className="flex flex-col max-h-[360px] overflow-y-auto p-1 scrollbar-thin">
         {headings.map((heading) => {
           const isActive = heading.id === scrollActiveSectionId;
 
           return (
             <a
               key={heading.id}
+              ref={isActive ? activeItemRef : null}
               href={`#${heading.id}`}
               onClick={(event) => onNavigate(event, heading.id)}
               data-selected={isActive ? "true" : undefined}
+              title={heading.text}
               className={cn(
                 "hover-box relative isolate mx-1 rounded-xl px-3 py-2 text-[15px] leading-snug cursor-pointer transition-colors duration-150",
                 "overflow-hidden text-ellipsis whitespace-nowrap text-left hover:bg-secondary dark:hover:bg-[#2f2f2f]",
@@ -272,7 +282,6 @@ function PreviewRail({
           {headings.map((heading, index) => {
             const isScrollActive = heading.id === validScrollActiveSectionId;
             const isFocalSection = heading.id === focalSectionId;
-            const pillScale = getPillScaleForIndex(index, focalSectionIndex);
 
             return (
               <a
@@ -310,7 +319,7 @@ function PreviewRail({
           })}
         </nav>
 
-        {/* TOC popup — opens directly aligned to the rail on hover */}
+        {/* TOC popup — opens directly aligned on top of the rail on hover */}
         {showTocPopup && (
           <div className="absolute top-1/2 right-0 z-50 -translate-y-1/2">
             <TocPopup
@@ -356,15 +365,24 @@ export function TocNavigator({
     if (messages && messages.length > 0) {
       const userPrompts = messages
         .filter((m) => m.role === "user")
-        .map((msg, index) => ({
-          id: `message-user-${index}`,
-          text: msg.content
-            ? msg.content.length > 42
-              ? msg.content.substring(0, 42) + "..."
-              : msg.content
-            : `Prompt #${index + 1}`,
-          level: 2,
-        }));
+        .map((msg, index) => {
+          const content = msg.content?.trim() || "";
+          const firstLine = content.split("\n")[0].trim();
+          let text = firstLine || content;
+          if (!text && (msg as any).files?.length) {
+            text = `Attachment (${(msg as any).files.length} file${(msg as any).files.length > 1 ? "s" : ""})`;
+          }
+          if (!text) {
+            text = `Prompt #${index + 1}`;
+          }
+          const truncated = text.length > 80 ? text.substring(0, 80) + "..." : text;
+
+          return {
+            id: msg.id ? `msg-user-${msg.id}` : `message-user-${index}`,
+            text: truncated,
+            level: 2,
+          };
+        });
       setHeadings(userPrompts);
       parsedHeadingsRef.current = userPrompts;
       if (userPrompts.length > 0) {
@@ -410,17 +428,29 @@ export function TocNavigator({
         return;
       }
 
-      const readingLinePx = getReadingLinePx();
-
       if (containerRef?.current) {
         const container = containerRef.current;
-        const scrollPosition = container.scrollTop + readingLinePx;
+        const containerRect = container.getBoundingClientRect();
+
+        // Pin the bottom tail when at the container end
+        const isAtBottom =
+          container.scrollHeight - container.scrollTop - container.clientHeight <= 48;
+        if (isAtBottom && headings.length > 0) {
+          setScrollActiveSectionId(headings[headings.length - 1].id);
+          return;
+        }
+
+        const readingLinePx = Math.min(container.clientHeight * 0.4, 220);
 
         for (let i = headings.length - 1; i >= 0; i--) {
           const elem = document.getElementById(headings[i].id);
-          if (elem && elem.offsetTop <= scrollPosition) {
-            setScrollActiveSectionId(headings[i].id);
-            return;
+          if (elem) {
+            const elemRect = elem.getBoundingClientRect();
+            const relativeTop = elemRect.top - containerRect.top;
+            if (relativeTop <= readingLinePx) {
+              setScrollActiveSectionId(headings[i].id);
+              return;
+            }
           }
         }
         setScrollActiveSectionId(headings[0]?.id || "");
@@ -454,7 +484,15 @@ export function TocNavigator({
     if (!elem) return;
 
     if (containerRef?.current) {
-      elem.scrollIntoView({ behavior: "smooth", block: "start" });
+      const container = containerRef.current;
+      const containerRect = container.getBoundingClientRect();
+      const elemRect = elem.getBoundingClientRect();
+      const targetScrollTop =
+        container.scrollTop + (elemRect.top - containerRect.top) - 24;
+      container.scrollTo({
+        top: Math.max(0, targetScrollTop),
+        behavior: "smooth",
+      });
     } else {
       const yOffset = -90;
       const y = Math.max(
@@ -471,7 +509,7 @@ export function TocNavigator({
       window.clearTimeout(clickLockTimerRef.current);
     clickLockTimerRef.current = window.setTimeout(() => {
       userClickedSectionIdRef.current = null;
-    }, 250);
+    }, 400);
 
     window.history.pushState(null, "", `#${id}`);
   };

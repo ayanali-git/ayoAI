@@ -1,31 +1,40 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { MarketingHeader } from "@/components/marketing/header";
 import { Footer } from "@/components/ui/footer";
 import { AnimatedArrow } from "@/components/ui/animated-arrow";
-import { ArrowUpRight, ArrowRight, Sparkles, ArrowUp, Search } from "lucide-react";
+import { ArrowUpRight, ArrowRight, Sparkles, ArrowUp, Search, Loader } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 export default function LandingPage() {
   const router = useRouter();
   const [heroPrompt, setHeroPrompt] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const handleHeroSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!heroPrompt.trim()) {
-      router.push("/c");
-      return;
+    const prompt = heroPrompt.trim();
+    if (!prompt || isSubmitting) return;
+
+    setIsSubmitting(true);
+    router.push(`/c?q=${encodeURIComponent(prompt)}`);
+  };
+
+  const handlePillClick = (prompt: string) => {
+    setHeroPrompt(prompt);
+    if (textareaRef.current) {
+      textareaRef.current.focus();
     }
-    router.push(`/c?q=${encodeURIComponent(heroPrompt)}`);
   };
 
   const quickPills = [
     { label: "Research", prompt: "Summarize recent breakthrough papers in AI alignment and safety" },
-    { label: "Talk with ChatGPT", prompt: "Explain the latest frontier AI models and reasoning capabilities" },
+    { label: "Talk with CloseAI", prompt: "Explain the latest frontier AI models and reasoning capabilities" },
     { label: "Stories", prompt: "Showcase customer success stories and real-world applications" },
     { label: "API Platform", prompt: "How do I get started with the API and developer platform?" },
     { label: "More", prompt: "Explore all closeAI features, enterprise solutions, and tools" },
@@ -48,6 +57,7 @@ export default function LandingPage() {
           <form onSubmit={handleHeroSubmit} className="relative w-full max-w-3xl mx-auto mb-6">
             <div className="relative w-full rounded-3xl dark:border-neutral-700/80 bg-secondary/80 dark:bg-[#212121] p-4 min-h-[100px] flex flex-col justify-between transition-all focus-within:border-neutral-500/80">
               <textarea
+                ref={textareaRef}
                 value={heroPrompt}
                 onChange={(e) => setHeroPrompt(e.target.value)}
                 onKeyDown={(e) => {
@@ -58,21 +68,26 @@ export default function LandingPage() {
                 }}
                 placeholder="Ask about anything, from research to reasoning and more..."
                 rows={2}
+                disabled={isSubmitting}
                 className="w-full bg-transparent resize-none text-[15px] text-foreground placeholder:text-muted-foreground/60 outline-none border-none ring-0 leading-relaxed"
               />
               <div className="flex items-center justify-end">
                 <button
                   type="submit"
-                  disabled={!heroPrompt.trim()}
+                  disabled={!heroPrompt.trim() || isSubmitting}
                   className={cn(
                     "w-8 h-8 rounded-full flex items-center justify-center transition-all duration-200",
-                    heroPrompt.trim().length > 0
+                    heroPrompt.trim().length > 0 && !isSubmitting
                       ? "bg-foreground text-background cursor-pointer hover:opacity-90 active:scale-95"
                       : "bg-neutral-300 dark:bg-[#383838] text-foreground cursor-not-allowed opacity-60"
                   )}
                   aria-label="Send prompt"
                 >
-                  <ArrowUp className="w-4 h-4 stroke-[2.5]" />
+                  {isSubmitting ? (
+                    <Loader className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <ArrowUp className="w-4 h-4 stroke-[2.5]" />
+                  )}
                 </button>
               </div>
             </div>
@@ -80,18 +95,24 @@ export default function LandingPage() {
 
           {/* Suggestion Pills */}
           <div className="flex flex-wrap items-center justify-center gap-2 max-w-2xl mx-auto">
-            {quickPills.map((pill, i) => (
-              <button
-                key={i}
-                onClick={() => {
-                  setHeroPrompt(pill.prompt);
-                  router.push(`/c?q=${encodeURIComponent(pill.prompt)}`);
-                }}
-                className="px-5 py-3 rounded-full border border-border/70 bg-secondary/40 hover:bg-secondary text-md sm:text-[13px] text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
-              >
-                {pill.label}
-              </button>
-            ))}
+            {quickPills.map((pill, i) => {
+              const isSelected = heroPrompt.trim() === pill.prompt;
+              return (
+                <button
+                  key={i}
+                  type="button"
+                  onClick={() => handlePillClick(pill.prompt)}
+                  className={cn(
+                    "px-5 py-2 rounded-full border text-md sm:text-[13px] transition-all cursor-pointer",
+                    isSelected
+                      ? "border-foreground/50 bg-secondary text-foreground font-medium"
+                      : "border-border/70 bg-secondary/40 hover:bg-secondary text-muted-foreground hover:text-foreground"
+                  )}
+                >
+                  {pill.label}
+                </button>
+              );
+            })}
           </div>
         </section>
 
@@ -206,7 +227,7 @@ export default function LandingPage() {
                 </div>
                 <div className="mt-4 flex flex-col justify-between h-[92px]">
                   <h3 className="text-base sm:text-lg font-semibold text-foreground group-hover:underline leading-snug">
-                    Improving GPT-5.6 Sol in ChatGPT — and expanding access to GPT-5.6 Luna for free users
+                    Improving GPT-5.6 Sol in CloseAI — and expanding access to GPT-5.6 Luna for free users
                   </h3>
                   <div className="flex items-center gap-2 text-md text-muted-foreground">
                     <span className="font-semibold text-foreground">Product</span>
@@ -216,14 +237,14 @@ export default function LandingPage() {
                 </div>
               </Link>
 
-              {/* Item 3: Health in ChatGPT (White Squircle + Red Flower Heart Badge matching Image 3) */}
+              {/* Item 3: Health in CloseAI (White Squircle + Red Flower Heart Badge matching Image 3) */}
               <Link href="/product/features" className="group block">
                 <div className="relative w-full aspect-[4/3] rounded-2xl overflow-hidden bg-gradient-to-br from-[#fed1d8] via-[#fee5d4] to-[#fbcfe0] dark:from-[#32161d] dark:via-[#261612] dark:to-[#221019] border border-border/40 flex items-center justify-center p-6">
                   {/* Soft Warm Blurred Background Glow */}
                   <div className="absolute inset-0 bg-gradient-to-tr from-pink-300/30 via-amber-200/20 to-rose-300/30 blur-xl pointer-events-none" />
 
                   {/* Center Crisp White Squircle Card */}
-                  <div className="relative z-10 w-28 h-28 sm:w-32 sm:h-32 rounded-[28px] bg-white flex items-center justify-center shadow-xl shadow-rose-950/10 transition-transform duration-500 group-hover:scale-105">
+                  <div className="relative z-10 w-28 h-28 sm:w-32 sm:h-32 rounded-[28px] bg-white flex items-center justify-center transition-transform duration-500 group-hover:scale-105">
                     <svg viewBox="0 0 100 100" className="w-16 h-16 sm:w-18 sm:h-18" xmlns="http://www.w3.org/2000/svg">
                       {/* Red Scalloped Flower / Petals */}
                       <g fill="#e50914">
@@ -245,7 +266,7 @@ export default function LandingPage() {
                 </div>
                 <div className="mt-4 flex flex-col justify-between h-[92px]">
                   <h3 className="text-base sm:text-lg font-semibold text-foreground group-hover:underline leading-snug">
-                    Launching Health in ChatGPT
+                    Launching Health in CloseAI
                   </h3>
                   <div className="flex items-center gap-2 text-md text-muted-foreground">
                     <span className="font-semibold text-foreground">Product</span>

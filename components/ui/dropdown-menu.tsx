@@ -35,8 +35,9 @@ const DropdownMenuSubTrigger = React.forwardRef<
   React.ElementRef<typeof DropdownMenuPrimitive.SubTrigger>,
   React.ComponentPropsWithoutRef<typeof DropdownMenuPrimitive.SubTrigger> & {
     inset?: boolean;
+    chevronClassName?: string;
   }
->(({ className, inset, children, onPointerMove, ...props }, ref) => (
+>(({ className, inset, chevronClassName, children, onPointerMove, ...props }, ref) => (
   <DropdownMenuPrimitive.SubTrigger
     ref={ref}
     onPointerMove={(e) => {
@@ -44,14 +45,14 @@ const DropdownMenuSubTrigger = React.forwardRef<
       onPointerMove?.(e);
     }}
     className={cn(
-      'flex cursor-pointer select-none items-center rounded-xl px-3 py-2 text-md outline-none transition-colors duration-75 hover:bg-secondary dark:hover:bg-[#2f2f2f] focus:bg-secondary dark:focus:bg-[#2f2f2f] data-[state=open]:bg-secondary dark:data-[state=open]:bg-[#2f2f2f] text-foreground group focus:outline-none focus:ring-0 ring-0',
+      'flex cursor-pointer select-none items-center rounded-xl px-3 py-2 text-md outline-none transition-colors duration-75 hover:bg-secondary dark:hover:bg-[#2f2f2f] focus:bg-secondary dark:focus:bg-[#2f2f2f] data-[state=open]:bg-secondary dark:data-[state=open]:bg-[#2f2f2f] text-foreground group focus:outline-none focus:ring-0 ring-0 text-left',
       inset && 'pl-8',
       className
     )}
     {...props}
   >
     {children}
-    <ChevronRight className="ml-auto h-4 w-4 text-muted-foreground group-hover:text-foreground shrink-0 transition-colors" />
+    <ChevronRight className={cn("ml-auto h-4 w-4 text-muted-foreground group-hover:text-foreground shrink-0 transition-colors", chevronClassName)} />
   </DropdownMenuPrimitive.SubTrigger>
 ));
 DropdownMenuSubTrigger.displayName =
@@ -68,7 +69,7 @@ const DropdownMenuSubContent = React.forwardRef<
         sideOffset={sideOffset}
         alignOffset={alignOffset}
         className={cn(
-          'z-[9999] min-w-[10rem] overflow-hidden rounded-2xl border border-border/80 dark:border-neutral-700/80 bg-background dark:bg-[#212121] p-1.5 text-foreground outline-none focus:outline-none focus:ring-0',
+          'z-[9999] min-w-[10rem] overflow-hidden rounded-2xl border border-border/80 dark:border-neutral-700/80 bg-background dark:bg-[#212121] p-1.5 text-foreground outline-none focus:outline-none focus:ring-0 shadow-2xl shadow-black/40',
           className
         )}
         {...props}
@@ -88,7 +89,7 @@ const DropdownMenuContent = React.forwardRef<
       ref={ref}
       sideOffset={sideOffset}
       className={cn(
-        'z-[9999] min-w-[8rem] overflow-hidden rounded-2xl border border-border/80 dark:border-neutral-700/80 bg-background dark:bg-[#212121] p-1.5 text-foreground outline-none focus:outline-none focus:ring-0',
+        'z-[9999] min-w-[8rem] overflow-hidden rounded-2xl border border-border/80 dark:border-neutral-700/80 bg-background dark:bg-[#212121] p-1.5 text-foreground outline-none focus:outline-none focus:ring-0 shadow-2xl shadow-black/40',
         className
       )}
       {...props}
@@ -110,7 +111,7 @@ const DropdownMenuItem = React.forwardRef<
       onPointerMove?.(e);
     }}
     className={cn(
-      'relative flex cursor-pointer select-none items-center rounded-xl px-3 py-2 text-md outline-none transition-colors duration-75 hover:bg-secondary dark:hover:bg-[#2f2f2f] focus:bg-secondary dark:focus:bg-[#2f2f2f] data-[disabled]:pointer-events-none data-[disabled]:opacity-50 text-foreground group focus:outline-none focus:ring-0 ring-0',
+      'relative flex cursor-pointer select-none items-center rounded-xl px-3 py-2 text-md outline-none transition-colors duration-75 hover:bg-secondary dark:hover:bg-[#2f2f2f] focus:bg-secondary dark:focus:bg-[#2f2f2f] data-[disabled]:pointer-events-none data-[disabled]:opacity-50 text-foreground group focus:outline-none focus:ring-0 ring-0 text-left',
       inset && 'pl-8',
       className
     )}
@@ -126,7 +127,7 @@ const DropdownMenuCheckboxItem = React.forwardRef<
   <DropdownMenuPrimitive.CheckboxItem
     ref={ref}
     className={cn(
-      'relative flex cursor-pointer select-none items-center rounded-xl py-2 pl-8 pr-3 text-md outline-none transition-colors duration-100 hover:bg-secondary dark:hover:bg-[#2f2f2f] focus:bg-secondary dark:focus:bg-[#2f2f2f] data-[disabled]:pointer-events-none data-[disabled]:opacity-50 text-foreground focus:outline-none focus:ring-0 ring-0',
+      'relative flex cursor-pointer select-none items-center rounded-xl py-2 pl-8 pr-3 text-md outline-none transition-colors duration-100 hover:bg-secondary dark:hover:bg-[#2f2f2f] focus:bg-secondary dark:focus:bg-[#2f2f2f] data-[disabled]:pointer-events-none data-[disabled]:opacity-50 text-foreground focus:outline-none focus:ring-0 ring-0 text-left',
       className
     )}
     checked={checked}
@@ -150,7 +151,7 @@ const DropdownMenuRadioItem = React.forwardRef<
   <DropdownMenuPrimitive.RadioItem
     ref={ref}
     className={cn(
-      'relative flex cursor-pointer select-none items-center justify-between rounded-xl px-3 py-2 text-md outline-none transition-colors duration-100 hover:bg-secondary dark:hover:bg-[#2f2f2f] focus:bg-secondary dark:focus:bg-[#2f2f2f] data-[disabled]:pointer-events-none data-[disabled]:opacity-50 text-foreground group focus:outline-none focus:ring-0 ring-0',
+      'relative flex cursor-pointer select-none items-center justify-between rounded-xl px-3 py-2 text-md outline-none transition-colors duration-100 hover:bg-secondary dark:hover:bg-[#2f2f2f] focus:bg-secondary dark:focus:bg-[#2f2f2f] data-[disabled]:pointer-events-none data-[disabled]:opacity-50 text-foreground group focus:outline-none focus:ring-0 ring-0 text-left',
       className
     )}
     {...props}

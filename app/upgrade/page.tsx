@@ -1,20 +1,16 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/hooks/use-auth';
 import { useSubscription } from '@/components/subscription-provider';
-import { supabase } from '@/lib/supabase';
 import toast from '@/lib/toast';
 import {
   ChevronLeft,
   Check,
-  Shield,
   Loader
 } from 'lucide-react';
 
@@ -22,69 +18,56 @@ const plans = [
   {
     id: 'free',
     name: 'Free',
-    description: 'Perfect for trying out closeAI',
+    price: '₹0',
     monthlyPrice: 0,
     yearlyPrice: 0,
+    description: 'Experience core intelligence for everyday assistance and questions.',
     features: [
-      { text: '10 AI conversations/day', included: true },
-      { text: '5 image generations/day', included: true },
-      { text: 'Basic document analysis', included: true },
-      { text: 'Standard response speed', included: true },
-      { text: 'Priority access', included: false },
-      { text: 'API access', included: false },
+      '10 AI conversations / day',
+      '5 image generations / day',
+      'Basic document & file analysis',
+      'Standard response speed',
+      'Web search grounding',
     ],
     popular: false,
   },
   {
     id: 'pro',
     name: 'Pro',
-    description: 'For power users and professionals',
+    price: '₹99',
     monthlyPrice: 99,
     yearlyPrice: 999,
+    originalAnnualPrice: 1175,
+    discountPercent: 15,
+    description: 'For professionals, engineers, and creators who need unlimited power.',
     features: [
-      { text: 'Unlimited AI conversations', included: true },
-      { text: '100 image generations/day', included: true },
-      { text: 'Advanced document analysis', included: true },
-      { text: 'Faster response speed', included: true },
-      { text: 'Priority support', included: true },
-      { text: 'API access', included: false },
+      'Unlimited AI conversations',
+      '100 image generations / day',
+      'Advanced document & code analysis',
+      'Priority fast inference speed',
+      'Early access to reasoning models',
+      'Custom instruction profiles',
     ],
     popular: true,
   },
   {
     id: 'ultra',
     name: 'Ultra Pro',
-    description: 'For teams and heavy users',
+    price: '₹199',
     monthlyPrice: 199,
     yearlyPrice: 1999,
+    originalAnnualPrice: 2351,
+    discountPercent: 15,
+    description: 'Maximum reasoning depth, limitless generations, and team workspaces.',
     features: [
-      { text: 'Everything in Pro', included: true },
-      { text: 'Unlimited image generations', included: true },
-      { text: 'Team collaboration tools', included: true },
-      { text: 'Fastest response speed', included: true },
-      { text: '24/7 priority support', included: true },
-      { text: 'Full API access', included: true },
+      'Everything in Pro',
+      'Unlimited image generations',
+      'Team collaboration workspaces',
+      'Fastest response throughput',
+      'Full API developer access',
+      '24/7 dedicated support',
     ],
     popular: false,
-  },
-];
-
-const faqs = [
-  {
-    question: 'Can I change my plan later?',
-    answer: 'Yes, you can upgrade or downgrade your plan at any time. Changes will be reflected in your next billing cycle.',
-  },
-  {
-    question: 'What payment methods do you accept?',
-    answer: 'We accept all major credit cards, debit cards, UPI, and net banking.',
-  },
-  {
-    question: 'Is there a refund policy?',
-    answer: 'Yes, we offer a 7-day money-back guarantee if you are not satisfied with your subscription.',
-  },
-  {
-    question: 'Do unused limits roll over?',
-    answer: 'Daily limits reset every 24 hours and do not roll over to the next day.',
   },
 ];
 
@@ -92,7 +75,7 @@ export default function UpgradePage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { user, token } = useAuth();
-  const { plan: currentPlan, hasActiveSubscription, refreshSubscription } = useSubscription();
+  const { plan: currentPlan, interval: currentInterval, hasActiveSubscription, refreshSubscription } = useSubscription();
   const [isYearly, setIsYearly] = useState(false);
   const [loading, setLoading] = useState<string | null>(null);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
@@ -101,31 +84,37 @@ export default function UpgradePage() {
   useEffect(() => {
     const success = searchParams.get('success');
     const canceled = searchParams.get('canceled');
+    const sessionId = searchParams.get('session_id');
 
     if (success === 'true' && !hasProcessedSuccess.current) {
       hasProcessedSuccess.current = true;
       toast.success('Subscription successful! Your plan has been upgraded.');
 
-      let attempts = 0;
-      const maxAttempts = 10;
-      const pollInterval = setInterval(async () => {
-        await refreshSubscription();
-        attempts++;
-
-        if (currentPlan !== 'free' || attempts >= maxAttempts) {
-          clearInterval(pollInterval);
+      const syncSession = async () => {
+        try {
+          const headers: Record<string, string> = {};
+          if (token) {
+            headers['Authorization'] = `Bearer ${token}`;
+          }
+          if (sessionId) {
+            await fetch(`/api/stripe/verify-session?session_id=${encodeURIComponent(sessionId)}`, { headers });
+          }
+        } catch (e) {
+          console.error('Session sync error:', e);
+        } finally {
+          await refreshSubscription();
           setShowSuccessModal(true);
         }
-      }, 1000);
+      };
 
+      syncSession();
       router.replace('/upgrade');
-      return () => clearInterval(pollInterval);
     } else if (canceled === 'true' && !hasProcessedSuccess.current) {
       hasProcessedSuccess.current = true;
       toast.error('Checkout was canceled.');
       router.replace('/upgrade');
     }
-  }, [searchParams, router, refreshSubscription, currentPlan]);
+  }, [searchParams, router, refreshSubscription, token]);
 
   const handleUpgrade = async (planId: string) => {
     if (!user) {
@@ -203,14 +192,14 @@ export default function UpgradePage() {
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Header */}
+    <div className="min-h-screen bg-background select-none">
+      {/* Back Header */}
       <div className="border-b border-border sticky top-0 z-10 bg-background">
         <div className="max-w-6xl mx-auto px-6 py-4">
           <Button
             variant="ghost"
             size="sm"
-            className="text-muted-foreground hover:text-foreground"
+            className="text-muted-foreground hover:text-foreground cursor-pointer"
             onClick={() => router.push('/c')}
           >
             <ChevronLeft className="w-4 h-4 mr-1" />
@@ -219,13 +208,13 @@ export default function UpgradePage() {
         </div>
       </div>
 
-      <div className="max-w-5xl mx-auto px-6 py-12">
+      <div className="max-w-6xl mx-auto px-6 py-16">
         {/* Title */}
-        <div className="text-center mb-12">
-          <h1 className="text-3xl md:text-4xl font-semibold text-foreground mb-3">
+        <div className="text-center max-w-3xl mx-auto mb-14">
+          <h1 className="text-4xl sm:text-6xl font-semibold tracking-tight text-foreground mb-6">
             Upgrade your plan
           </h1>
-          <p className="text-muted-foreground max-w-lg mx-auto">
+          <p className="text-lg text-muted-foreground">
             Choose the plan that best fits your workflow.
           </p>
 
@@ -238,8 +227,8 @@ export default function UpgradePage() {
             />
             <span className={`text-md ${isYearly ? 'text-foreground font-medium' : 'text-muted-foreground'}`}>
               Yearly
-              <span className="ml-1.5 text-md text-neutral-500 font-normal">
-                (Save 15%)
+              <span className="ml-1.5 text-xs font-semibold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-600 dark:text-emerald-400">
+                Save 15%
               </span>
             </span>
           </div>
@@ -249,6 +238,7 @@ export default function UpgradePage() {
               <Button
                 variant="outline"
                 size="sm"
+                className="rounded-full cursor-pointer"
                 onClick={handleManageSubscription}
                 disabled={loading === 'manage'}
               >
@@ -258,58 +248,72 @@ export default function UpgradePage() {
           )}
         </div>
 
-        {/* Pricing Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-20">
+        {/* Pricing Cards Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-16">
           {plans.map((plan) => {
-            const isCurrentPlan = currentPlan === plan.id;
+            const isCurrentPlan = currentPlan === plan.id && (
+              plan.id === 'free'
+                ? !hasActiveSubscription || currentPlan === 'free'
+                : (isYearly ? currentInterval === 'yearly' : currentInterval !== 'yearly')
+            );
             const price = isYearly ? plan.yearlyPrice : plan.monthlyPrice;
 
             return (
-              <Card
+              <div
                 key={plan.id}
-                className={`relative flex flex-col justify-between p-8 rounded-2xl bg-card transition-colors ${
-                  plan.popular
-                    ? 'border-2 border-foreground'
-                    : 'border border-border'
+                className={`relative rounded-3xl p-8 flex flex-col justify-between border transition-all ${
+                  plan.popular || (isCurrentPlan && plan.id !== 'free')
+                    ? "bg-card border-foreground/30"
+                    : "bg-card/60 border-border/70 hover:border-border"
                 }`}
               >
-                <div>
-                  <div className="flex items-center justify-between mb-2">
-                    <CardTitle className="text-lg font-semibold text-foreground">{plan.name}</CardTitle>
-                    {plan.popular && (
-                      <Badge variant="secondary" className="text-md font-normal">
-                        Popular
-                      </Badge>
-                    )}
-                  </div>
-                  <CardDescription className="text-md text-muted-foreground mb-6">
-                    {plan.description}
-                  </CardDescription>
+                {isCurrentPlan ? (
+                  <span className="absolute -top-3 left-1/2 -translate-x-1/2 px-3.5 py-0.5 rounded-full bg-foreground text-background text-[13px] font-semibold tracking-wide uppercase shadow-sm">
+                    Active Plan
+                  </span>
+                ) : plan.popular ? (
+                  <span className="absolute -top-3 left-1/2 -translate-x-1/2 px-3.5 py-0.5 rounded-full bg-foreground text-background text-[13px] font-semibold tracking-wide uppercase shadow-sm">
+                    Most Popular
+                  </span>
+                ) : null}
 
-                  <div className="mb-8">
+                <div>
+                  <div className="mb-6">
+                    <h3 className="text-xl font-semibold text-foreground mb-1">{plan.name}</h3>
+                    <p className="text-md text-muted-foreground min-h-[32px]">{plan.description}</p>
+                  </div>
+
+                  <div className="flex flex-col mb-8">
                     <div className="flex items-baseline gap-1">
-                      <span className="text-4xl font-semibold text-foreground">₹{price}</span>
-                      <span className="text-md text-muted-foreground">
-                        /{isYearly ? 'year' : 'month'}
+                      <span className="text-4xl sm:text-5xl font-bold tracking-tight text-foreground">
+                        ₹{price}
                       </span>
+                      {plan.id !== 'free' && (
+                        <span className="text-md text-muted-foreground">
+                          /{isYearly ? 'year' : 'month'}
+                        </span>
+                      )}
                     </div>
+                    {isYearly && plan.originalAnnualPrice ? (
+                      <div className="flex items-center gap-2 mt-2">
+                        <span className="text-sm line-through text-muted-foreground">
+                          ₹{plan.originalAnnualPrice}
+                        </span>
+                        <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-emerald-500/30 text-emerald-600 dark:text-emerald-400">
+                          Save {plan.discountPercent}%
+                        </span>
+                      </div>
+                    ) : null}
                   </div>
 
                   <div className="space-y-3 mb-8">
-                    {plan.features.map((feature, idx) => (
-                      <div key={idx} className="flex items-center gap-3">
-                        <Check
-                          className={`w-4 h-4 flex-shrink-0 ${
-                            feature.included ? 'text-foreground' : 'text-neutral-300'
-                          }`}
-                        />
-                        <span
-                          className={`text-md ${
-                            feature.included ? 'text-foreground' : 'text-muted-foreground'
-                          }`}
-                        >
-                          {feature.text}
-                        </span>
+                    <p className="text-md font-semibold uppercase tracking-wider text-muted-foreground">
+                      Included features
+                    </p>
+                    {plan.features.map((feat, i) => (
+                      <div key={i} className="flex items-center gap-2.5 text-md text-foreground">
+                        <Check className="w-4 h-4 text-muted-foreground shrink-0" />
+                        <span>{feat}</span>
                       </div>
                     ))}
                   </div>
@@ -319,25 +323,32 @@ export default function UpgradePage() {
                   {isCurrentPlan ? (
                     <Button
                       variant="outline"
-                      className="w-full rounded-full cursor-default text-muted-foreground"
+                      className="w-full h-11 rounded-full text-foreground font-medium border-neutral-300 dark:border-neutral-700 bg-neutral-100 dark:bg-[#252525] disabled:opacity-100 disabled:pointer-events-auto disabled:cursor-not-allowed cursor-not-allowed shadow-sm"
+                      disabled
+                    > Current Plan
+                    </Button>
+                  ) : currentPlan === 'ultra' && plan.id === 'pro' && (!isYearly || currentInterval === 'yearly') ? (
+                    <Button
+                      variant="outline"
+                      className="w-full h-11 rounded-full text-neutral-500 dark:text-neutral-400 font-medium border-neutral-200 dark:border-neutral-800 bg-neutral-50 dark:bg-[#181818] disabled:opacity-100 disabled:pointer-events-auto disabled:cursor-not-allowed cursor-not-allowed"
                       disabled
                     >
-                      Current Plan
+                      Included in Ultra Pro
                     </Button>
                   ) : plan.id === 'free' ? (
                     <Button
                       variant="outline"
-                      className="w-full rounded-full text-muted-foreground"
+                      className="w-full h-11 rounded-full text-neutral-500 dark:text-neutral-400 font-medium border-neutral-200 dark:border-neutral-800 bg-neutral-50 dark:bg-[#181818] disabled:opacity-100 disabled:pointer-events-auto disabled:cursor-not-allowed cursor-not-allowed"
                       disabled
                     >
-                      Free
+                      Free Plan
                     </Button>
                   ) : (
                     <Button
-                      className={`w-full rounded-full ${
+                      className={`w-full h-11 rounded-full text-md font-medium transition-all shadow-sm cursor-pointer ${
                         plan.popular
-                          ? 'bg-primary text-primary-foreground hover:opacity-90'
-                          : 'bg-secondary text-foreground hover:bg-neutral-200'
+                          ? "bg-foreground text-background hover:opacity-90"
+                          : "bg-secondary text-foreground hover:bg-secondary/80 border border-border"
                       }`}
                       onClick={() => handleUpgrade(plan.id)}
                       disabled={loading !== null}
@@ -350,36 +361,9 @@ export default function UpgradePage() {
                     </Button>
                   )}
                 </div>
-              </Card>
+              </div>
             );
           })}
-        </div>
-
-        {/* FAQs */}
-        <div className="max-w-3xl mx-auto mb-16">
-          <h2 className="text-xl font-semibold text-foreground text-center mb-8">
-            Frequently asked questions
-          </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {faqs.map((faq, index) => (
-              <div key={index} className="border border-border rounded-2xl p-6">
-                <h3 className="text-md font-medium text-foreground mb-2">{faq.question}</h3>
-                <p className="text-md text-muted-foreground">{faq.answer}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Trust Badges */}
-        <div className="border-t border-border pt-8 flex items-center justify-center gap-8 text-md text-muted-foreground">
-          <div className="flex items-center gap-1.5">
-            <Shield className="w-4 h-4" />
-            <span>Secure payment via Stripe</span>
-          </div>
-          <div className="flex items-center gap-1.5">
-            <Check className="w-4 h-4" />
-            <span>7-day money-back guarantee</span>
-          </div>
         </div>
       </div>
 
@@ -387,11 +371,6 @@ export default function UpgradePage() {
       <Dialog open={showSuccessModal} onOpenChange={setShowSuccessModal}>
         <DialogContent className="sm:max-w-md bg-card border-border">
           <DialogHeader>
-            <div className="flex justify-center mb-4">
-              <div className="w-12 h-12 bg-black text-white rounded-full flex items-center justify-center">
-                <Check className="w-6 h-6" />
-              </div>
-            </div>
             <DialogTitle className="text-center text-xl">
               Welcome to {currentPlan === 'ultra' ? 'Ultra Pro' : 'Pro'}
             </DialogTitle>

@@ -38,7 +38,7 @@ export default function BlogPage() {
       <div className="space-y-10 sm:space-y-12">
         {posts.map((post, i) => (
           <article key={i} className="group cursor-pointer pb-8 border-b border-border/40 last:border-b-0">
-            <div className="flex flex-wrap items-center gap-2 sm:gap-4 text-xs sm:text-sm text-muted-foreground mb-2 sm:mb-3">
+            <div className="flex flex-wrap items-center gap-2 sm:gap-4 text-base sm:text-base text-muted-foreground mb-2 sm:mb-3">
               <span className="font-medium text-foreground">{post.category}</span>
               <span>•</span>
               <span>{post.date}</span>
@@ -46,8 +46,8 @@ export default function BlogPage() {
               <span>{post.readTime}</span>
             </div>
             <h2 className="text-xl sm:text-2xl font-semibold mb-2 sm:mb-3 group-hover:underline">{post.title}</h2>
-            <p className="text-muted-foreground text-sm sm:text-base mb-4 leading-relaxed">{post.excerpt}</p>
-            <div className="inline-flex items-center text-sm sm:text-base font-medium hover:underline">
+            <p className="text-muted-foreground text-base sm:text-base mb-4 leading-relaxed">{post.excerpt}</p>
+            <div className="inline-flex items-center text-base sm:text-base font-medium hover:underline">
               <span>Read article</span>
               <AnimatedArrow size={14} />
             </div>

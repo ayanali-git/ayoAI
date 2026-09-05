@@ -21,17 +21,17 @@ export default function HelpPage() {
         <div className="p-5 sm:p-6 bg-card border border-border rounded-2xl cursor-pointer hover:bg-secondary/50 transition-colors">
           <HelpCircle className="h-6 w-6 sm:h-8 sm:w-8 mb-3 sm:mb-4 text-foreground" />
           <h3 className="text-base sm:text-lg font-medium mb-1 sm:mb-2">Getting Started</h3>
-          <p className="text-xs sm:text-sm text-muted-foreground">Basics of using our web interface and features.</p>
+          <p className="text-base sm:text-base text-muted-foreground">Basics of using our web interface and features.</p>
         </div>
         <div className="p-5 sm:p-6 bg-card border border-border rounded-2xl cursor-pointer hover:bg-secondary/50 transition-colors">
           <Settings className="h-6 w-6 sm:h-8 sm:w-8 mb-3 sm:mb-4 text-foreground" />
           <h3 className="text-base sm:text-lg font-medium mb-1 sm:mb-2">Account & Billing</h3>
-          <p className="text-xs sm:text-sm text-muted-foreground">Manage subscriptions, usage limits, and invoices.</p>
+          <p className="text-base sm:text-base text-muted-foreground">Manage subscriptions, usage limits, and invoices.</p>
         </div>
         <div className="p-5 sm:p-6 bg-card border border-border rounded-2xl cursor-pointer hover:bg-secondary/50 transition-colors">
           <FileText className="h-6 w-6 sm:h-8 sm:w-8 mb-3 sm:mb-4 text-foreground" />
           <h3 className="text-base sm:text-lg font-medium mb-1 sm:mb-2">Troubleshooting</h3>
-          <p className="text-xs sm:text-sm text-muted-foreground">Solutions for common errors and technical issues.</p>
+          <p className="text-base sm:text-base text-muted-foreground">Solutions for common errors and technical issues.</p>
         </div>
       </div>
 
@@ -44,7 +44,7 @@ export default function HelpPage() {
             "Can I use generated content for commercial purposes?",
             "How do I upgrade to a team plan?"
           ].map((question, i) => (
-            <div key={i} className="p-4 rounded-xl border border-border/60 hover:bg-secondary/30 transition-colors cursor-pointer text-sm sm:text-base">
+            <div key={i} className="p-4 rounded-xl border border-border/60 hover:bg-secondary/30 transition-colors cursor-pointer text-base sm:text-base">
               <span className="font-medium">{question}</span>
             </div>
           ))}

@@ -47,7 +47,7 @@ export default function PricingPage() {
       name: "Ultra Pro",
       price: "₹199",
       period: "/month",
-      description: "Maximum reasoning depth, limitless generations, and team workspaces.",
+      description: "For teams and enterprises that require the ultimate in AI reasoning and collaboration.",
       features: [
         "Everything in Pro",
         "Unlimited image generations",
@@ -66,9 +66,6 @@ export default function PricingPage() {
     <div className="py-20 max-w-6xl mx-auto select-none">
       {/* Header */}
       <div className="text-center max-w-3xl mx-auto mb-16">
-        <p className="text-md font-semibold text-muted-foreground tracking-wider uppercase mb-3">
-          Pricing Plans
-        </p>
         <h1 className="text-4xl sm:text-6xl font-semibold tracking-tight text-foreground mb-6">
           Simple, transparent pricing.
         </h1>
@@ -115,7 +112,7 @@ export default function PricingPage() {
                 </p>
                 {plan.features.map((feat, i) => (
                   <div key={i} className="flex items-center gap-2.5 text-md text-foreground">
-                    <Check className="w-4 h-4 text-emerald-500 shrink-0" />
+                    <Check className="w-4 h-4 text-muted-foreground shrink-0" />
                     <span>{feat}</span>
                   </div>
                 ))}

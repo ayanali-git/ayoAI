@@ -11,6 +11,7 @@ export function ToasterProvider() {
       position="top-center"
       theme={resolvedTheme === 'dark' ? 'dark' : 'light'}
       preset="snappy"
+      showTimestamp={false}
     />
   );
 }

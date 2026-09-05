@@ -10,7 +10,7 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
-        const { message, chatId, files } = await request.json();
+        const { message, chatId, files, truncateMessageId, model } = await request.json();
 
         if (!message || typeof message !== 'string') {
             return NextResponse.json({ error: 'Message is required' }, { status: 400 });
@@ -49,6 +49,27 @@ export async function POST(request: NextRequest) {
             }
 
             currentChatId = newChat.id;
+        }
+
+        // If editing/regenerating from a specific message, delete that message and subsequent messages
+        if (truncateMessageId) {
+            try {
+                const { data: targetMsg } = await supabaseAdmin
+                    .from('messages')
+                    .select('created_at')
+                    .eq('id', truncateMessageId)
+                    .single();
+
+                if (targetMsg?.created_at) {
+                    await supabaseAdmin
+                        .from('messages')
+                        .delete()
+                        .eq('chat_id', currentChatId)
+                        .gte('created_at', targetMsg.created_at);
+                }
+            } catch (truncError) {
+                console.error('Error truncating messages for edit:', truncError);
+            }
         }
 
         // Get previous messages for context
@@ -96,7 +117,7 @@ export async function POST(request: NextRequest) {
         // Generate AI response
         let aiResponse;
         try {
-            aiResponse = await aiService.generateResponse(aiMessages, undefined, imageUrls);
+            aiResponse = await aiService.generateResponse(aiMessages, undefined, imageUrls, model || "GPT-5.4");
         } catch (aiError: any) {
             console.error('AI generation error:', aiError);
             aiResponse = {
@@ -111,7 +132,7 @@ export async function POST(request: NextRequest) {
                 chat_id: currentChatId,
                 role: 'assistant',
                 content: aiResponse.content,
-                metadata: null,
+                metadata: model ? { model } : null,
             })
             .select()
             .single();
@@ -143,6 +164,7 @@ export async function POST(request: NextRequest) {
                 content: aiResponse.content,
                 createdAt: assistantMessage.created_at,
                 chatId: currentChatId,
+                model: model || "GPT-5.4",
             },
         });
 

@@ -12,28 +12,28 @@ export default function ApiDocsPage() {
 
       <section className="mb-12 sm:mb-16">
         <h2 className="text-xl sm:text-2xl font-semibold mb-4 sm:mb-6">Authentication</h2>
-        <p className="text-muted-foreground mb-4 text-sm sm:text-base">
+        <p className="text-muted-foreground mb-4 text-base sm:text-base">
           All API requests require a Bearer token in the Authorization header. You can generate API keys in your dashboard.
         </p>
-        <div className="bg-card border border-border rounded-xl p-3 sm:p-4 overflow-x-auto text-xs sm:text-sm font-mono break-all text-foreground">
+        <div className="bg-card border border-border rounded-xl p-3 sm:p-4 overflow-x-auto text-base sm:text-base font-mono break-all text-foreground">
           Authorization: Bearer YOUR_API_KEY
         </div>
       </section>
 
       <section className="mb-12 sm:mb-16">
         <h2 className="text-xl sm:text-2xl font-semibold mb-4 sm:mb-6">Chat Completions</h2>
-        <p className="text-muted-foreground mb-4 text-sm sm:text-base">
+        <p className="text-muted-foreground mb-4 text-base sm:text-base">
           Creates a model response for the given chat conversation.
         </p>
         
         <h3 className="text-base sm:text-lg font-medium mb-3">Endpoint</h3>
-        <div className="bg-card border border-border rounded-xl p-3 sm:p-4 mb-6 font-mono text-xs sm:text-sm overflow-x-auto break-all text-foreground">
+        <div className="bg-card border border-border rounded-xl p-3 sm:p-4 mb-6 font-mono text-base sm:text-base overflow-x-auto break-all text-foreground">
           <span className="font-bold text-emerald-500 mr-2">POST</span>
           <span>https://api.closeai.example.com/v1/chat/completions</span>
         </div>
 
         <h3 className="text-base sm:text-lg font-medium mb-3">Example Request</h3>
-        <pre className="bg-card border border-border rounded-xl p-3 sm:p-4 overflow-x-auto text-xs sm:text-sm text-muted-foreground w-full max-w-full font-mono">
+        <pre className="bg-card border border-border rounded-xl p-3 sm:p-4 overflow-x-auto text-base sm:text-base text-muted-foreground w-full max-w-full font-mono">
           <code>{`curl https://api.closeai.example.com/v1/chat/completions \\
   -H "Content-Type: application/json" \\
   -H "Authorization: Bearer $CLOSEAI_API_KEY" \\

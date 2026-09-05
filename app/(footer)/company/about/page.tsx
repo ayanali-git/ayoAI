@@ -29,7 +29,7 @@ export default function AboutPage() {
             <div key={i} className="p-6 bg-card border border-border rounded-2xl">
               <principle.icon className="h-6 w-6 mb-4 text-foreground" />
               <h3 className="text-lg font-medium mb-2">{principle.title}</h3>
-              <p className="text-muted-foreground text-sm sm:text-base">{principle.desc}</p>
+              <p className="text-muted-foreground text-base sm:text-base">{principle.desc}</p>
             </div>
           ))}
         </div>

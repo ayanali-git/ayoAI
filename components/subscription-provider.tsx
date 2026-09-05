@@ -28,6 +28,7 @@ interface SubscriptionContextType {
     plan: string;
     status: string;
     hasActiveSubscription: boolean;
+    interval: 'monthly' | 'yearly';
     limits: UsageLimits;
     usage: UsageStats;
     loading: boolean;
@@ -52,6 +53,7 @@ const SubscriptionContext = createContext<SubscriptionContextType>({
     plan: 'free',
     status: 'inactive',
     hasActiveSubscription: false,
+    interval: 'monthly',
     limits: defaultLimits,
     usage: defaultUsage,
     loading: true,
@@ -73,6 +75,7 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
     const [plan, setPlan] = useState('free');
     const [status, setStatus] = useState('inactive');
     const [hasActiveSubscription, setHasActiveSubscription] = useState(false);
+    const [interval, setInterval] = useState<'monthly' | 'yearly'>('monthly');
     const [limits, setLimits] = useState<UsageLimits>(defaultLimits);
     const [usage, setUsage] = useState<UsageStats>(defaultUsage);
     const [loading, setLoading] = useState(true);
@@ -82,6 +85,7 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
             setPlan('free');
             setStatus('inactive');
             setHasActiveSubscription(false);
+            setInterval('monthly');
             setLimits(defaultLimits);
             setUsage(defaultUsage);
             setLoading(false);
@@ -101,6 +105,7 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
                 setPlan(data.plan || 'free');
                 setStatus(data.status || 'inactive');
                 setHasActiveSubscription(data.hasActiveSubscription || false);
+                setInterval(data.interval || 'monthly');
                 setLimits(data.limits || defaultLimits);
                 setUsage(data.usage || defaultUsage);
             }
@@ -166,6 +171,7 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
         plan,
         status,
         hasActiveSubscription,
+        interval,
         limits,
         usage,
         loading,

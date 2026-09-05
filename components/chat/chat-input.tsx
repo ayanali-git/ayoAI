@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useRef, useEffect, useState, forwardRef } from "react";
+import React, { useRef, useEffect, useState, useCallback, forwardRef } from "react";
 import {
   Plus,
   ArrowUp,
@@ -13,6 +13,11 @@ import {
   Image as ImageIcon,
   Film,
   Music,
+  Loader,
+  Sparkles,
+  Check,
+  Paperclip,
+  Square,
 } from "lucide-react";
 import { useDropzone } from "react-dropzone";
 import {
@@ -20,6 +25,12 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { PlusMenuContent } from "./plus-menu-content";
 import { cn } from "@/lib/utils";
 import toast from "@/lib/toast";
 
@@ -27,6 +38,7 @@ interface ChatInputProps {
   message: string;
   onMessageChange: (msg: string) => void;
   onSend: () => void;
+  onStop?: () => void;
   uploadedFiles: File[];
   onFilesChange: (files: File[]) => void;
   isTyping: boolean;
@@ -34,9 +46,13 @@ interface ChatInputProps {
   centered?: boolean;
   showDisclaimer?: boolean;
   children?: React.ReactNode;
+  selectedModel?: string;
+  onModelChange?: (model: string) => void;
+  selectedTier?: number;
+  onTierChange?: (tier: number) => void;
 }
 
-/** Get a human-readable file type label like ChatGPT */
+/** Get a human-readable file type label */
 function getFileTypeLabel(file: File): string {
   const ext = file.name.split(".").pop()?.toLowerCase() || "";
   const mime = file.type;
@@ -113,7 +129,7 @@ function getFileIcon(file: File) {
   return FileText;
 }
 
-/** ChatGPT-style preview card with thumbnail or code icon */
+/** preview card with thumbnail or code icon */
 function FilePreviewCard({ file, onRemove }: { file: File; onRemove: () => void }) {
   const [imageUrl, setImageUrl] = useState<string | null>(null);
 
@@ -131,13 +147,13 @@ function FilePreviewCard({ file, onRemove }: { file: File; onRemove: () => void 
   const typeLabel = getFileTypeLabel(file);
 
   return (
-    <div className="relative group flex items-center gap-2.5 bg-neutral-100 dark:bg-[#262626] border border-neutral-200/90 dark:border-white/10 rounded-2xl p-2 pr-4 text-foreground min-w-0 shadow-sm animate-in fade-in-0 duration-150">
+    <div className="relative group flex items-center gap-2.5 bg-neutral-100 dark:bg-[#262626] border border-neutral-200/90 dark:border-white/10 rounded-2xl p-2 pr-4 text-foreground min-w-0 animate-in fade-in-0 duration-150">
       {/* File type icon or Image preview */}
-      <div className="w-10 h-10 rounded-xl overflow-hidden bg-white dark:bg-neutral-800 border border-neutral-200/80 dark:border-white/5 flex items-center justify-center shrink-0 shadow-xs">
+      <div className="w-10 h-10 rounded-xl overflow-hidden bg-white dark:bg-neutral-800 border border-neutral-200/80 dark:border-white/5 flex items-center justify-center shrink-0">
         {imageUrl ? (
           <img src={imageUrl} alt={file.name} className="w-full h-full object-cover" />
         ) : (
-          <Icon className="w-5 h-5 text-neutral-700 dark:text-neutral-300" />
+          <Icon className="w-4 h-4 text-neutral-700 dark:text-neutral-300" />
         )}
       </div>
 
@@ -158,7 +174,7 @@ function FilePreviewCard({ file, onRemove }: { file: File; onRemove: () => void 
           e.stopPropagation();
           onRemove();
         }}
-        className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-white/90 dark:bg-neutral-800/90 backdrop-blur-sm border border-neutral-300/90 dark:border-white/20 text-neutral-600 dark:text-neutral-300 hover:text-neutral-900 dark:hover:text-white hover:bg-white dark:hover:bg-neutral-700 flex items-center justify-center cursor-pointer"
+        className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-white/90 dark:bg-neutral-800/90 backdrop-blur-sm border border-neutral-300/90 dark:border-white/20 text-neutral-600 dark:text-neutral-300 hover:text-neutral-900 dark:hover:text-white hover:bg-white dark:hover:bg-neutral-700 flex items-center justify-center cursor-pointer"
         aria-label="Remove file"
       >
         <X className="w-2.5 h-2.5 stroke-[2.5]" />
@@ -172,6 +188,7 @@ export const ChatInput = forwardRef<HTMLDivElement, ChatInputProps>(function Cha
     message,
     onMessageChange,
     onSend,
+    onStop,
     uploadedFiles,
     onFilesChange,
     isTyping,
@@ -179,13 +196,36 @@ export const ChatInput = forwardRef<HTMLDivElement, ChatInputProps>(function Cha
     centered = false,
     showDisclaimer = false,
     children,
+    selectedModel = "GPT-5.4",
+    onModelChange,
+    selectedTier = 4,
+    onTierChange,
   },
   ref
 ) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const pillRef = useRef<HTMLDivElement>(null);
+  const plusButtonRef = useRef<HTMLButtonElement>(null);
   const [isListening, setIsListening] = useState(false);
+  const [plusMenuOpen, setPlusMenuOpen] = useState(false);
+  const [isMultiLine, setIsMultiLine] = useState(false);
+  const [menuSideOffset, setMenuSideOffset] = useState(14);
+  const [menuAlignOffset, setMenuAlignOffset] = useState(0);
   const recognitionRef = useRef<any>(null);
+  const [currentModel, setCurrentModel] = useState(selectedModel);
+
+  useEffect(() => {
+    if (selectedModel) {
+      setCurrentModel(selectedModel);
+    }
+  }, [selectedModel]);
+
+  const handleSelectModel = (modelName: string) => {
+    setCurrentModel(modelName);
+    onModelChange?.(modelName);
+    toast.success(`Switched to ${modelName}`);
+  };
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop: (acceptedFiles) => {
@@ -195,14 +235,85 @@ export const ChatInput = forwardRef<HTMLDivElement, ChatInputProps>(function Cha
     noKeyboard: true,
   });
 
-  // Auto-resize textarea
+  // Auto-resize textarea and detect multiline
   useEffect(() => {
-    if (textareaRef.current) {
+    if (!textareaRef.current) {
+      setIsMultiLine(Boolean(message && message.includes("\n")));
+      return;
+    }
+
+    // When message is cleared or empty, immediately reset height and collapse
+    if (!message || message.trim() === "") {
+      textareaRef.current.style.height = "26px";
+      textareaRef.current.style.overflowY = "hidden";
+      setIsMultiLine(false);
+      return;
+    }
+
+    if (message.includes("\n")) {
       textareaRef.current.style.height = "auto";
       const scrollH = textareaRef.current.scrollHeight;
       textareaRef.current.style.height = `${Math.min(scrollH, 200)}px`;
+      textareaRef.current.style.overflowY = scrollH > 200 ? "auto" : "hidden";
+      setIsMultiLine(true);
+    } else {
+      textareaRef.current.style.height = "auto";
+      const scrollH = textareaRef.current.scrollHeight;
+      if (scrollH > 38) {
+        textareaRef.current.style.height = `${Math.min(scrollH, 200)}px`;
+        textareaRef.current.style.overflowY = scrollH > 200 ? "auto" : "hidden";
+        setIsMultiLine(true);
+      } else {
+        textareaRef.current.style.height = "26px";
+        textareaRef.current.style.overflowY = "hidden";
+        setIsMultiLine(false);
+      }
     }
   }, [message]);
+
+  const isExpandedLayout =
+    uploadedFiles.length > 0 ||
+    (Boolean(message && message.trim()) && (isMultiLine || message.includes("\n")));
+
+  // Calculate dynamic menu sideOffset & alignOffset so it is ALWAYS positioned above the chat input pill
+  const updateMenuPosition = useCallback(() => {
+    if (plusButtonRef.current && pillRef.current) {
+      const buttonRect = plusButtonRef.current.getBoundingClientRect();
+      const pillRect = pillRef.current.getBoundingClientRect();
+      const isMobile = window.innerWidth < 768;
+
+      // Distance from top of the + button to the top of the chat input pill:
+      const distToPillTop = Math.max(0, buttonRect.top - pillRect.top);
+      // Place the dropdown 10px above the top border of the chat input pill:
+      setMenuSideOffset(Math.round(distToPillTop + 10));
+
+      if (isMobile) {
+        // On small screen devices, align cleanly with the + button so it doesn't overhang
+        setMenuAlignOffset(0);
+      } else {
+        // On desktop, align cleanly with the left edge of the chat input pill:
+        const distToPillLeft = Math.max(0, buttonRect.left - pillRect.left);
+        setMenuAlignOffset(-Math.round(distToPillLeft));
+      }
+    }
+  }, []);
+
+  useEffect(() => {
+    updateMenuPosition();
+  }, [message, isExpandedLayout, uploadedFiles.length, plusMenuOpen, updateMenuPosition]);
+
+  useEffect(() => {
+    if (!pillRef.current) return;
+    const ro = new ResizeObserver(() => {
+      updateMenuPosition();
+    });
+    ro.observe(pillRef.current);
+    window.addEventListener("resize", updateMenuPosition);
+    return () => {
+      ro.disconnect();
+      window.removeEventListener("resize", updateMenuPosition);
+    };
+  }, [updateMenuPosition]);
 
   // Speech Recognition (Web Speech API)
   const toggleDictation = async () => {
@@ -298,6 +409,54 @@ export const ChatInput = forwardRef<HTMLDivElement, ChatInputProps>(function Cha
     }
   };
 
+  // Support clipboard image pasting (Ctrl+V screenshots/images)
+  const handlePaste = (e: React.ClipboardEvent) => {
+    const clipboardData = e.clipboardData;
+    if (!clipboardData) return;
+
+    const items = clipboardData.items;
+    const filesToAdd: File[] = [];
+
+    if (items) {
+      for (let i = 0; i < items.length; i++) {
+        const item = items[i];
+        if (item.type.startsWith("image/") || item.kind === "file") {
+          const file = item.getAsFile();
+          if (file) {
+            const ext = file.type.split("/")[1] || "png";
+            const namedFile =
+              file.name && file.name !== "image.png"
+                ? file
+                : new File([file], `Pasted_Image_${Date.now()}.${ext}`, {
+                    type: file.type || "image/png",
+                  });
+            filesToAdd.push(namedFile);
+          }
+        }
+      }
+    }
+
+    if (filesToAdd.length === 0 && clipboardData.files && clipboardData.files.length > 0) {
+      for (let i = 0; i < clipboardData.files.length; i++) {
+        const file = clipboardData.files[i];
+        if (file.type.startsWith("image/")) {
+          filesToAdd.push(file);
+        }
+      }
+    }
+
+    if (filesToAdd.length > 0) {
+      e.preventDefault();
+      e.stopPropagation();
+      onFilesChange([...uploadedFiles, ...filesToAdd]);
+      toast.success(
+        filesToAdd.length === 1
+          ? "Image attached from clipboard"
+          : `${filesToAdd.length} images attached from clipboard`
+      );
+    }
+  };
+
   const removeFile = (index: number) => {
     const newFiles = [...uploadedFiles];
     newFiles.splice(index, 1);
@@ -305,9 +464,145 @@ export const ChatInput = forwardRef<HTMLDivElement, ChatInputProps>(function Cha
   };
 
   const hasContent = message.trim().length > 0 || uploadedFiles.length > 0;
-  const isMultiLine =
-    message.includes("\n") ||
-    (textareaRef.current && textareaRef.current.scrollHeight > 48);
+
+  const renderPlusButton = () => (
+    <DropdownMenu
+      open={plusMenuOpen}
+      onOpenChange={(open) => {
+        if (open) updateMenuPosition();
+        setPlusMenuOpen(open);
+      }}
+    >
+      <Tooltip open={plusMenuOpen ? false : undefined}>
+        <TooltipTrigger asChild>
+          <DropdownMenuTrigger asChild>
+            <button
+              ref={plusButtonRef}
+              type="button"
+              disabled={isTyping || isUploading}
+              className="w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-secondary dark:hover:bg-[#2f2f2f] transition-colors shrink-0 cursor-pointer outline-none focus:outline-none"
+              aria-label="Add files and more"
+            >
+              <Plus className="w-5 h-5" />
+            </button>
+          </DropdownMenuTrigger>
+        </TooltipTrigger>
+        <TooltipContent className="text-md">
+          Add files & more
+        </TooltipContent>
+      </Tooltip>
+
+      <DropdownMenuContent
+        side="top"
+        align="start"
+        sideOffset={menuSideOffset}
+        alignOffset={menuAlignOffset}
+        avoidCollisions={true}
+        collisionPadding={12}
+        className="w-64 max-w-[calc(100vw-24px)] rounded-2xl p-1.5 bg-background dark:bg-[#212121] border border-border/80 dark:border-neutral-700/80 shadow-2xl shadow-black/40 select-none outline-none"
+        style={{
+          WebkitFontSmoothing: "antialiased",
+          MozOsxFontSmoothing: "grayscale",
+        }}
+      >
+        <PlusMenuContent
+          onAddFiles={() => {
+            fileInputRef.current?.click();
+            setPlusMenuOpen(false);
+          }}
+          selectedModel={currentModel}
+          onModelChange={(newModel) => {
+            handleSelectModel(newModel);
+          }}
+          selectedTier={selectedTier}
+          onTierChange={onTierChange}
+          isOpen={plusMenuOpen}
+        />
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+
+  const renderRightActions = () => (
+    <>
+      {/* Think Mode Pill Button */}
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <button
+            type="button"
+            onClick={(e) => e.preventDefault()}
+            style={{ cursor: "not-allowed" }}
+            className="hidden min-[420px]:flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-full text-base sm:text-[13px] font-medium text-muted-foreground/50 opacity-60 cursor-not-allowed select-none bg-transparent hover:bg-transparent"
+            aria-label="Think mode (Coming soon)"
+          >
+            <Brain className="w-5 h-5 text-muted-foreground/50 pointer-events-none" />
+            <span className="pointer-events-none hidden sm:inline">Think</span>
+          </button>
+        </TooltipTrigger>
+        <TooltipContent className="text-md">
+          Coming soon
+        </TooltipContent>
+      </Tooltip>
+
+      {/* Dictate / Mic */}
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <button
+            type="button"
+            onClick={toggleDictation}
+            className={cn(
+              "w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center transition-all cursor-pointer shrink-0",
+              isListening
+                ? "bg-red-500/15 text-red-500 hover:bg-red-500/25 ring-red-500/30"
+                : "text-muted-foreground hover:text-foreground hover:bg-secondary"
+            )}
+            aria-label={isListening ? "Stop dictation" : "Dictate"}
+          >
+            {isListening ? (
+              <MicOff className="w-5 h-5 text-red-500" />
+            ) : (
+              <Mic className="w-5 h-5" />
+            )}
+          </button>
+        </TooltipTrigger>
+        <TooltipContent className="text-md">
+          {isListening ? "Stop dictation" : "Dictate"}
+        </TooltipContent>
+      </Tooltip>
+
+      {/* Send / Stop Button */}
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <button
+            type="button"
+            onClick={isTyping ? onStop : onSend}
+            disabled={(!hasContent && !isTyping) || isUploading}
+            className={cn(
+              "w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center transition-all shrink-0",
+              isTyping
+                ? "bg-foreground text-background cursor-pointer hover:opacity-85 active:scale-95"
+                : isUploading
+                ? "bg-secondary dark:bg-neutral-800 text-foreground cursor-wait opacity-90"
+                : hasContent
+                ? "bg-foreground text-background cursor-pointer hover:opacity-90 active:scale-95"
+                : "bg-neutral-300 dark:bg-[#383838] text-muted-foreground/50 cursor-not-allowed opacity-50"
+            )}
+            aria-label={isTyping ? "Stop generating" : "Send message"}
+          >
+            {isTyping ? (
+              <Square className="w-4 h-4 fill-current" />
+            ) : isUploading ? (
+              <Loader className="w-5 h-5 animate-spin text-foreground" />
+            ) : (
+              <ArrowUp className="w-5 h-5 stroke-[3]" />
+            )}
+          </button>
+        </TooltipTrigger>
+        <TooltipContent className="text-md">
+          {isTyping ? "Stop generating" : isUploading ? "Uploading files..." : "Send message"}
+        </TooltipContent>
+      </Tooltip>
+    </>
+  );
 
   return (
     <div
@@ -320,17 +615,33 @@ export const ChatInput = forwardRef<HTMLDivElement, ChatInputProps>(function Cha
       {children}
       <div
         {...getRootProps()}
+        ref={pillRef}
         className={cn(
           "relative bg-background dark:bg-[#212121] border border-border/80 dark:border-neutral-700/80 transition-all duration-200",
-          isMultiLine || uploadedFiles.length > 0
+          isExpandedLayout
             ? "rounded-3xl p-2.5 sm:p-3"
-            : "rounded-full px-1.5 sm:px-2 py-1 min-h-[48px] sm:min-h-[52px]",
+            : "rounded-full px-1.5 sm:px-2 py-1 min-h-[48px] sm:min-h-[52px] flex items-center",
           isDragActive && "ring-2 ring-primary border-primary"
         )}
       >
         <input {...getInputProps()} />
+        {/* Attachment Button */}
+        <input
+          type="file"
+          multiple
+          className="hidden"
+          ref={fileInputRef}
+          onChange={(e) => {
+            if (e.target.files) {
+              onFilesChange([
+                ...uploadedFiles,
+                ...Array.from(e.target.files),
+              ]);
+            }
+          }}
+        />
 
-        {/* Attached Files Preview — ChatGPT-style cards (Image 3) */}
+        {/* Attached Files Preview —  cards (Image 3) */}
         {uploadedFiles.length > 0 && (
           <div className="flex flex-wrap gap-2 px-1 pt-1 pb-2">
             {uploadedFiles.map((file, i) => (
@@ -339,142 +650,67 @@ export const ChatInput = forwardRef<HTMLDivElement, ChatInputProps>(function Cha
           </div>
         )}
 
-        {/* Text Input Row / Area */}
-        <div
-          className={cn(
-            "flex items-center gap-1 sm:gap-2",
-            isMultiLine ? "flex-col items-stretch" : "flex-row"
-          )}
-        >
-          {/* Main Input Field */}
-          <div className="flex-1 flex items-center min-w-0 pl-0.5 sm:pl-1">
-            {/* Attachment Button */}
-            <input
-              type="file"
-              multiple
-              className="hidden"
-              ref={fileInputRef}
-              onChange={(e) => {
-                if (e.target.files) {
-                  onFilesChange([
-                    ...uploadedFiles,
-                    ...Array.from(e.target.files),
-                  ]);
-                }
-              }}
-            />
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <button
-                  type="button"
-                  onClick={() => fileInputRef.current?.click()}
-                  disabled={isTyping || isUploading}
-                  className="w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors shrink-0 cursor-pointer"
-                  aria-label="Add attachment"
-                >
-                  <Plus className="w-4 h-4 sm:w-5 sm:h-5" />
-                </button>
-              </TooltipTrigger>
-              <TooltipContent className="text-md">
-                Add files and more
-              </TooltipContent>
-            </Tooltip>
+        {isExpandedLayout ? (
+          /* Multiline Layout: full-width textarea on top, bottom toolbar with + on left and tools on right */
+          <div className="flex flex-col w-full">
+            <div className="w-full px-1.5 sm:px-2 pt-0.5 pb-1">
+              <textarea
+                ref={textareaRef}
+                value={message}
+                onChange={(e) => onMessageChange(e.target.value)}
+                onKeyDown={handleKeyDown}
+                onPaste={handlePaste}
+                placeholder="Ask anything"
+                rows={1}
+                disabled={isTyping || isUploading}
+                className="w-full min-w-0 bg-transparent border-0 p-0 text-[16px] sm:text-[16.5px] text-foreground placeholder:text-muted-foreground/70 focus:outline-none focus:ring-0 resize-none min-h-[44px] max-h-[200px] leading-relaxed"
+              />
+            </div>
 
-            <textarea
-              ref={textareaRef}
-              value={message}
-              onChange={(e) => onMessageChange(e.target.value)}
-              onKeyDown={handleKeyDown}
-              placeholder="Ask anything"
-              rows={1}
-              disabled={isTyping || isUploading}
-              className="w-full min-w-0 bg-transparent border-0 px-2 py-1.5 text-[14.5px] sm:text-[15px] text-foreground placeholder:text-muted-foreground/70 focus:outline-none focus:ring-0 resize-none min-h-[34px] max-h-[200px] leading-relaxed"
-            />
+            {/* Bottom Toolbar Row: + button placed down side like others buttons */}
+            <div className="flex items-center justify-between w-full pt-1">
+              <div className="flex items-center pl-0.5">
+                {renderPlusButton()}
+              </div>
+
+              <div className="flex items-center gap-1 sm:gap-1.5 shrink-0 pr-0.5">
+                {renderRightActions()}
+              </div>
+            </div>
           </div>
+        ) : (
+          /* Single-line Layout: sleek single row with + on left, textarea in center, tools on right */
+          <div className="flex items-center gap-1 sm:gap-2 w-full">
+            <div className="flex items-center shrink-0 pl-0.5 sm:pl-1">
+              {renderPlusButton()}
+            </div>
 
-          {/* Right Action Tools Dock */}
-          <div
-            className={cn(
-              "flex items-center gap-1 sm:gap-1.5 shrink-0 pr-0.5 sm:pr-1",
-              isMultiLine && "justify-end pt-1"
-            )}
-          >
-            {/* Think Mode Pill Button */}
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <button
-                  type="button"
-                  onClick={(e) => e.preventDefault()}
-                  style={{ cursor: "not-allowed" }}
-                  className="hidden min-[420px]:flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-full text-xs sm:text-[13px] font-medium text-muted-foreground/50 opacity-60 cursor-not-allowed select-none bg-transparent hover:bg-transparent"
-                  aria-label="Think mode (Coming soon)"
-                >
-                  <Brain className="w-4 h-4 text-muted-foreground/50 pointer-events-none" />
-                  <span className="pointer-events-none hidden sm:inline">Think</span>
-                </button>
-              </TooltipTrigger>
-              <TooltipContent className="text-md">
-                Coming soon
-              </TooltipContent>
-            </Tooltip>
+            <div className="flex-1 min-w-0 flex items-center">
+              <textarea
+                ref={textareaRef}
+                value={message}
+                onChange={(e) => onMessageChange(e.target.value)}
+                onKeyDown={handleKeyDown}
+                onPaste={handlePaste}
+                placeholder="Ask anything"
+                rows={1}
+                disabled={isTyping || isUploading}
+                className="w-full min-w-0 bg-transparent border-0 px-0.5 sm:px-1 py-0 text-[16px] sm:text-[16.5px] text-foreground placeholder:text-muted-foreground/75 focus:outline-none focus:ring-0 resize-none h-[26px] leading-[26px] overflow-hidden scrollbar-none"
+              />
+            </div>
 
-            {/* Dictate / Mic */}
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <button
-                  type="button"
-                  onClick={toggleDictation}
-                  className={cn(
-                    "w-8 h-8 sm:w-9 sm:h-9 rounded-full flex items-center justify-center transition-all cursor-pointer shrink-0",
-                    isListening
-                      ? "bg-red-500/15 text-red-500 hover:bg-red-500/25 ring-red-500/30"
-                      : "text-muted-foreground hover:text-foreground hover:bg-secondary"
-                  )}
-                  aria-label={isListening ? "Stop dictation" : "Dictate"}
-                >
-                  {isListening ? (
-                    <MicOff className="w-4 h-4 text-red-500" />
-                  ) : (
-                    <Mic className="w-4 h-4" />
-                  )}
-                </button>
-              </TooltipTrigger>
-              <TooltipContent className="text-md">
-                {isListening ? "Stop dictation" : "Dictate"}
-              </TooltipContent>
-            </Tooltip>
-
-            {/* Send Button */}
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <button
-                  type="button"
-                  onClick={onSend}
-                  disabled={!hasContent || isTyping || isUploading}
-                  className={cn(
-                    "w-8 h-8 sm:w-9 sm:h-9 rounded-full flex items-center justify-center transition-all shrink-0",
-                    hasContent && !isTyping && !isUploading
-                      ? "bg-foreground text-background cursor-pointer hover:opacity-90 active:scale-95"
-                      : "bg-neutral-300 dark:bg-[#383838] text-muted-foreground/50 cursor-not-allowed opacity-50"
-                  )}
-                  aria-label="Send message"
-                >
-                  <ArrowUp className="w-4 h-4 stroke-[2.5]" />
-                </button>
-              </TooltipTrigger>
-              <TooltipContent className="text-md">
-                Send message
-              </TooltipContent>
-            </Tooltip>
+            <div className="flex items-center gap-1 sm:gap-1.5 shrink-0 pr-0.5 sm:pr-1">
+              {renderRightActions()}
+            </div>
           </div>
-        </div>
+        )}
       </div>
 
-      {/* Responsive Disclaimer — ChatGPT style */}
+      {/* Responsive Disclaimer */}
       {showDisclaimer && (
         <div className="text-center pt-2 pb-0.5 px-3 select-none">
-          <p className="text-[11px] sm:text-xs text-muted-foreground/60 font-normal tracking-tight leading-tight">
-            closeAI can make mistakes. Verify important info.
+          <p className="text-[13px] sm:text-base text-muted-foreground/60 font-normal tracking-tight leading-tight">
+            CloseAI can make mistakes. Verify important info.
           </p>
         </div>
       )}

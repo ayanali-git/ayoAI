@@ -183,7 +183,7 @@ export function MarketingHeader() {
               }}
               className="flex items-center gap-2 hover:opacity-85 transition-opacity"
             >
-              <span className="font-bold text-[17px] tracking-tight text-foreground">
+              <span className="font-bold text-xl tracking-tight text-foreground">
                 CloseAI
               </span>
             </Link>
@@ -325,7 +325,7 @@ export function MarketingHeader() {
                 <button
                   onMouseEnter={() => setActiveMenu(null)}
                   onClick={() => setIsSearchOpen(false)}
-                  className="text-foreground hover:opacity-80 p-1 transition-opacity cursor-pointer"
+                  className="text-muted-foreground hover:text-foreground p-1 pt-2 transition-colors cursor-pointer"
                   aria-label="Close search"
                 >
                   <X className="w-4 h-4" />
@@ -337,7 +337,7 @@ export function MarketingHeader() {
                     setActiveMenu(null);
                     setIsSearchOpen(true);
                   }}
-                  className="text-muted-foreground hover:text-foreground p-1 transition-colors cursor-pointer"
+                  className="text-muted-foreground hover:text-foreground p-1 pt-2 transition-colors cursor-pointer"
                   aria-label="Search"
                 >
                   <Search className="w-4 h-4" />
@@ -412,7 +412,7 @@ export function MarketingHeader() {
 
                 <Button
                   asChild
-                  className="group rounded-full px-4 h-8 text-[13px] font-medium bg-foreground text-background hover:opacity-90 transition-opacity cursor-pointer"
+                  className="group rounded-full px-3 h-9 text-[13px] font-medium bg-foreground text-background hover:opacity-90 transition-opacity cursor-pointer"
                 >
                   <Link href="/c" className="flex items-center gap-1">
                     <span>Go to Chat</span>

@@ -41,7 +41,7 @@ export default function FeaturesPage() {
             </div>
             <div>
               <h2 className="text-xl sm:text-2xl font-semibold mb-2 sm:mb-4">{feature.title}</h2>
-              <p className="text-sm sm:text-base text-muted-foreground leading-relaxed">
+              <p className="text-base sm:text-base text-muted-foreground leading-relaxed">
                 {feature.description}
               </p>
             </div>

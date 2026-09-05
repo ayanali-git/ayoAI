@@ -13,8 +13,8 @@ export const PLAN_PRICES = {
         yearly: process.env.STRIPE_PRO_YEARLY_PRICE_ID!,
     },
     ultra: {
-        monthly: process.env.STRIPE_ULTRA_MONTHLY_PRICE_ID!,
-        yearly: process.env.STRIPE_ULTRA_YEARLY_PRICE_ID!,
+        monthly: process.env.STRIPE_ULTRA_PRO_MONTHLY_PRICE_ID!,
+        yearly: process.env.STRIPE_ULTRA_PRO_YEARLY_PRICE_ID!,
     },
 } as const;
 

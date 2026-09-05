@@ -24,23 +24,27 @@ export async function POST(request: NextRequest) {
         const arrayBuffer = await file.arrayBuffer();
         const buffer = Buffer.from(arrayBuffer);
 
-        // Upload to Supabase Storage
-        const { data: uploadData, error: uploadError } = await supabaseAdmin.storage
+        let uploadResult = await supabaseAdmin.storage
             .from('uploads')
             .upload(filename, buffer, {
                 contentType: file.type,
                 upsert: false,
             });
 
-        if (uploadError) {
-            console.error('Upload error:', uploadError);
-            // If bucket doesn't exist, return a helpful error
-            if (uploadError.message.includes('Bucket not found')) {
-                return NextResponse.json({
-                    error: 'Storage bucket "uploads" not found. Please create it in Supabase dashboard.'
-                }, { status: 500 });
-            }
-            return NextResponse.json({ error: 'Failed to upload file' }, { status: 500 });
+        if (uploadResult.error && uploadResult.error.message.includes('Bucket not found')) {
+            console.log('Bucket "uploads" not found. Creating public bucket...');
+            await supabaseAdmin.storage.createBucket('uploads', { public: true });
+            uploadResult = await supabaseAdmin.storage
+                .from('uploads')
+                .upload(filename, buffer, {
+                    contentType: file.type,
+                    upsert: false,
+                });
+        }
+
+        if (uploadResult.error) {
+            console.error('Upload error:', uploadResult.error);
+            return NextResponse.json({ error: 'Failed to upload file: ' + uploadResult.error.message }, { status: 500 });
         }
 
         // Get public URL

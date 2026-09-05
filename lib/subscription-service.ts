@@ -70,7 +70,28 @@ class SubscriptionService {
         return 'free';
       }
 
-      return data.plan || 'free';
+      if (data?.plan && data.plan !== 'free') {
+        return data.plan;
+      }
+
+      // Check subscriptions table if profile says free or is unset
+      const { data: activeSub } = await supabase
+        .from('subscriptions')
+        .select('plan_name')
+        .eq('user_id', userId)
+        .eq('status', 'active')
+        .maybeSingle();
+
+      if (activeSub?.plan_name) {
+        // Sync profile
+        await supabase
+          .from('profiles')
+          .update({ plan: activeSub.plan_name, subscription_status: 'active' })
+          .eq('id', userId);
+        return activeSub.plan_name;
+      }
+
+      return data?.plan || 'free';
     } catch (error) {
       console.error('Get user plan error:', error);
       return 'free';

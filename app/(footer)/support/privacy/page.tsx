@@ -4,7 +4,7 @@ export default function PrivacyPage() {
   return (
     <div className="py-12 sm:py-16 w-full max-w-3xl mx-auto min-w-0">
       <h1 className="text-3xl sm:text-5xl font-semibold tracking-tight text-foreground mb-4 sm:mb-6">Privacy Policy</h1>
-      <div className="text-sm sm:text-base text-muted-foreground mb-8 sm:mb-12">Last updated: August 23, 2026</div>
+      <div className="text-base sm:text-base text-muted-foreground mb-8 sm:mb-12">Last updated: August 23, 2026</div>
 
       <div className="space-y-8 sm:space-y-12 text-base sm:text-lg text-muted-foreground leading-relaxed">
         <section>
@@ -17,7 +17,7 @@ export default function PrivacyPage() {
         <section>
           <h2 className="text-xl sm:text-2xl font-semibold text-foreground mb-3 sm:mb-4">2. Data We Collect</h2>
           <p className="mb-3 sm:mb-4">We collect information that you provide directly to us, including:</p>
-          <ul className="list-disc pl-6 space-y-2 text-sm sm:text-base">
+          <ul className="list-disc pl-6 space-y-2 text-base sm:text-base">
             <li>Account information (name, email, password)</li>
             <li>Payment and billing information</li>
             <li>Content you input into our models (prompts, uploaded files)</li>

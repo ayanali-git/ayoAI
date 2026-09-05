@@ -17,10 +17,10 @@ export default function StatusPage() {
           <CheckCircle2 className="h-7 w-7 sm:h-8 sm:w-8 text-emerald-500 shrink-0" />
           <div>
             <h2 className="text-lg sm:text-xl font-semibold">All Systems Operational</h2>
-            <p className="text-xs sm:text-sm text-muted-foreground">Updated a few minutes ago</p>
+            <p className="text-base sm:text-base text-muted-foreground">Updated a few minutes ago</p>
           </div>
         </div>
-        <div className="text-xs sm:text-sm font-medium px-3 py-1 bg-secondary rounded-full whitespace-nowrap">
+        <div className="text-base sm:text-base font-medium px-3 py-1 bg-secondary rounded-full whitespace-nowrap">
           99.99% Uptime
         </div>
       </div>
@@ -33,9 +33,9 @@ export default function StatusPage() {
           { name: "Model Inference", status: "Operational" },
           { name: "Billing & Accounts", status: "Operational" }
         ].map((service, i) => (
-          <div key={i} className="flex items-center justify-between py-3.5 sm:py-4 border-b border-border/60 text-sm sm:text-base">
+          <div key={i} className="flex items-center justify-between py-3.5 sm:py-4 border-b border-border/60 text-base sm:text-base">
             <span className="font-medium text-foreground">{service.name}</span>
-            <span className="text-xs sm:text-sm text-muted-foreground flex items-center gap-2">
+            <span className="text-base sm:text-base text-muted-foreground flex items-center gap-2">
               <span className="h-2 w-2 rounded-full bg-emerald-500 block"></span>
               {service.status}
             </span>
@@ -45,7 +45,7 @@ export default function StatusPage() {
 
       <section className="mt-12 sm:mt-16">
         <h3 className="text-base sm:text-lg font-semibold mb-4 sm:mb-6">Past Incidents</h3>
-        <div className="text-muted-foreground text-sm sm:text-base">
+        <div className="text-muted-foreground text-base sm:text-base">
           <p>No incidents reported in the last 30 days.</p>
         </div>
       </section>

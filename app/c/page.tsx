@@ -1,63 +1,119 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import React, { useState, useEffect, useRef, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/lib/supabase";
 import { chatService, Chat } from "@/lib/chat-service";
 import { Sidebar } from "@/components/chat/sidebar";
 import { WelcomeScreen } from "@/components/chat/welcome-screen";
 import { ChatInput } from "@/components/chat/chat-input";
+import { Loader, PanelRight } from "lucide-react";
 import { CloseAIIcon } from "@/components/brand/logo";
-import { Loader, PanelRight, Plus } from "lucide-react";
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { useSidebarContext } from "@/components/chat/sidebar-context";
 import toast from "@/lib/toast";
 
-export default function NewChatPage() {
+function NewChatContent() {
   const { user, loading } = useAuth();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const queryPrompt = searchParams?.get("q")?.trim() || "";
 
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const {
+    sidebarOpen,
+    toggleSidebar: handleToggleSidebar,
+  } = useSidebarContext();
+  const [isSidebarBtnHovered, setIsSidebarBtnHovered] = useState(false);
   const [chats, setChats] = useState<Chat[]>([]);
+  const [isChatsLoading, setIsChatsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [message, setMessage] = useState("");
   const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
   const [isTyping, setIsTyping] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
+  const [isAutoCreating, setIsAutoCreating] = useState(false);
+  const [selectedModel, setSelectedModel] = useState("GPT-5.4");
+  const [selectedModelTier, setSelectedModelTier] = useState(4);
+  const autoCreateTriggeredRef = useRef(false);
 
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      const isMobile = window.innerWidth < 768;
-      if (isMobile) {
-        setSidebarOpen(false);
-      } else {
-        const saved = localStorage.getItem("closeai_sidebar_open");
-        setSidebarOpen(saved !== null ? saved === "true" : true);
+  const handleAutoCreateAndSend = async (promptText: string) => {
+    if (!user) return;
+    setIsAutoCreating(true);
+    try {
+      // 1. Create chat directly in Supabase
+      const { data: newChat, error: chatError } = await supabase
+        .from("chats")
+        .insert({
+          user_id: user.id,
+          title:
+            promptText.substring(0, 48) +
+            (promptText.length > 48 ? "..." : ""),
+          starred: false,
+        })
+        .select()
+        .single();
+
+      if (chatError || !newChat) {
+        throw new Error(chatError?.message || "Failed to create chat");
       }
-    }
-  }, []);
 
-  const handleToggleSidebar = () => {
-    setSidebarOpen((prev) => {
-      const next = !prev;
+      // 2. Mark pending prompt for immediate AI trigger in [id]/page
       if (typeof window !== "undefined") {
-        localStorage.setItem("closeai_sidebar_open", String(next));
+        sessionStorage.setItem(
+          `auto_send_${newChat.id}`,
+          JSON.stringify({
+            prompt: promptText,
+            model: selectedModel,
+          })
+        );
       }
-      return next;
-    });
+
+      // 3. Replace URL with active chat
+      router.replace(`/c/${newChat.id}`);
+    } catch (error: any) {
+      console.error("Error auto-starting chat:", error);
+      toast.error(error.message || "Failed to start chat");
+      setIsAutoCreating(false);
+      setMessage(promptText);
+    }
   };
 
   useEffect(() => {
-    if (!loading && !user) {
+    if (loading) return;
+
+    if (!user) {
+      const pending = queryPrompt || (typeof window !== "undefined" ? sessionStorage.getItem("pending_prompt") : null);
+      if (pending) {
+        if (typeof window !== "undefined") {
+          sessionStorage.setItem("pending_prompt", pending);
+        }
+      }
       router.push("/auth/login");
-    } else if (user) {
-      loadChats();
+      return;
     }
-  }, [user, loading, router]);
+
+    loadChats();
+
+    // Check if we need to auto-create and send from query param or pending prompt
+    const promptToSend =
+      queryPrompt ||
+      (typeof window !== "undefined"
+        ? sessionStorage.getItem("pending_prompt")
+        : null);
+
+    if (promptToSend && promptToSend.trim() && !autoCreateTriggeredRef.current) {
+      autoCreateTriggeredRef.current = true;
+      if (typeof window !== "undefined") {
+        sessionStorage.removeItem("pending_prompt");
+      }
+      handleAutoCreateAndSend(promptToSend.trim());
+    }
+  }, [user, loading, queryPrompt, router]);
 
   const loadChats = async () => {
     if (!user) return;
@@ -66,6 +122,8 @@ export default function NewChatPage() {
       setChats(userChats);
     } catch (error) {
       console.error("Error loading chats:", error);
+    } finally {
+      setIsChatsLoading(false);
     }
   };
 
@@ -107,6 +165,7 @@ export default function NewChatPage() {
           `auto_send_${newChat.id}`,
           JSON.stringify({
             prompt: messageText,
+            model: selectedModel,
           })
         );
       }
@@ -123,20 +182,8 @@ export default function NewChatPage() {
     }
   };
 
-  if (loading) {
-    return (
-      <div className="flex h-screen items-center justify-center bg-background">
-        <Loader className="w-6 h-6 animate-spin text-muted-foreground" />
-      </div>
-    );
-  }
-
-  if (!user) {
-    return null;
-  }
-
   return (
-    <div className="flex h-screen bg-background text-foreground overflow-hidden">
+    <div className="flex h-full w-full bg-background text-foreground overflow-hidden">
       {/* Sidebar (Expanded or Mini Rail) */}
       <Sidebar
         user={user}
@@ -159,51 +206,117 @@ export default function NewChatPage() {
         onSearchChange={setSearchQuery}
         isOpen={sidebarOpen}
         onToggle={handleToggleSidebar}
+        isLoading={isChatsLoading || loading}
       />
 
       {/* Main Chat Workspace */}
-      <div className="flex-1 flex flex-col min-w-0 h-full relative">
+      <div className="flex-1 flex flex-col min-w-0 h-full relative overflow-hidden">
         {/* Transparent Top Floating Header */}
-        <header className="sticky top-0 z-20 h-14 px-3 sm:px-4 flex items-center justify-between select-none pointer-events-none">
-          <div className="flex items-center gap-2 pointer-events-auto">
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <button
-                  type="button"
-                  onClick={handleToggleSidebar}
-                  className="md:hidden w-8 h-8 rounded-xl bg-background dark:bg-[#212121] flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-secondary dark:hover:bg-[#2f2f2f] transition-colors cursor-pointer outline-none focus:outline-none"
-                  aria-label="Toggle sidebar"
-                >
-                  <PanelRight className="w-4 h-4" />
-                </button>
-              </TooltipTrigger>
-              <TooltipContent className="text-md">
-                Toggle sidebar
-              </TooltipContent>
-            </Tooltip>
+        <header className="shrink-0 z-30 h-14 pt-[env(safe-area-inset-top,0px)] px-3 sm:px-4 flex items-center justify-between select-none">
+          <div className="flex items-center gap-2">
+            {!sidebarOpen && (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsSidebarBtnHovered(false);
+                      handleToggleSidebar();
+                    }}
+                    onMouseEnter={() => setIsSidebarBtnHovered(true)}
+                    onMouseLeave={() => setIsSidebarBtnHovered(false)}
+                    onBlur={() => setIsSidebarBtnHovered(false)}
+                    className="lg:hidden w-8 h-8 rounded-xl bg-background dark:bg-[#212121] flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-secondary dark:hover:bg-[#2f2f2f] transition-colors cursor-pointer outline-none focus:outline-none"
+                    aria-label="Open sidebar"
+                  >
+                      <PanelRight className="w-4 h-4 text-foreground" />
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent side="bottom" align="start" sideOffset={6} className="text-md">
+                  Open sidebar
+                </TooltipContent>
+              </Tooltip>
+            )}
           </div>
         </header>
 
         {/* Content Stream (Welcome Zero State) */}
-        <div className="flex-1 flex flex-col justify-center overflow-y-auto px-2 sm:px-4">
-          <WelcomeScreen
-            user={user}
-            onPromptSelect={(prompt) => setMessage(prompt)}
-          >
-            <ChatInput
-              message={message}
-              onMessageChange={setMessage}
-              onSend={handleSend}
-              uploadedFiles={uploadedFiles}
-              onFilesChange={setUploadedFiles}
-              isTyping={isTyping}
-              isUploading={isUploading}
-              centered={true}
-              showDisclaimer={true}
-            />
-          </WelcomeScreen>
+        <div className="flex-1 flex flex-col justify-center overflow-y-auto px-2 sm:px-4 pb-[env(safe-area-inset-bottom,0px)] no-overscroll">
+          {isAutoCreating || (queryPrompt && !autoCreateTriggeredRef.current) ? (
+            <div className="flex-1 w-full h-full flex flex-col items-center justify-center space-y-3 pb-12 text-muted-foreground animate-in fade-in-0 duration-200">
+              <Loader className="w-6 h-6 animate-spin text-foreground" />
+              <p className="text-[14px]">Starting your conversation...</p>
+            </div>
+          ) : (
+            <WelcomeScreen
+              user={user}
+              onPromptSelect={(prompt) => setMessage(prompt)}
+            >
+              <ChatInput
+                message={message}
+                onMessageChange={setMessage}
+                onSend={handleSend}
+                uploadedFiles={uploadedFiles}
+                onFilesChange={setUploadedFiles}
+                isTyping={isTyping}
+                isUploading={isUploading}
+                selectedModel={selectedModel}
+                onModelChange={setSelectedModel}
+                selectedTier={selectedModelTier}
+                onTierChange={setSelectedModelTier}
+                centered={true}
+                showDisclaimer={false}
+              />
+            </WelcomeScreen>
+          )}
         </div>
       </div>
     </div>
+  );
+}
+
+function NewChatFallback() {
+  const { sidebarOpen } = useSidebarContext();
+  return (
+    <div className="flex h-full w-full bg-background text-foreground overflow-hidden">
+      {sidebarOpen ? (
+        <div className="hidden md:flex w-[260px] h-full bg-sidebar border-r border-border/80 p-3 flex-col justify-between shrink-0">
+          <div className="space-y-4 py-2">
+            <div className="h-4 w-20 bg-muted-foreground/20 rounded animate-pulse ml-2" />
+            <div className="space-y-2">
+              <div className="h-8 w-full bg-secondary/80 dark:bg-neutral-800/60 rounded-xl animate-pulse" />
+              <div className="h-8 w-[85%] bg-secondary/70 dark:bg-neutral-800/50 rounded-xl animate-pulse" />
+              <div className="h-8 w-[92%] bg-secondary/70 dark:bg-neutral-800/50 rounded-xl animate-pulse" />
+            </div>
+          </div>
+          <div className="w-full flex items-center gap-2.5 py-2 pl-[2px] pr-2 border-t border-border/80">
+            <div className="w-9 h-9 rounded-full bg-secondary/80 dark:bg-neutral-800/80 animate-pulse shrink-0" />
+            <div className="flex-1 space-y-1.5">
+              <div className="h-3.5 w-24 bg-secondary/80 dark:bg-neutral-800/80 rounded animate-pulse" />
+              <div className="h-2.5 w-12 bg-secondary/60 dark:bg-neutral-800/60 rounded animate-pulse" />
+            </div>
+          </div>
+        </div>
+      ) : (
+        <div className="hidden md:flex w-[56px] h-full bg-sidebar border-r border-border flex-col items-center justify-between p-2 shrink-0">
+          <div className="w-9 h-9 rounded-xl bg-secondary/80 dark:bg-neutral-800/60 animate-pulse mt-2" />
+          <div className="w-9 h-9 rounded-full bg-secondary/80 dark:bg-neutral-800/80 animate-pulse mb-2" />
+        </div>
+      )}
+      <div className="flex-1 flex flex-col items-center justify-center min-w-0">
+        <div className="w-full max-w-2xl px-4 flex flex-col items-center justify-center space-y-6">
+          <div className="h-8 w-64 bg-secondary/80 dark:bg-neutral-800/60 rounded-xl animate-pulse" />
+          <div className="h-12 w-full bg-secondary/60 dark:bg-neutral-800/40 rounded-full animate-pulse" />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default function NewChatPage() {
+  return (
+    <Suspense fallback={<NewChatFallback />}>
+      <NewChatContent />
+    </Suspense>
   );
 }

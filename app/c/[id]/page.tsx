@@ -24,6 +24,7 @@ import {
   ArrowDown,
   PanelRight,
 } from "lucide-react";
+import { CloseAIIcon } from "@/components/brand/logo";
 import { Button } from "@/components/ui/button";
 import {
   Tooltip,
@@ -36,6 +37,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useSidebarContext } from "@/components/chat/sidebar-context";
 import { cn } from "@/lib/utils";
 import toast from "@/lib/toast";
 
@@ -45,8 +47,15 @@ export default function ActiveChatPage() {
   const params = useParams();
   const chatId = params.id as string;
 
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const {
+    sidebarOpen,
+    toggleSidebar: handleToggleSidebar,
+  } = useSidebarContext();
+  const [isSidebarBtnHovered, setIsSidebarBtnHovered] = useState(false);
+
   const [chats, setChats] = useState<Chat[]>([]);
+  const [isChatsLoading, setIsChatsLoading] = useState(true);
+  const [isChatLoading, setIsChatLoading] = useState(true);
   const [messages, setMessages] = useState<Message[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [inputValue, setInputValue] = useState("");
@@ -57,32 +66,37 @@ export default function ActiveChatPage() {
     content: string;
     files: File[];
   } | null>(null);
-  const [selectedModel, setSelectedModel] = useState("closeAI 4o");
+  const [selectedModel, setSelectedModel] = useState("GPT-5.4");
+  const [selectedModelTier, setSelectedModelTier] = useState(4);
   const [showScrollBottom, setShowScrollBottom] = useState(false);
+  const autoSendTriggeredRef = useRef(false);
 
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
+  // Optimistically show pending message immediately if this chat was just auto-created
   useEffect(() => {
-    if (typeof window !== "undefined") {
-      const isMobile = window.innerWidth < 768;
-      if (isMobile) {
-        setSidebarOpen(false);
-      } else {
-        const saved = localStorage.getItem("closeai_sidebar_open");
-        setSidebarOpen(saved !== null ? saved === "true" : true);
+    if (typeof window !== "undefined" && chatId) {
+      const autoKey = `auto_send_${chatId}`;
+      const autoDataStr = sessionStorage.getItem(autoKey);
+      if (autoDataStr) {
+        try {
+          const autoData = JSON.parse(autoDataStr);
+          if (autoData?.model) {
+            setSelectedModel(autoData.model);
+          }
+          if (autoData?.prompt) {
+            setPendingMessage({ content: autoData.prompt, files: [] });
+            setIsTyping(true);
+          }
+        } catch (e) {}
       }
     }
-  }, []);
+  }, [chatId]);
 
-  const handleToggleSidebar = () => {
-    setSidebarOpen((prev) => {
-      const next = !prev;
-      if (typeof window !== "undefined") {
-        localStorage.setItem("closeai_sidebar_open", String(next));
-      }
-      return next;
-    });
-  };
+  useEffect(() => {
+    setIsChatLoading(true);
+    setMessages([]);
+  }, [chatId]);
 
   useEffect(() => {
     if (!loading && !user) {
@@ -118,6 +132,8 @@ export default function ActiveChatPage() {
       setChats(userChats);
     } catch (error) {
       console.error("Error loading chats:", error);
+    } finally {
+      setIsChatsLoading(false);
     }
   };
 
@@ -146,14 +162,18 @@ export default function ActiveChatPage() {
       setMessages(cleanMessages);
 
       // Check if this chat was just created with a pending auto-send prompt
-      if (typeof window !== "undefined") {
+      if (typeof window !== "undefined" && !autoSendTriggeredRef.current) {
         const autoKey = `auto_send_${chatId}`;
         const autoDataStr = sessionStorage.getItem(autoKey);
         if (autoDataStr) {
           sessionStorage.removeItem(autoKey);
+          autoSendTriggeredRef.current = true;
           const autoData = JSON.parse(autoDataStr);
           if (autoData?.prompt) {
-            triggerAiGeneration(autoData.prompt);
+            if (autoData?.model) {
+              setSelectedModel(autoData.model);
+            }
+            triggerAiGeneration(autoData.prompt, autoData?.model);
           }
         }
       }
@@ -161,17 +181,104 @@ export default function ActiveChatPage() {
       console.error("Error loading chat:", error);
       toast.error("Failed to load chat");
       router.push("/c");
+    } finally {
+      setIsChatLoading(false);
     }
   };
 
-  const triggerAiGeneration = async (promptText: string) => {
+  const streamAbortControllerRef = useRef<boolean>(false);
+
+  const handleStop = () => {
+    streamAbortControllerRef.current = true;
+    setIsTyping(false);
+  };
+
+  const streamAssistantResponse = async (
+    userMessage: any,
+    fullAssistantMessage: any,
+    baseMessages?: any[]
+  ) => {
+    streamAbortControllerRef.current = false;
+    const fullText = fullAssistantMessage?.content || "";
+    const assistantId = fullAssistantMessage?.id;
+
+    // Remove optimistic pending message
+    setPendingMessage(null);
+
+    // Initial state with blank assistant message
+    setMessages((prev) => {
+      const list = baseMessages ? [...baseMessages] : [...prev];
+      const filtered = list.filter((m) => m.id !== userMessage.id);
+      return [
+        ...filtered,
+        userMessage,
+        { ...fullAssistantMessage, content: "" },
+      ];
+    });
+
     setIsTyping(true);
+
+    const tokens = fullText.split(/(\s+)/);
+    if (tokens.length === 0) {
+      setIsTyping(false);
+      return;
+    }
+
+    let displayed = "";
+    const step = Math.max(1, Math.min(3, Math.ceil(tokens.length / 100)));
+    const intervalMs = 18;
+
+    for (let i = 0; i < tokens.length; i += step) {
+      if (streamAbortControllerRef.current) {
+        displayed = fullText;
+        break;
+      }
+
+      displayed += tokens.slice(i, i + step).join("");
+      const snapshot = displayed;
+
+      setMessages((prev) => {
+        if (prev.length === 0) return prev;
+        const copy = [...prev];
+        const lastIdx = copy.length - 1;
+        if (copy[lastIdx] && copy[lastIdx].id === assistantId) {
+          copy[lastIdx] = { ...copy[lastIdx], content: snapshot };
+        }
+        return copy;
+      });
+
+      scrollToBottom();
+      await new Promise((r) => setTimeout(r, intervalMs));
+    }
+
+    // Final update with complete content
+    setMessages((prev) => {
+      const copy = [...prev];
+      const lastIdx = copy.length - 1;
+      if (copy[lastIdx] && copy[lastIdx].id === assistantId) {
+        copy[lastIdx] = { ...copy[lastIdx], content: fullText };
+      }
+      return copy;
+    });
+
+    setIsTyping(false);
+    scrollToBottom();
+  };
+
+  const triggerAiGeneration = async (promptText: string, modelOverride?: string) => {
+    setIsTyping(true);
+    setPendingMessage({ content: promptText, files: [] });
     try {
       const headers: Record<string, string> = {
         "Content-Type": "application/json",
       };
-      if (token) {
-        headers["Authorization"] = `Bearer ${token}`;
+      let authToken = token;
+      if (!authToken) {
+        const { data: sessionData } = await supabase.auth.getSession();
+        authToken = sessionData?.session?.access_token || null;
+      }
+      if (authToken) {
+        headers["Authorization"] = `Bearer ${authToken}`;
       }
 
       const response = await fetch("/api/chat", {
@@ -181,6 +288,7 @@ export default function ActiveChatPage() {
           chatId,
           message: promptText,
           files: [],
+          model: modelOverride || selectedModel,
         }),
       });
 
@@ -191,29 +299,127 @@ export default function ActiveChatPage() {
 
       const result = await response.json();
       if (result.assistantMessage && result.userMessage) {
-        setMessages((prev) => {
-          const withoutDuplicate = prev.filter(
-            (m) => m.id !== result.userMessage.id && m.content !== promptText
-          );
-          return [
-            ...withoutDuplicate,
-            result.userMessage,
-            result.assistantMessage,
-          ];
-        });
+        await streamAssistantResponse(result.userMessage, result.assistantMessage);
       } else {
         const details = await chatService.getChatDetails(supabase, chatId);
         if (details?.messages) {
           setMessages(details.messages);
         }
+        setIsTyping(false);
+        setPendingMessage(null);
       }
       await loadChats();
     } catch (error: any) {
       console.error("AI generation error:", error);
       toast.error(error.message || "Failed to generate response");
-    } finally {
+      setInputValue(promptText);
       setIsTyping(false);
+      setPendingMessage(null);
     }
+  };
+
+  const handleEditAndResend = async (
+    messageId: string,
+    newContent: string,
+    messageIndex: number
+  ) => {
+    if (!newContent.trim() || !user || !chatId) return;
+
+    // 1. Truncate local messages array up to messageIndex
+    const remainingMessages = messages.slice(0, messageIndex);
+    setMessages(remainingMessages);
+
+    // 2. Set pending message and typing indicator
+    setPendingMessage({ content: newContent, files: [] });
+    setIsTyping(true);
+
+    try {
+      const headers: Record<string, string> = {
+        "Content-Type": "application/json",
+      };
+      let authToken = token;
+      if (!authToken) {
+        const { data: sessionData } = await supabase.auth.getSession();
+        authToken = sessionData?.session?.access_token || null;
+      }
+      if (authToken) {
+        headers["Authorization"] = `Bearer ${authToken}`;
+      }
+
+      // 3. Call /api/chat with truncateMessageId to prune DB messages from that point
+      const response = await fetch("/api/chat", {
+        method: "POST",
+        headers,
+        body: JSON.stringify({
+          chatId,
+          message: newContent,
+          files: [],
+          truncateMessageId: messageId,
+          model: selectedModel,
+        }),
+      });
+
+      if (!response.ok) {
+        const err = await response.json();
+        throw new Error(err.error || "Failed to regenerate response");
+      }
+
+      const result = await response.json();
+      if (result.userMessage && result.assistantMessage) {
+        await streamAssistantResponse(
+          result.userMessage,
+          result.assistantMessage,
+          remainingMessages
+        );
+      } else {
+        await loadChat();
+        setIsTyping(false);
+        setPendingMessage(null);
+      }
+      await loadChats();
+    } catch (error: any) {
+      console.error("Error editing message:", error);
+      toast.error(error.message || "Failed to regenerate response");
+      await loadChat();
+      setIsTyping(false);
+      setPendingMessage(null);
+    }
+  };
+
+  const handleRegenerate = async (
+    assistantMsg?: Message,
+    assistantIndex?: number
+  ) => {
+    if (isTyping || !user || !chatId) return;
+
+    let targetIdx =
+      typeof assistantIndex === "number" ? assistantIndex : messages.length - 1;
+
+    // Find the nearest preceding user message to regenerate from
+    let userMsgIdx = -1;
+    for (let i = targetIdx - 1; i >= 0; i--) {
+      if (messages[i].role === "user") {
+        userMsgIdx = i;
+        break;
+      }
+    }
+
+    if (userMsgIdx === -1) {
+      for (let i = messages.length - 1; i >= 0; i--) {
+        if (messages[i].role === "user") {
+          userMsgIdx = i;
+          break;
+        }
+      }
+    }
+
+    if (userMsgIdx === -1) {
+      toast.error("No prompt found to regenerate.");
+      return;
+    }
+
+    const userMsg = messages[userMsgIdx];
+    await handleEditAndResend(userMsg.id, userMsg.content, userMsgIdx);
   };
 
   const handleSend = async () => {
@@ -268,6 +474,7 @@ export default function ActiveChatPage() {
           chatId,
           message: messageContent,
           files: fileData,
+          model: selectedModel,
         }),
       });
 
@@ -278,13 +485,11 @@ export default function ActiveChatPage() {
 
       const result = await response.json();
       if (result.userMessage && result.assistantMessage) {
-        setMessages((prev) => [
-          ...prev,
-          result.userMessage,
-          result.assistantMessage,
-        ]);
+        await streamAssistantResponse(result.userMessage, result.assistantMessage);
       } else {
         await loadChat();
+        setIsTyping(false);
+        setPendingMessage(null);
       }
       await loadChats();
     } catch (error: any) {
@@ -292,27 +497,15 @@ export default function ActiveChatPage() {
       toast.error(error.message || "Failed to send message");
       setInputValue(messageContent);
       setUploadedFiles(currentFiles);
-    } finally {
       setIsTyping(false);
-      setIsUploading(false);
       setPendingMessage(null);
+    } finally {
+      setIsUploading(false);
     }
   };
 
-  if (loading) {
-    return (
-      <div className="flex h-screen items-center justify-center bg-background">
-        <Loader className="w-6 h-6 animate-spin text-muted-foreground" />
-      </div>
-    );
-  }
-
-  if (!user) {
-    return null;
-  }
-
   return (
-    <div className="flex h-screen bg-background text-foreground overflow-hidden">
+    <div className="flex h-full w-full bg-background text-foreground overflow-hidden">
       {/* Sidebar */}
       <Sidebar
         user={user}
@@ -333,161 +526,187 @@ export default function ActiveChatPage() {
         onSearchChange={setSearchQuery}
         isOpen={sidebarOpen}
         onToggle={handleToggleSidebar}
+        isLoading={isChatsLoading || loading}
       />
 
       {/* Main Chat Area */}
       <div className="flex-1 flex flex-col min-w-0 h-full relative overflow-hidden">
-        {/* Full-height Scrollable Message Stream */}
-        <div
-          ref={scrollContainerRef}
-          onScroll={handleScroll}
-          className="h-full w-full overflow-y-auto overflow-x-hidden relative"
-        >
-          {/* Transparent Top Floating Header */}
-          <header className="sticky top-0 z-20 h-14 px-3 sm:px-4 flex items-center justify-between select-none pointer-events-none">
-            <div className="flex items-center gap-2 pointer-events-auto">
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <button
-                    type="button"
-                    onClick={handleToggleSidebar}
-                    className="md:hidden w-8 h-8 rounded-xl bg-background dark:bg-[#212121] flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-secondary dark:hover:bg-[#2f2f2f] transition-colors cursor-pointer outline-none focus:outline-none"
-                    aria-label="Toggle sidebar"
-                  >
-                    <PanelRight className="w-4 h-4" />
-                  </button>
-                </TooltipTrigger>
-                <TooltipContent className="text-md">
-                  Toggle sidebar
-                </TooltipContent>
-              </Tooltip>
-            </div>
-
-            <div className="flex items-center gap-1.5 sm:gap-2 pointer-events-auto">
+        {/* Transparent Floating Header - Buttons float cleanly on top, no background bar/patti */}
+        <header className="absolute top-0 left-0 right-0 z-30 h-14 pt-[env(safe-area-inset-top,0px)] px-3 sm:px-4 flex items-center justify-between select-none pointer-events-none bg-transparent">
+          <div className="flex items-center gap-2 pointer-events-auto pl-1 sm:pl-0">
+            {!sidebarOpen && (
               <Tooltip>
                 <TooltipTrigger asChild>
                   <button
                     type="button"
                     onClick={() => {
-                      navigator.clipboard.writeText(window.location.href);
-                      toast.success("Chat link copied");
+                      setIsSidebarBtnHovered(false);
+                      handleToggleSidebar();
                     }}
-                    className="h-8 px-2.5 sm:px-3.5 rounded-xl bg-background dark:bg-[#212121] border-0 text-xs sm:text-sm font-medium text-foreground hover:bg-secondary dark:hover:bg-[#2f2f2f] cursor-pointer flex items-center gap-1.5 transition-colors outline-none focus:outline-none"
+                    onMouseEnter={() => setIsSidebarBtnHovered(true)}
+                    onMouseLeave={() => setIsSidebarBtnHovered(false)}
+                    onBlur={() => setIsSidebarBtnHovered(false)}
+                    className="lg:hidden w-8 h-8 rounded-xl bg-background dark:bg-[#212121] flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-secondary dark:hover:bg-[#2f2f2f] transition-colors cursor-pointer outline-none focus:outline-none"
+                    aria-label="Open sidebar"
                   >
-                    <Upload className="w-4 h-4" />
-                    <span className="hidden min-[400px]:inline">Share</span>
+                      <PanelRight className="w-4 h-4 text-foreground" />
                   </button>
                 </TooltipTrigger>
-                <TooltipContent className="text-md">
-                  Share conversation
+                <TooltipContent side="bottom" align="start" sideOffset={6} className="text-md">
+                  Open sidebar
+                </TooltipContent>
+              </Tooltip>
+            )}
+          </div>
+
+          <div className="flex items-center gap-1.5 sm:gap-2 pointer-events-auto pr-1 sm:pr-1">
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button
+                  type="button"
+                  onClick={() => {
+                    navigator.clipboard.writeText(window.location.href);
+                    toast.success("Chat link copied");
+                  }}
+                  className="h-8 px-2.5 sm:px-3.5 rounded-xl bg-background dark:bg-[#212121] border-0 text-xs sm:text-sm font-medium text-foreground hover:bg-secondary dark:hover:bg-[#2f2f2f] cursor-pointer flex items-center gap-1.5 transition-colors outline-none focus:outline-none"
+                >
+                  <Upload className="w-4 h-4" />
+                  <span className="hidden min-[400px]:inline">Share</span>
+                </button>
+              </TooltipTrigger>
+              <TooltipContent side="bottom" sideOffset={6} className="text-md">
+                Share conversation
+              </TooltipContent>
+            </Tooltip>
+
+            {/* Three Dots Options Menu */}
+            <DropdownMenu>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <DropdownMenuTrigger asChild>
+                    <button
+                      className="w-8 h-8 rounded-xl flex items-center justify-center text-muted-foreground hover:text-foreground bg-background dark:bg-[#212121] border-0 hover:bg-secondary dark:hover:bg-[#2f2f2f] transition-colors cursor-pointer outline-none focus:outline-none"
+                      aria-label="Chat options"
+                    >
+                      <MoreHorizontal className="w-4 h-4" />
+                    </button>
+                  </DropdownMenuTrigger>
+                </TooltipTrigger>
+                <TooltipContent side="bottom" align="end" sideOffset={6} className="text-md">
+                  More options
                 </TooltipContent>
               </Tooltip>
 
-              {/* Three Dots Options Menu (Image 2, 3, 4) */}
-              <DropdownMenu>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <DropdownMenuTrigger asChild>
-                      <button
-                        className="w-8 h-8 rounded-xl flex items-center justify-center text-muted-foreground hover:text-foreground bg-background dark:bg-[#212121] border-0 hover:bg-secondary dark:hover:bg-[#2f2f2f] transition-colors cursor-pointer outline-none focus:outline-none"
-                        aria-label="Chat options"
-                      >
-                        <MoreHorizontal className="w-4 h-4" />
-                      </button>
-                    </DropdownMenuTrigger>
-                  </TooltipTrigger>
-                  <TooltipContent className="text-md">More options</TooltipContent>
-                </Tooltip>
-
-                <DropdownMenuContent
-                  align="end"
-                  className="w-52 rounded-2xl p-1.5 bg-background dark:bg-[#212121] border border-border/80 dark:border-neutral-700/80"
+              <DropdownMenuContent
+                align="end"
+                sideOffset={6}
+                className="w-52 rounded-xl p-1.5 bg-background dark:bg-[#212121] border border-border/80 dark:border-neutral-700/80"
+              >
+                <DropdownMenuItem
+                  onClick={() => toast("No files attached to this chat")}
+                  className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-[13px] font-normal cursor-pointer text-foreground hover:bg-secondary dark:hover:bg-[#2f2f2f] transition-colors"
                 >
-                  <DropdownMenuItem
-                    onClick={() => toast("No files attached to this chat")}
-                    className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-[13px] font-normal cursor-pointer text-foreground hover:bg-secondary dark:hover:bg-[#2f2f2f] transition-colors"
-                  >
-                    <Folder className="w-4 h-4 text-muted-foreground" />
-                    <span>View files in chat</span>
-                  </DropdownMenuItem>
+                  <Folder className="w-4 h-4 text-muted-foreground" />
+                  <span>View files in chat</span>
+                </DropdownMenuItem>
 
-                  <DropdownMenuItem
-                    onClick={async () => {
-                      const currentChat = chats.find((c) => c.id === chatId);
-                      const isStarred = currentChat?.starred;
-                      await chatService.toggleChatStar(
-                        supabase,
-                        chatId,
-                        !isStarred
-                      );
-                      loadChats();
-                      toast.success(isStarred ? "Chat unpinned" : "Chat pinned");
-                    }}
-                    className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-[13px] font-normal cursor-pointer text-foreground hover:bg-secondary dark:hover:bg-[#2f2f2f] transition-colors"
-                  >
-                    {chats.find((c) => c.id === chatId)?.starred ? (
-                      <>
-                        <PinOff className="w-4 h-4 text-muted-foreground" />
-                        <span>Unpin chat</span>
-                      </>
-                    ) : (
-                      <>
-                        <Pin className="w-4 h-4 text-muted-foreground" />
-                        <span>Pin chat</span>
-                      </>
-                    )}
-                  </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={async () => {
+                    const currentChat = chats.find((c) => c.id === chatId);
+                    const isStarred = currentChat?.starred;
+                    await chatService.toggleChatStar(
+                      supabase,
+                      chatId,
+                      !isStarred
+                    );
+                    loadChats();
+                    toast.success(isStarred ? "Chat unpinned" : "Chat pinned");
+                  }}
+                  className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-[13px] font-normal cursor-pointer text-foreground hover:bg-secondary dark:hover:bg-[#2f2f2f] transition-colors"
+                >
+                  {chats.find((c) => c.id === chatId)?.starred ? (
+                    <>
+                      <PinOff className="w-4 h-4 text-muted-foreground" />
+                      <span>Unpin chat</span>
+                    </>
+                  ) : (
+                    <>
+                      <Pin className="w-4 h-4 text-muted-foreground" />
+                      <span>Pin chat</span>
+                    </>
+                  )}
+                </DropdownMenuItem>
 
-                  <DropdownMenuItem
-                    onClick={() => toast.success("Chat archived")}
-                    className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-[13px] font-normal cursor-pointer text-foreground hover:bg-secondary dark:hover:bg-[#2f2f2f] transition-colors"
-                  >
-                    <Archive className="w-4 h-4 text-muted-foreground" />
-                    <span>Archive</span>
-                  </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={() => toast.success("Chat archived")}
+                  className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-[13px] font-normal cursor-pointer text-foreground hover:bg-secondary dark:hover:bg-[#2f2f2f] transition-colors"
+                >
+                  <Archive className="w-4 h-4 text-muted-foreground" />
+                  <span>Archive</span>
+                </DropdownMenuItem>
 
-                  <DropdownMenuItem
-                    onClick={async () => {
-                      await chatService.deleteChat(supabase, chatId);
-                      router.push("/c");
-                    }}
-                    className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-[13px] font-normal cursor-pointer text-red-500 hover:bg-red-500/10 focus:text-red-500 transition-colors"
-                  >
-                    <Trash2 className="w-4 h-4 text-red-500" />
-                    <span>Delete</span>
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </div>
-          </header>
-
-          {/* Messages Container */}
-          <div className={cn("transition-all duration-200", uploadedFiles.length > 0 ? "pb-[150px]" : "pb-[92px] sm:pb-[98px]")}>
-            <MessageList
-              messages={messages}
-              user={user}
-              isTyping={isTyping}
-              pendingMessage={pendingMessage}
-              onRegenerate={handleSend}
-              onEditMessage={(content) => setInputValue(content)}
-            />
+                <DropdownMenuItem
+                  onClick={async () => {
+                    await chatService.deleteChat(supabase, chatId);
+                    router.push("/c");
+                  }}
+                  className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-[13px] font-normal cursor-pointer text-red-500 hover:bg-red-500/10 focus:text-red-500 transition-colors"
+                >
+                  <Trash2 className="w-4 h-4 text-red-500" />
+                  <span>Delete</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
+        </header>
+
+        {/* Full-Height Scrollable Message Stream — scrollbar runs full height without heading strip */}
+        <div
+          ref={scrollContainerRef}
+          onScroll={handleScroll}
+          className={cn(
+            "flex-1 w-full overflow-x-hidden relative no-overscroll flex flex-col scroll-smooth pt-14",
+            isChatLoading ? "overflow-y-hidden" : "overflow-y-auto"
+          )}
+        >
+          {/* Messages Container or Loader */}
+          {isChatLoading ? (
+            <div className="flex-1 w-full h-full flex flex-col items-center justify-center pb-16 text-muted-foreground animate-in fade-in-0 duration-150">
+              <Loader className="w-6 h-6 animate-spin text-foreground/80" />
+            </div>
+          ) : (
+            <div className={cn("transition-all duration-200", uploadedFiles.length > 0 ? "pb-[160px]" : "pb-[110px] sm:pb-[118px]")}>
+              <MessageList
+                messages={messages}
+                user={user}
+                isTyping={isTyping}
+                pendingMessage={pendingMessage}
+                onRegenerate={handleRegenerate}
+                onEditAndResend={handleEditAndResend}
+              />
+            </div>
+          )}
           {/* Right-Edge TOC Navigator */}
-          <TocNavigator messages={messages} containerRef={scrollContainerRef} />
+          {!isChatLoading && <TocNavigator messages={messages} containerRef={scrollContainerRef} />}
         </div>
 
         {/* Floating Input Dock */}
-        <div className="absolute bottom-0 left-0 right-0 sm:right-3 z-20 pointer-events-none pb-2 bg-gradient-to-t from-background via-background/90 to-transparent pt-4">
+        <div className="absolute bottom-0 left-0 right-0 z-20 pointer-events-none pb-[max(env(safe-area-inset-bottom,0px),0.5rem)] bg-gradient-to-t from-background via-background/90 to-transparent pt-4">
           <div className="pointer-events-auto">
             <ChatInput
               message={inputValue}
               onMessageChange={setInputValue}
               onSend={handleSend}
+              onStop={handleStop}
               uploadedFiles={uploadedFiles}
               onFilesChange={setUploadedFiles}
               isTyping={isTyping}
               isUploading={isUploading}
-              showDisclaimer={true}
+              showDisclaimer={messages.length > 0}
+              selectedModel={selectedModel}
+              onModelChange={setSelectedModel}
+              selectedTier={selectedModelTier}
+              onTierChange={setSelectedModelTier}
             >
               {/* Dynamic Floating Scroll-to-Bottom Button — stays right above input pill */}
               <AnimatePresence>
@@ -504,7 +723,7 @@ export default function ActiveChatPage() {
                         <button
                           type="button"
                           onClick={scrollToBottom}
-                          className="w-9 h-9 rounded-full bg-white/90 dark:bg-neutral-800/80 backdrop-blur-sm border border-neutral-200/90 dark:border-neutral-700/60 flex items-center justify-center text-neutral-700 dark:text-neutral-200 hover:text-neutral-950 dark:hover:text-white hover:bg-white dark:hover:bg-neutral-700 transition-all cursor-pointer shadow-md"
+                          className="w-9 h-9 rounded-full bg-white/90 dark:bg-neutral-800/80 backdrop-blur-sm border border-neutral-200/90 dark:border-neutral-700/60 flex items-center justify-center text-neutral-700 dark:text-neutral-200 hover:text-neutral-950 dark:hover:text-white hover:bg-white dark:hover:bg-neutral-700 transition-all cursor-pointer"
                           aria-label="Scroll to bottom"
                         >
                           <ArrowDown className="w-4 h-4" />

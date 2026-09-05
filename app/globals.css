@@ -67,6 +67,12 @@
   }
 }
 
+/* iOS Safari overscroll / bounce prevention */
+.no-overscroll {
+  overscroll-behavior: none;
+  -webkit-overflow-scrolling: touch;
+}
+
 /* Smooth prose for AI responses */
 .chat-markdown {
   font-size: 15px;
@@ -198,6 +204,10 @@ html:not(.dark) .gooey-title {
   color: #111111 !important;
 }
 
+.gooey-timestamp {
+  display: none !important;
+}
+
 /* Dropdown Menu Separator Visibility */
 [data-radix-dropdown-menu-separator] {
   height: 1px !important;
@@ -209,5 +219,177 @@ html:not(.dark) .gooey-title {
 
 .dark [data-radix-dropdown-menu-separator] {
   background-color: #383838 !important;
+}
+
+/* Animated Shimmer for Thinking / Loading text */
+@keyframes shimmer-sweep {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.animate-shimmer-text {
+  background: linear-gradient(
+    90deg,
+    rgba(160, 160, 165, 0.35) 0%,
+    rgba(255, 255, 255, 0.98) 50%,
+    rgba(160, 160, 165, 0.35) 100%
+  );
+  background-size: 200% 100%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: shimmer-sweep 2.2s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+  display: inline-block;
+}
+
+html:not(.dark) .animate-shimmer-text {
+  background: linear-gradient(
+    90deg,
+    rgba(130, 130, 135, 0.4) 0%,
+    rgba(20, 20, 20, 0.98) 50%,
+    rgba(130, 130, 135, 0.4) 100%
+  );
+  background-size: 200% 100%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ==========================================================================
+   Code Syntax Highlighting (Prism theme - vibrant colors for code blocks)
+   ========================================================================== */
+.token.comment,
+.token.prolog,
+.token.doctype,
+.token.cdata {
+  color: #8b949e !important;
+  font-style: italic !important;
+}
+
+html:not(.dark) .token.comment,
+html:not(.dark) .token.prolog,
+html:not(.dark) .token.doctype,
+html:not(.dark) .token.cdata {
+  color: #6e7781 !important;
+}
+
+.token.punctuation {
+  color: #c9d1d9 !important;
+}
+
+html:not(.dark) .token.punctuation {
+  color: #24292f !important;
+}
+
+.token.property,
+.token.tag,
+.token.constant,
+.token.symbol,
+.token.deleted {
+  color: #79c0ff !important;
+}
+
+html:not(.dark) .token.property,
+html:not(.dark) .token.tag,
+html:not(.dark) .token.constant,
+html:not(.dark) .token.symbol,
+html:not(.dark) .token.deleted {
+  color: #0550ae !important;
+}
+
+.token.boolean,
+.token.number {
+  color: #ffab70 !important;
+}
+
+html:not(.dark) .token.boolean,
+html:not(.dark) .token.number {
+  color: #cf222e !important;
+}
+
+.token.selector,
+.token.attr-name,
+.token.string,
+.token.char,
+.token.builtin,
+.token.inserted {
+  color: #7ee787 !important;
+}
+
+html:not(.dark) .token.selector,
+html:not(.dark) .token.attr-name,
+html:not(.dark) .token.string,
+html:not(.dark) .token.char,
+html:not(.dark) .token.builtin,
+html:not(.dark) .token.inserted {
+  color: #116329 !important;
+}
+
+.token.operator,
+.token.entity,
+.token.url {
+  color: #79c0ff !important;
+}
+
+html:not(.dark) .token.operator,
+html:not(.dark) .token.entity,
+html:not(.dark) .token.url {
+  color: #0550ae !important;
+}
+
+.token.atrule,
+.token.attr-value,
+.token.keyword,
+.token.directive-hash,
+.token.directive {
+  color: #ff7b72 !important;
+  font-weight: 500;
+}
+
+html:not(.dark) .token.atrule,
+html:not(.dark) .token.attr-value,
+html:not(.dark) .token.keyword,
+html:not(.dark) .token.directive-hash,
+html:not(.dark) .token.directive {
+  color: #cf222e !important;
+}
+
+.token.function,
+.token.class-name {
+  color: #d2a8ff !important;
+}
+
+html:not(.dark) .token.function,
+html:not(.dark) .token.class-name {
+  color: #8250df !important;
+}
+
+.token.variable,
+.token.regex,
+.token.important {
+  color: #ffa657 !important;
+}
+
+html:not(.dark) .token.variable,
+html:not(.dark) .token.regex,
+html:not(.dark) .token.important {
+  color: #953800 !important;
+}
+
+/* KaTeX math display optimizations */
+.chat-markdown .katex-display {
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 0.35rem 0;
+  margin: 0.5rem 0;
+}
+
+.chat-markdown .katex {
+  font-size: 1.05em;
+  text-rendering: auto;
 }
 
