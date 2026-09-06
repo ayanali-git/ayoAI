@@ -73,6 +73,15 @@
   -webkit-overflow-scrolling: touch;
 }
 
+/* Prevent iOS Safari / mobile browser auto-zoom on input and textarea focus */
+@media screen and (max-width: 1024px) {
+  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
+  textarea,
+  select {
+    font-size: 16px !important;
+  }
+}
+
 /* Smooth prose for AI responses */
 .chat-markdown {
   font-size: 15px;

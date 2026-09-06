@@ -28,7 +28,7 @@ export default function LandingPage() {
   const handlePillClick = (prompt: string) => {
     setHeroPrompt(prompt);
     if (textareaRef.current) {
-      textareaRef.current.focus();
+      textareaRef.current.focus({ preventScroll: true });
     }
   };
 
@@ -55,7 +55,10 @@ export default function LandingPage() {
 
           {/* Hero Input Card */}
           <form onSubmit={handleHeroSubmit} className="relative w-full max-w-3xl mx-auto mb-6">
-            <div className="relative w-full rounded-3xl bg-white/50 dark:bg-[#212121]/50 backdrop-blur-sm p-4 min-h-[100px] flex flex-col justify-between transition-all focus-within:border-neutral-500/80">
+            <div 
+              onClick={() => textareaRef.current?.focus({ preventScroll: true })}
+              className="relative w-full rounded-3xl bg-white/50 dark:bg-[#212121]/50 backdrop-blur-sm p-4 min-h-[100px] flex flex-col justify-between transition-all focus-within:border-neutral-500/80 cursor-text"
+            >
               <textarea
                 ref={textareaRef}
                 value={heroPrompt}
@@ -69,9 +72,9 @@ export default function LandingPage() {
                 placeholder="Ask about anything, from research to reasoning and more..."
                 rows={2}
                 disabled={isSubmitting}
-                className="w-full bg-transparent resize-none text-[15px] text-foreground placeholder:text-muted-foreground focus:placeholder:text-foreground transition-colors outline-none border-none ring-0 leading-relaxed"
+                className="w-full bg-transparent resize-none text-[16px] text-foreground placeholder:text-muted-foreground focus:placeholder:text-foreground transition-colors outline-none border-none ring-0 leading-relaxed"
               />
-              <div className="flex items-center justify-end">
+              <div className="flex items-center justify-end" onClick={(e) => e.stopPropagation()}>
                 <button
                   type="submit"
                   disabled={!heroPrompt.trim() || isSubmitting}

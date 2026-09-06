@@ -1,13 +1,19 @@
 import './globals.css';
 import 'katex/dist/katex.min.css';
 import 'goey-toast/styles.css';
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import { cookies } from 'next/headers';
 import { ToasterProvider } from '@/components/ui/toaster';
 import { AuthProvider } from '@/components/auth-provider';
 import { SubscriptionProvider } from '@/components/subscription-provider';
 import { ThemeProvider } from '@/components/theme-provider';
 import { TooltipProvider } from '@/components/ui/tooltip';
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
+};
 
 export const metadata: Metadata = {
   title: 'CloseAI',
