@@ -70,8 +70,66 @@ export default function ActiveChatPage() {
   const [selectedModelTier, setSelectedModelTier] = useState(4);
   const [showScrollBottom, setShowScrollBottom] = useState(false);
   const autoSendTriggeredRef = useRef(false);
+  const isAutoScrollPinnedRef = useRef(true);
 
   const scrollContainerRef = useRef<HTMLDivElement>(null);
+
+  // Handle scroll events to show/hide scroll-to-bottom button
+  const handleScroll = () => {
+    if (!scrollContainerRef.current) return;
+    const { scrollTop, scrollHeight, clientHeight } =
+      scrollContainerRef.current;
+    const isScrolledUp = scrollHeight - scrollTop - clientHeight > 80;
+    setShowScrollBottom(isScrolledUp);
+    isAutoScrollPinnedRef.current = !isScrolledUp;
+  };
+
+  const scrollToBottom = (behavior: ScrollBehavior = "smooth") => {
+    if (scrollContainerRef.current) {
+      scrollContainerRef.current.scrollTo({
+        top: scrollContainerRef.current.scrollHeight,
+        behavior,
+      });
+      if (behavior === "auto") {
+        setShowScrollBottom(false);
+        isAutoScrollPinnedRef.current = true;
+      }
+    }
+  };
+
+  const forceScrollToBottom = () => {
+    if (!scrollContainerRef.current) return;
+    scrollContainerRef.current.scrollTop = scrollContainerRef.current.scrollHeight;
+    setShowScrollBottom(false);
+    isAutoScrollPinnedRef.current = true;
+  };
+
+  // Auto-scroll pinning effect when messages, typing, or pending prompt update
+  useEffect(() => {
+    if (isAutoScrollPinnedRef.current) {
+      forceScrollToBottom();
+      const t1 = setTimeout(forceScrollToBottom, 60);
+      const t2 = setTimeout(forceScrollToBottom, 180);
+      const t3 = setTimeout(forceScrollToBottom, 320);
+      return () => {
+        clearTimeout(t1);
+        clearTimeout(t2);
+        clearTimeout(t3);
+      };
+    }
+  }, [messages.length, isTyping, pendingMessage]);
+
+  // Keep scroll glued to bottom on iOS Safari virtual keyboard resize
+  useEffect(() => {
+    if (typeof window === "undefined" || !window.visualViewport) return;
+    const onResize = () => {
+      if (isAutoScrollPinnedRef.current) {
+        forceScrollToBottom();
+      }
+    };
+    window.visualViewport.addEventListener("resize", onResize);
+    return () => window.visualViewport?.removeEventListener("resize", onResize);
+  }, []);
 
   // Optimistically show pending message immediately if this chat was just auto-created
   useEffect(() => {
@@ -107,23 +165,7 @@ export default function ActiveChatPage() {
     }
   }, [user, loading, chatId, router]);
 
-  // Handle scroll events to show/hide scroll-to-bottom button
-  const handleScroll = () => {
-    if (!scrollContainerRef.current) return;
-    const { scrollTop, scrollHeight, clientHeight } =
-      scrollContainerRef.current;
-    const isScrolledUp = scrollHeight - scrollTop - clientHeight > 180;
-    setShowScrollBottom(isScrolledUp);
-  };
 
-  const scrollToBottom = () => {
-    if (scrollContainerRef.current) {
-      scrollContainerRef.current.scrollTo({
-        top: scrollContainerRef.current.scrollHeight,
-        behavior: "smooth",
-      });
-    }
-  };
 
   const loadChats = async () => {
     if (!user) return;
@@ -247,7 +289,9 @@ export default function ActiveChatPage() {
         return copy;
       });
 
-      scrollToBottom();
+      if (isAutoScrollPinnedRef.current && scrollContainerRef.current) {
+        scrollContainerRef.current.scrollTop = scrollContainerRef.current.scrollHeight;
+      }
       await new Promise((r) => setTimeout(r, intervalMs));
     }
 
@@ -262,12 +306,19 @@ export default function ActiveChatPage() {
     });
 
     setIsTyping(false);
-    scrollToBottom();
+    if (isAutoScrollPinnedRef.current) {
+      forceScrollToBottom();
+    }
   };
 
   const triggerAiGeneration = async (promptText: string, modelOverride?: string) => {
     setIsTyping(true);
     setPendingMessage({ content: promptText, files: [] });
+    isAutoScrollPinnedRef.current = true;
+    setShowScrollBottom(false);
+    setTimeout(forceScrollToBottom, 0);
+    setTimeout(forceScrollToBottom, 60);
+    setTimeout(forceScrollToBottom, 180);
     try {
       const headers: Record<string, string> = {
         "Content-Type": "application/json",
@@ -332,6 +383,11 @@ export default function ActiveChatPage() {
     // 2. Set pending message and typing indicator
     setPendingMessage({ content: newContent, files: [] });
     setIsTyping(true);
+    isAutoScrollPinnedRef.current = true;
+    setShowScrollBottom(false);
+    setTimeout(forceScrollToBottom, 0);
+    setTimeout(forceScrollToBottom, 60);
+    setTimeout(forceScrollToBottom, 180);
 
     try {
       const headers: Record<string, string> = {
@@ -433,6 +489,14 @@ export default function ActiveChatPage() {
     setUploadedFiles([]);
     setPendingMessage({ content: messageContent, files: currentFiles });
     setIsTyping(true);
+    isAutoScrollPinnedRef.current = true;
+    setShowScrollBottom(false);
+
+    // Immediate scroll + interval scrolls through iOS Safari keyboard dismissal
+    setTimeout(forceScrollToBottom, 0);
+    setTimeout(forceScrollToBottom, 60);
+    setTimeout(forceScrollToBottom, 150);
+    setTimeout(forceScrollToBottom, 320);
 
     try {
       const headers: Record<string, string> = {
@@ -546,7 +610,7 @@ export default function ActiveChatPage() {
                     onMouseEnter={() => setIsSidebarBtnHovered(true)}
                     onMouseLeave={() => setIsSidebarBtnHovered(false)}
                     onBlur={() => setIsSidebarBtnHovered(false)}
-                    className="lg:hidden w-8 h-8 rounded-xl bg-background dark:bg-[#212121] flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-secondary dark:hover:bg-[#2f2f2f] transition-colors cursor-pointer outline-none focus:outline-none"
+                    className="lg:hidden w-8 h-8 rounded-xl bg-background  flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors cursor-pointer outline-none focus:outline-none"
                     aria-label="Open sidebar"
                   >
                       <PanelRight className="w-4 h-4 text-foreground" />
@@ -568,7 +632,7 @@ export default function ActiveChatPage() {
                     navigator.clipboard.writeText(window.location.href);
                     toast.success("Chat link copied");
                   }}
-                  className="h-8 px-2.5 sm:px-3.5 rounded-xl bg-background dark:bg-[#212121] border-0 text-xs sm:text-sm font-medium text-foreground hover:bg-secondary dark:hover:bg-[#2f2f2f] cursor-pointer flex items-center gap-1.5 transition-colors outline-none focus:outline-none"
+                  className="h-8 px-2.5 sm:px-3.5 rounded-xl bg-background border-0 text-xs sm:text-sm font-medium text-foreground hover:bg-secondary cursor-pointer flex items-center gap-1.5 transition-colors outline-none focus:outline-none"
                 >
                   <Upload className="w-4 h-4" />
                   <span className="hidden min-[400px]:inline">Share</span>
@@ -585,7 +649,7 @@ export default function ActiveChatPage() {
                 <TooltipTrigger asChild>
                   <DropdownMenuTrigger asChild>
                     <button
-                      className="w-8 h-8 rounded-xl flex items-center justify-center text-muted-foreground hover:text-foreground bg-background dark:bg-[#212121] border-0 hover:bg-secondary dark:hover:bg-[#2f2f2f] transition-colors cursor-pointer outline-none focus:outline-none"
+                      className="w-8 h-8 rounded-xl flex items-center justify-center text-muted-foreground hover:text-foreground bg-background border-0 hover:bg-secondary transition-colors cursor-pointer outline-none focus:outline-none"
                       aria-label="Chat options"
                     >
                       <MoreHorizontal className="w-4 h-4" />
@@ -600,7 +664,7 @@ export default function ActiveChatPage() {
               <DropdownMenuContent
                 align="end"
                 sideOffset={6}
-                className="w-52 rounded-xl p-1.5 bg-background dark:bg-[#212121] border border-border/80 dark:border-neutral-700/80"
+                className="w-52 rounded-xl p-1.5 bg-white/50 dark:bg-[#212121]/50 backdrop-blur-sm border border-border/50 dark:border-neutral-700/50"
               >
                 <DropdownMenuItem
                   onClick={() => toast("No files attached to this chat")}
@@ -665,7 +729,7 @@ export default function ActiveChatPage() {
           ref={scrollContainerRef}
           onScroll={handleScroll}
           className={cn(
-            "flex-1 w-full overflow-x-hidden relative no-overscroll flex flex-col scroll-smooth pt-14",
+            "flex-1 w-full overflow-x-hidden relative no-overscroll flex flex-col pt-14",
             isChatLoading ? "overflow-y-hidden" : "overflow-y-auto"
           )}
         >
@@ -675,7 +739,7 @@ export default function ActiveChatPage() {
               <Loader className="w-6 h-6 animate-spin text-foreground/80" />
             </div>
           ) : (
-            <div className={cn("transition-all duration-200", uploadedFiles.length > 0 ? "pb-[160px]" : "pb-[110px] sm:pb-[118px]")}>
+            <div className={cn("transition-all duration-200", uploadedFiles.length > 0 ? "pb-48" : "pb-40 sm:pb-36")}>
               <MessageList
                 messages={messages}
                 user={user}
@@ -722,8 +786,11 @@ export default function ActiveChatPage() {
                       <TooltipTrigger asChild>
                         <button
                           type="button"
-                          onClick={scrollToBottom}
-                          className="w-9 h-9 rounded-full bg-white/90 dark:bg-neutral-800/80 backdrop-blur-sm border border-neutral-200/90 dark:border-neutral-700/60 flex items-center justify-center text-neutral-700 dark:text-neutral-200 hover:text-neutral-950 dark:hover:text-white hover:bg-white dark:hover:bg-neutral-700 transition-all cursor-pointer"
+                          onClick={() => {
+                            isAutoScrollPinnedRef.current = true;
+                            scrollToBottom("smooth");
+                          }}
+                          className="w-9 h-9 rounded-full bg-white/50 dark:bg-[#212121]/50 backdrop-blur-sm border border-border/50 dark:border-neutral-700/50 flex items-center justify-center text-neutral-700 dark:text-neutral-200 hover:text-foreground dark:hover:text-foreground hover:bg-background dark:hover:bg-background transition-all cursor-pointer"
                           aria-label="Scroll to bottom"
                         >
                           <ArrowDown className="w-4 h-4" />

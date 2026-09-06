@@ -2,7 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { AnimatedArrow } from '@/components/ui/animated-arrow';
+import { AnimatedArrow } from '@/components/ui/animated-icons';
 import { Sparkles, Brain, Cpu, ArrowUpRight, ShieldCheck } from 'lucide-react';
 
 export default function ResearchOverviewPage() {

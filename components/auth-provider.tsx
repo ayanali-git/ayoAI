@@ -131,6 +131,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
     setUser(null);
     setSession(null);
+    if (typeof document !== 'undefined') {
+      document.cookie = 'user_plan=; path=/; max-age=0; expires=Thu, 01 Jan 1970 00:00:00 GMT';
+    }
     if (typeof window !== 'undefined') {
       window.location.href = '/';
     } else {

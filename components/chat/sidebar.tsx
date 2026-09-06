@@ -383,7 +383,7 @@ export function Sidebar({
                 <p className="text-md text-muted-foreground leading-tight">{planDisplay}</p>
               </div>
             </DropdownMenuSubTrigger>
-            <DropdownMenuSubContent sideOffset={2} alignOffset={-80} className="w-64 rounded-2xl p-1.5 bg-background dark:bg-[#212121] border border-border/80 dark:border-neutral-700/80">
+            <DropdownMenuSubContent sideOffset={2} alignOffset={-80} className="w-64 rounded-2xl p-1.5 bg-white/50 dark:bg-[#212121]/50 backdrop-blur-sm border border-border/50 dark:border-neutral-700/50">
               <div className="flex items-center gap-2 px-3 py-2 text-md text-muted-foreground select-none">
                 <UserIcon className="w-4 h-4 shrink-0" />
                 <span className="truncate">{userEmail}</span>
@@ -483,7 +483,7 @@ export function Sidebar({
               <Moon className="w-4 h-4 hidden dark:block text-muted-foreground" />
               <span>Theme</span>
             </DropdownMenuSubTrigger>
-            <DropdownMenuSubContent sideOffset={2} alignOffset={-85} className="w-40 rounded-2xl p-1.5 bg-background dark:bg-[#212121] border border-border/80 dark:border-neutral-700/80">
+            <DropdownMenuSubContent sideOffset={2} alignOffset={-85} className="w-40 rounded-2xl p-1.5 bg-white/50 dark:bg-[#212121]/50 backdrop-blur-sm border border-border/50 dark:border-neutral-700/50">
               <DropdownMenuRadioGroup value={theme} onValueChange={setTheme}>
                 <DropdownMenuRadioItem value="light">Light</DropdownMenuRadioItem>
                 <DropdownMenuRadioItem value="dark">Dark</DropdownMenuRadioItem>
@@ -515,7 +515,7 @@ export function Sidebar({
               <LifeBuoy className="w-4 h-4 text-muted-foreground" />
               <span>Help</span>
             </DropdownMenuSubTrigger>
-            <DropdownMenuSubContent sideOffset={2} alignOffset={-260} className="w-56 rounded-2xl p-1.5 bg-background dark:bg-[#212121] border border-border/80 dark:border-neutral-700/80">
+            <DropdownMenuSubContent sideOffset={2} alignOffset={-260} className="w-56 rounded-2xl p-1.5 bg-white/50 dark:bg-[#212121]/50 backdrop-blur-sm border border-border/50 dark:border-neutral-700/50">
               <DropdownMenuItem asChild>
                 <Link href="/support/help" className="flex items-center gap-2.5 px-3 py-2 cursor-pointer rounded-xl text-md">
                   <HelpCircle className="w-4 h-4 text-muted-foreground" />
@@ -582,7 +582,7 @@ export function Sidebar({
   // ----------------------------------------------------
   if (!isOpen) {
     return (
-      <div className="hidden md:flex w-[56px] h-[100dvh] bg-sidebar border-r border-border flex-col items-center justify-between shrink-0 select-none z-30 relative group/rail">
+      <div className="hidden md:flex w-[65px] h-[100dvh] bg-sidebar border-r border-border flex-col items-center justify-between shrink-0 select-none z-30 relative group/rail">
         {/* Full-height border resize/toggle handle */}
         <div
           onClick={onToggle}
@@ -699,7 +699,7 @@ export function Sidebar({
               <DropdownMenuContent
                 side="right"
                 align="end"
-                className="w-64 rounded-2xl p-1.5 bg-popover/98 backdrop-blur-2xl border border-border/80"
+                className="w-64 rounded-2xl p-1.5 bg-white/50 dark:bg-[#212121]/50 backdrop-blur-sm border border-border/50 dark:border-neutral-700/50"
               >
                 {renderAccountMenuItems()}
               </DropdownMenuContent>
@@ -945,7 +945,7 @@ export function Sidebar({
                     <p className="text-[15px] font-medium text-foreground truncate leading-snug">
                       {displayName}
                     </p>
-                    <p className="text-[13px] text-muted-foreground leading-none">
+                    <p className="text-[13px] text-muted-foreground leading-none" suppressHydrationWarning>
                       {planDisplay}
                     </p>
                   </div>
@@ -956,7 +956,7 @@ export function Sidebar({
                 side="top"
                 align="start"
                 sideOffset={8}
-                className="w-[244px] max-h-[calc(100dvh-5rem)] overflow-y-auto rounded-2xl p-1.5 mb-1 bg-background dark:bg-[#212121] border border-border/80 dark:border-neutral-700/80 outline-none focus:outline-none ring-0"
+                className="w-[244px] max-h-[calc(100dvh-5rem)] overflow-y-auto rounded-2xl p-1.5 mb-1 bg-white/50 dark:bg-[#212121]/50 backdrop-blur-sm border border-border/50 dark:border-neutral-700/50 outline-none focus:outline-none ring-0"
               >
                 {renderAccountMenuItems()}
               </DropdownMenuContent>

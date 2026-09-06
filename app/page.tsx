@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { MarketingHeader } from "@/components/marketing/header";
 import { Footer } from "@/components/ui/footer";
-import { AnimatedArrow } from "@/components/ui/animated-arrow";
+import { AnimatedArrow } from "@/components/ui/animated-icons";
 import { ArrowUpRight, ArrowRight, Sparkles, ArrowUp, Search, Loader } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -55,7 +55,7 @@ export default function LandingPage() {
 
           {/* Hero Input Card */}
           <form onSubmit={handleHeroSubmit} className="relative w-full max-w-3xl mx-auto mb-6">
-            <div className="relative w-full rounded-3xl dark:border-neutral-700/80 bg-secondary/80 dark:bg-[#212121] p-4 min-h-[100px] flex flex-col justify-between transition-all focus-within:border-neutral-500/80">
+            <div className="relative w-full rounded-3xl bg-white/50 dark:bg-[#212121]/50 backdrop-blur-sm p-4 min-h-[100px] flex flex-col justify-between transition-all focus-within:border-neutral-500/80">
               <textarea
                 ref={textareaRef}
                 value={heroPrompt}
@@ -69,24 +69,24 @@ export default function LandingPage() {
                 placeholder="Ask about anything, from research to reasoning and more..."
                 rows={2}
                 disabled={isSubmitting}
-                className="w-full bg-transparent resize-none text-[15px] text-foreground placeholder:text-muted-foreground/60 outline-none border-none ring-0 leading-relaxed"
+                className="w-full bg-transparent resize-none text-[15px] text-foreground placeholder:text-muted-foreground focus:placeholder:text-foreground transition-colors outline-none border-none ring-0 leading-relaxed"
               />
               <div className="flex items-center justify-end">
                 <button
                   type="submit"
                   disabled={!heroPrompt.trim() || isSubmitting}
                   className={cn(
-                    "w-8 h-8 rounded-full flex items-center justify-center transition-all duration-200",
+                    "w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center transition-all shrink-0",
                     heroPrompt.trim().length > 0 && !isSubmitting
                       ? "bg-foreground text-background cursor-pointer hover:opacity-90 active:scale-95"
-                      : "bg-neutral-300 dark:bg-[#383838] text-foreground cursor-not-allowed opacity-60"
+                      : "bg-white/50 dark:bg-[#212121]/50 text-foreground cursor-not-allowed opacity-60"
                   )}
                   aria-label="Send prompt"
                 >
                   {isSubmitting ? (
-                    <Loader className="w-4 h-4 animate-spin" />
+                    <Loader className="w-5 h-5 animate-spin text-foreground" />
                   ) : (
-                    <ArrowUp className="w-4 h-4 stroke-[2.5]" />
+                    <ArrowUp className="w-5 h-5 stroke-[3]" />
                   )}
                 </button>
               </div>
@@ -103,10 +103,10 @@ export default function LandingPage() {
                   type="button"
                   onClick={() => handlePillClick(pill.prompt)}
                   className={cn(
-                    "px-5 py-2 rounded-full border text-md sm:text-[13px] transition-all cursor-pointer",
+                    "px-4 py-3 rounded-full text-md sm:text-[13px] transition-all cursor-pointer",
                     isSelected
-                      ? "border-foreground/50 bg-secondary text-foreground font-medium"
-                      : "border-border/70 bg-secondary/40 hover:bg-secondary text-muted-foreground hover:text-foreground"
+                      ? "bg-secondary text-foreground"
+                      : "bg-white/50 dark:bg-[#212121]/50 backdrop-blur-sm hover:bg-secondary text-muted-foreground hover:text-foreground"
                   )}
                 >
                   {pill.label}

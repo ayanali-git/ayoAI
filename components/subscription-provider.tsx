@@ -70,17 +70,72 @@ export const useSubscription = () => {
     return context;
 };
 
-export function SubscriptionProvider({ children }: { children: React.ReactNode }) {
-    const { user, token } = useAuth();
-    const [plan, setPlan] = useState('free');
-    const [status, setStatus] = useState('inactive');
-    const [hasActiveSubscription, setHasActiveSubscription] = useState(false);
+function getInitialPlan(): string {
+    if (typeof window !== 'undefined') {
+        const match = document.cookie.match(/(?:^|;\s*)user_plan=([^;]+)/);
+        if (match && match[1]) {
+            const val = decodeURIComponent(match[1]).trim();
+            if (val) return val;
+        }
+    }
+    return 'free';
+}
+
+function persistPlanCookie(newPlan: string) {
+    if (typeof document !== 'undefined') {
+        if (!newPlan || newPlan === 'free') {
+            document.cookie = 'user_plan=; path=/; max-age=0; expires=Thu, 01 Jan 1970 00:00:00 GMT';
+        } else {
+            document.cookie = `user_plan=${encodeURIComponent(newPlan)}; path=/; max-age=31536000; SameSite=Lax`;
+        }
+    }
+}
+
+export function SubscriptionProvider({
+    children,
+    initialPlan = 'free',
+}: {
+    children: React.ReactNode;
+    initialPlan?: string;
+}) {
+    const { user, token, loading: authLoading } = useAuth();
+    const [plan, setPlan] = useState<string>(() => {
+        if (initialPlan && initialPlan !== 'free') return initialPlan;
+        const cached = getInitialPlan();
+        if (cached && cached !== 'free') return cached;
+        return initialPlan || 'free';
+    });
+    const [status, setStatus] = useState(() => (plan !== 'free' ? 'active' : 'inactive'));
+    const [hasActiveSubscription, setHasActiveSubscription] = useState(() => plan !== 'free');
     const [interval, setInterval] = useState<'monthly' | 'yearly'>('monthly');
     const [limits, setLimits] = useState<UsageLimits>(defaultLimits);
     const [usage, setUsage] = useState<UsageStats>(defaultUsage);
     const [loading, setLoading] = useState(true);
 
+    // Purge any legacy localStorage keys to ensure plan is strictly cookie-driven
+    useEffect(() => {
+        try {
+            localStorage.removeItem('user_plan');
+        } catch (e) {}
+    }, []);
+
+    // Sync from cookie immediately on mount if initialPlan was free
+    useEffect(() => {
+        const cached = getInitialPlan();
+        if (cached && cached !== 'free' && plan === 'free') {
+            setPlan(cached);
+            setStatus('active');
+            setHasActiveSubscription(true);
+        }
+    }, [plan]);
+
     const fetchSubscription = useCallback(async () => {
+        // While auth is still initializing, DO NOT reset plan or delete cookies!
+        if (authLoading) {
+            return;
+        }
+
+        // Only when auth has finished loading AND user is null (definitely logged out):
         if (!user) {
             setPlan('free');
             setStatus('inactive');
@@ -89,6 +144,7 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
             setLimits(defaultLimits);
             setUsage(defaultUsage);
             setLoading(false);
+            persistPlanCookie('free');
             return;
         }
 
@@ -102,30 +158,34 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
 
             if (response.ok) {
                 const data = await response.json();
-                setPlan(data.plan || 'free');
+                const currentPlan = data.plan || 'free';
+                setPlan(currentPlan);
                 setStatus(data.status || 'inactive');
                 setHasActiveSubscription(data.hasActiveSubscription || false);
                 setInterval(data.interval || 'monthly');
                 setLimits(data.limits || defaultLimits);
                 setUsage(data.usage || defaultUsage);
+                persistPlanCookie(currentPlan);
             }
         } catch (error) {
             console.error('Error fetching subscription:', error);
         } finally {
             setLoading(false);
         }
-    }, [user, token]);
+    }, [user, token, authLoading]);
 
     useEffect(() => {
-        fetchSubscription();
-    }, [fetchSubscription]);
+        if (!authLoading) {
+            fetchSubscription();
+        }
+    }, [fetchSubscription, authLoading]);
 
     // Real-time subscription to profile changes (for when webhook updates the plan)
     useEffect(() => {
         if (!user) return;
 
         const channel = supabase
-            .channel('profile-changes')
+            .channel(`profile-changes-${user.id}`)
             .on(
                 'postgres_changes',
                 {
@@ -134,9 +194,15 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
                     table: 'profiles',
                     filter: `id=eq.${user.id}`,
                 },
-                (payload) => {
-                    console.log('Profile updated:', payload);
-                    // Refresh subscription data when profile is updated
+                (payload: any) => {
+                    console.log('Realtime profile updated:', payload);
+                    if (payload?.new?.plan) {
+                        const newPlan = payload.new.plan;
+                        setPlan(newPlan);
+                        setStatus(payload.new.subscription_status || 'active');
+                        setHasActiveSubscription(newPlan !== 'free');
+                        persistPlanCookie(newPlan);
+                    }
                     fetchSubscription();
                 }
             )
@@ -146,6 +212,17 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
             supabase.removeChannel(channel);
         };
     }, [user, fetchSubscription]);
+
+    // Focus listener to re-sync when tab becomes active
+    useEffect(() => {
+        const handleFocus = () => {
+            if (user && !authLoading) {
+                fetchSubscription();
+            }
+        };
+        window.addEventListener('focus', handleFocus);
+        return () => window.removeEventListener('focus', handleFocus);
+    }, [user, authLoading, fetchSubscription]);
 
     const canUseFeature = useCallback((feature: 'messages' | 'images' | 'files'): boolean => {
         if (feature === 'files') {

@@ -268,11 +268,11 @@ export default function UpgradePage() {
                 }`}
               >
                 {isCurrentPlan ? (
-                  <span className="absolute -top-3 left-1/2 -translate-x-1/2 px-3.5 py-0.5 rounded-full bg-foreground text-background text-[13px] font-semibold tracking-wide uppercase shadow-sm">
+                  <span className="absolute -top-3 left-1/2 -translate-x-1/2 px-3.5 py-0.5 rounded-full bg-foreground text-background text-[13px] font-semibold tracking-wide uppercase">
                     Active Plan
                   </span>
                 ) : plan.popular ? (
-                  <span className="absolute -top-3 left-1/2 -translate-x-1/2 px-3.5 py-0.5 rounded-full bg-foreground text-background text-[13px] font-semibold tracking-wide uppercase shadow-sm">
+                  <span className="absolute -top-3 left-1/2 -translate-x-1/2 px-3.5 py-0.5 rounded-full bg-foreground text-background text-[13px] font-semibold tracking-wide uppercase">
                     Most Popular
                   </span>
                 ) : null}
@@ -323,7 +323,7 @@ export default function UpgradePage() {
                   {isCurrentPlan ? (
                     <Button
                       variant="outline"
-                      className="w-full h-11 rounded-full text-foreground font-medium border-neutral-300 dark:border-neutral-700 bg-neutral-100 dark:bg-[#252525] disabled:opacity-100 disabled:pointer-events-auto disabled:cursor-not-allowed cursor-not-allowed shadow-sm"
+                      className="w-full h-11 rounded-full text-foreground font-medium border-neutral-300 dark:border-neutral-700 bg-neutral-100 dark:bg-[#252525] disabled:opacity-100 disabled:pointer-events-auto disabled:cursor-not-allowed cursor-not-allowed"
                       disabled
                     > Current Plan
                     </Button>
@@ -345,7 +345,7 @@ export default function UpgradePage() {
                     </Button>
                   ) : (
                     <Button
-                      className={`w-full h-11 rounded-full text-md font-medium transition-all shadow-sm cursor-pointer ${
+                      className={`w-full h-11 rounded-full text-md font-medium transition-all cursor-pointer ${
                         plan.popular
                           ? "bg-foreground text-background hover:opacity-90"
                           : "bg-secondary text-foreground hover:bg-secondary/80 border border-border"

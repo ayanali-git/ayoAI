@@ -2,7 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { AnimatedArrow } from '@/components/ui/animated-arrow';
+import { AnimatedArrow } from '@/components/ui/animated-icons';
 import { Shield, Lock, Eye, CheckCircle2, AlertTriangle, FileText } from 'lucide-react';
 
 export default function SafetyPage() {

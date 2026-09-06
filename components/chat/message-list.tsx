@@ -5,6 +5,7 @@ import { User } from '@supabase/supabase-js';
 import { Message } from '@/lib/chat-service';
 import { CloseAIIcon } from '@/components/brand/logo';
 import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import remarkMath from 'remark-math';
 import rehypeKatex from 'rehype-katex';
 import Prism from 'prismjs';
@@ -103,19 +104,43 @@ function highlightCode(code: string, lang: string): string {
   }
 }
 
-/** Preprocesses LaTeX formula markers and unescaped characters so KaTeX parses smoothly */
+/** Preprocesses LaTeX formula markers, currency dollar signs, table formatting, and unclosed delimiters */
 function preprocessContent(text: string): string {
   if (!text) return '';
 
-  // 1. Normalize LaTeX display/inline brackets \[ \] and \( \)
-  let result = text
+  let result = text;
+
+  // 1. Convert pipe-pipe separated lines into proper markdown table rows with newlines
+  result = result.replace(/\|\s*\|\s*/g, '|\n| ');
+
+  // 2. Prevent currency dollar signs ($100, $1 Trillion, $2.5B) from being incorrectly parsed as LaTeX math
+  // In KaTeX / remark-math, any $ followed immediately by a digit is a monetary amount, not a formula
+  result = result.replace(/(?<!\\)\$(?=\d)/g, '\\$');
+
+  // 3. Normalize LaTeX display/inline brackets \[ \] and \( \)
+  result = result
     .replace(/\\\[([\s\S]*?)\\\]/g, '$$$$$1$$$$')
     .replace(/\\\(([\s\S]*?)\\\)/g, '$$$1$$');
 
-  // 2. Fix unescaped underscores inside \text{...} in math formulas
+  // 4. Fix unescaped underscores inside \text{...} in math formulas
   result = result.replace(/\\text\{([^}]+)\}/g, (_, inner) => {
     return `\\text{${inner.replace(/(?<!\\)_/g, '\\_')}}`;
   });
+
+  // 5. Clean up awkward spaced asterisks like "* *, **"
+  result = result.replace(/\*\s+\*,\s+\*\*/g, ', **');
+
+  // 6. Auto-close dangling unclosed code blocks (```) during streaming/interrupted generation
+  const codeBlockCount = (result.match(/```/g) || []).length;
+  if (codeBlockCount % 2 !== 0) {
+    result += '\n```';
+  }
+
+  // 7. Auto-close dangling bold (**) during streaming/interrupted generation
+  const boldCount = (result.match(/\*\*/g) || []).length;
+  if (boldCount % 2 !== 0) {
+    result += '**';
+  }
 
   return result;
 }
@@ -149,16 +174,16 @@ function CodeBlock({ language, code }: { language: string; code: string }) {
   }, [code, displayLang]);
 
   return (
-    <div className="relative my-3 sm:my-4 rounded-xl overflow-hidden border border-neutral-200/90 dark:border-neutral-700/60 bg-neutral-50 dark:bg-[#141414] text-left">
+    <div className="relative my-4 rounded-xl overflow-hidden border border-neutral-200/90 dark:border-neutral-700/60 bg-neutral-50 dark:bg-[#141414] text-left">
       {/* Header bar: language + copy button */}
       <div className="flex items-center justify-between px-4 py-2 bg-neutral-100 dark:bg-[#1f1f1f] text-xs font-sans text-neutral-600 dark:text-neutral-300 select-none border-b border-neutral-200/80 dark:border-neutral-700/60">
-        <span className="font-mono text-[13px] lowercase font-medium tracking-wide">
+        <span className="font-mono text-xs lowercase font-medium tracking-wide">
           {displayLang}
         </span>
         <button
           type="button"
           onClick={handleCopy}
-          className="flex items-center gap-1.5 px-2 py-2 rounded-2xl text-[12px] text-neutral-600 hover:text-neutral-900 hover:bg-neutral-200/70 dark:text-neutral-300 dark:hover:text-white dark:hover:bg-white/10 transition-colors cursor-pointer outline-none"
+          className="flex items-center gap-1.5 px-2 py-1 rounded-lg text-xs text-neutral-600 hover:text-neutral-900 hover:bg-neutral-200/70 dark:text-neutral-300 dark:hover:text-white dark:hover:bg-white/10 transition-colors cursor-pointer outline-none"
         >
           {copied ? (
             <>
@@ -174,8 +199,8 @@ function CodeBlock({ language, code }: { language: string; code: string }) {
         </button>
       </div>
 
-      {/* Code content with integrated dynamic horizontal scrollbar and rich syntax colors */}
-      <div className="p-3.5 sm:p-4 code-scroll text-[14px] sm:text-[14.5px] font-mono leading-relaxed bg-neutral-100 dark:bg-[#1f1f1f] select-text">
+      {/* Code content with horizontal scrollbar */}
+      <div className="p-3.5 sm:p-4 code-scroll text-[13.5px] sm:text-[14px] font-mono leading-relaxed bg-neutral-100 dark:bg-[#1f1f1f] select-text">
         <pre className="!m-0 !p-0 bg-transparent border-0 font-mono whitespace-pre w-max min-w-full">
           <code
             className={`!bg-transparent !p-0 font-mono whitespace-pre block language-${displayLang}`}
@@ -235,7 +260,7 @@ function MessageAttachmentItem({ file }: { file: any }) {
         href={imgSrc}
         target="_blank"
         rel="noopener noreferrer"
-        className="group relative block overflow-hidden rounded-xl bg-neutral-100 dark:bg-[#262626] transition-all max-w-[100px] sm:max-w-[150px] shadow-xs cursor-pointer select-none"
+        className="group relative block overflow-hidden rounded-xl bg-neutral-100 dark:bg-[#262626] transition-all max-w-[100px] sm:max-w-[150px] cursor-pointer select-none"
         title={displayName}
       >
         <img
@@ -313,7 +338,7 @@ export function MessageList({
   // Auto-scroll on new messages or typing
   useEffect(() => {
     if (scrollBottomRef.current) {
-      scrollBottomRef.current.scrollIntoView({ behavior: 'smooth' });
+      scrollBottomRef.current.scrollIntoView({ behavior: 'auto', block: 'end' });
     }
   }, [messages.length, isTyping, pendingMessage]);
 
@@ -332,13 +357,13 @@ export function MessageList({
   let userMessageCounter = 0;
 
   return (
-    <div className="w-full max-w-3xl mx-auto py-6 sm:py-8 space-y-6 sm:space-y-8 px-2 sm:px-4">
+    <div className="w-full max-w-3xl mx-auto pt-10 pb-2 space-y-5 px-6">
       {messages.map((msg, index) => {
         const isUser = msg.role === 'user';
         const userMsgIndex = isUser ? userMessageCounter++ : null;
         const msgId = msg.id || `msg-${index}`;
         const isCopied = copiedId === msgId;
-        const targetDomId = msg.id ? `msg-user-${msg.id}` : `message-user-${userMsgIndex}`;
+        const targetDomId = msg.id ? `msg-user-${msg.id}` : `message-${userMsgIndex}`;
 
         if (isUser) {
           const isEditing = editingMessageId === msgId;
@@ -377,7 +402,7 @@ export function MessageList({
                       }
                     }}
                     rows={Math.min(Math.max(editDraftText.split('\n').length, 2), 8)}
-                    className="w-full bg-transparent border-0 outline-none focus:outline-none focus:ring-0 resize-none text-[14.5px] sm:text-[15px] leading-relaxed text-foreground placeholder:text-muted-foreground select-text"
+                    className="w-full bg-transparent border-0 outline-none focus:outline-none focus:ring-0 resize-none text-[15px] sm:text-[15.5px] leading-relaxed text-foreground placeholder:text-muted-foreground select-text"
                     autoFocus
                   />
                   <div className="flex items-center justify-end gap-2 mt-2 pt-1 select-none">
@@ -406,7 +431,7 @@ export function MessageList({
               ) : (
                 <>
                   {/* User Bubble Capsule */}
-                  <div className="bg-bubble dark:bg-[#2F2F2F] text-foreground text-[14.5px] sm:text-[15px] leading-relaxed rounded-2xl sm:rounded-3xl px-4 sm:px-5 py-2.5 sm:py-3 max-w-[85%] sm:max-w-[75%] whitespace-pre-wrap select-text break-words">
+                  <div className="bg-bubble dark:bg-[#2F2F2F] text-foreground text-[15px] sm:text-[15.5px] leading-relaxed rounded-2xl sm:rounded-3xl px-4 sm:px-5 py-2.5 sm:py-3 max-w-[85%] sm:max-w-[75%] whitespace-pre-wrap select-text break-words">
                     {msg.content}
                   </div>
 
@@ -452,11 +477,81 @@ export function MessageList({
 
             <div className="w-full space-y-3">
               {/* Message Content */}
-              <div className="chat-markdown text-foreground select-text text-[14.5px] sm:text-[15px] leading-relaxed break-words overflow-hidden w-full">
+              <div className="chat-markdown text-foreground select-text text-[15px] sm:text-[15.5px] leading-7 break-words overflow-hidden w-full">
                 <ReactMarkdown
-                  remarkPlugins={[remarkMath]}
+                  remarkPlugins={[remarkGfm, remarkMath]}
                   rehypePlugins={[[rehypeKatex, { strict: false, throwOnError: false }]]}
                   components={{
+                    table({ children }: any) {
+                      return (
+                        <div className="my-4 w-full overflow-x-auto rounded-xl border border-border/70 bg-card/40">
+                          <table className="w-full text-left border-collapse text-sm !m-0">
+                            {children}
+                          </table>
+                        </div>
+                      );
+                    },
+                    thead({ children }: any) {
+                      return (
+                        <thead className="bg-secondary/70 dark:bg-[#1f1f1f] border-b border-border/80 text-foreground font-semibold text-xs tracking-wider uppercase">
+                          {children}
+                        </thead>
+                      );
+                    },
+                    th({ children }: any) {
+                      return (
+                        <th className="px-4 py-2.5 font-semibold text-foreground text-xs uppercase tracking-wider">
+                          {children}
+                        </th>
+                      );
+                    },
+                    td({ children }: any) {
+                      return (
+                        <td className="px-4 py-2.5 border-t border-border/40 text-foreground/90 text-sm align-top leading-relaxed">
+                          {children}
+                        </td>
+                      );
+                    },
+                    tr({ children }: any) {
+                      return (
+                        <tr className="hover:bg-secondary/30 transition-colors">
+                          {children}
+                        </tr>
+                      );
+                    },
+                    p({ children }: any) {
+                      return <p className="mb-3.5 last:mb-0 leading-7 text-foreground/95">{children}</p>;
+                    },
+                    h1({ children }: any) {
+                      return <h1 className="text-2xl sm:text-[26px] font-semibold tracking-tight text-foreground mt-7 mb-3 first:mt-0">{children}</h1>;
+                    },
+                    h2({ children }: any) {
+                      return <h2 className="text-xl sm:text-[22px] font-semibold tracking-tight text-foreground mt-6 mb-2.5 first:mt-0">{children}</h2>;
+                    },
+                    h3({ children }: any) {
+                      return <h3 className="text-lg sm:text-[19px] font-semibold tracking-tight text-foreground mt-5 mb-2 first:mt-0">{children}</h3>;
+                    },
+                    h4({ children }: any) {
+                      return <h4 className="text-base font-semibold text-foreground mt-4 mb-1.5 first:mt-0">{children}</h4>;
+                    },
+                    ul({ children }: any) {
+                      return <ul className="my-3 pl-6 list-disc space-y-1.5 text-foreground/95 leading-7">{children}</ul>;
+                    },
+                    ol({ children }: any) {
+                      return <ol className="my-3 pl-6 list-decimal space-y-1.5 text-foreground/95 leading-7">{children}</ol>;
+                    },
+                    li({ children }: any) {
+                      return <li className="leading-7 pl-0.5">{children}</li>;
+                    },
+                    blockquote({ children }: any) {
+                      return <blockquote className="my-4 border-l-2 border-border/80 pl-4 italic text-muted-foreground leading-7">{children}</blockquote>;
+                    },
+                    hr() {
+                      return <hr className="my-6 border-border/60" />;
+                    },
+                    strong({ children }: any) {
+                      return <strong className="font-semibold text-foreground">{children}</strong>;
+                    },
                     pre({ children }: any) {
                       if (React.isValidElement(children)) {
                         const childProps: any = children.props || {};
@@ -483,7 +578,7 @@ export function MessageList({
                     code({ className, children, ...props }: any) {
                       return (
                         <code
-                          className="bg-neutral-100 dark:bg-[#282828] text-neutral-900 dark:text-foreground px-1.5 py-0.5 rounded-md font-mono text-[13px] border border-neutral-200/80 dark:border-border/50 select-text"
+                          className="bg-neutral-200/60 dark:bg-white/10 text-foreground px-1.5 py-0.5 rounded-md font-mono text-[13.5px] font-normal select-text"
                           {...props}
                         >
                           {children}
@@ -590,7 +685,7 @@ export function MessageList({
               ))}
             </div>
           )}
-          <div className="bg-bubble dark:bg-[#2F2F2F] text-foreground text-[14.5px] sm:text-[15px] leading-relaxed rounded-2xl sm:rounded-3xl px-4 sm:px-5 py-2.5 sm:py-3 max-w-[85%] sm:max-w-[75%] whitespace-pre-wrap select-text break-words">
+          <div className="bg-bubble dark:bg-[#2F2F2F] text-foreground text-[15px] sm:text-[15.5px] leading-relaxed rounded-2xl sm:rounded-3xl px-4 sm:px-5 py-2.5 sm:py-3 max-w-[85%] sm:max-w-[75%] whitespace-pre-wrap select-text break-words">
             {pendingMessage.content}
           </div>
         </div>
@@ -603,15 +698,13 @@ export function MessageList({
           messages[messages.length - 1]?.role === "user" ||
           (messages[messages.length - 1]?.role === "assistant" &&
             !messages[messages.length - 1]?.content)) && (
-          <div className="flex gap-2.5 sm:gap-4 items-start animate-in fade-in-0 duration-150">
-            <div className="flex items-center gap-2 py-1 select-none">
-              <span className="text-[14.5px] sm:text-[15px] font-normal animate-shimmer-text">
-                Thinking...
-              </span>
-            </div>
+          <div className="flex gap-2.5 sm:gap-3 items-center py-2 animate-in fade-in-0 duration-150 select-none">
+            <div className="w-2 h-2 rounded-full bg-foreground/60 animate-ping" />
+            <span className="text-[14px] sm:text-[14.5px] font-medium text-muted-foreground animate-pulse">
+              Thinking...
+            </span>
           </div>
         )}
-
 
       <div ref={scrollBottomRef} />
     </div>

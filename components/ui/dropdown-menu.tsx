@@ -69,7 +69,7 @@ const DropdownMenuSubContent = React.forwardRef<
         sideOffset={sideOffset}
         alignOffset={alignOffset}
         className={cn(
-          'z-[9999] min-w-[10rem] overflow-hidden rounded-2xl border border-border/80 dark:border-neutral-700/80 bg-background dark:bg-[#212121] p-1.5 text-foreground outline-none focus:outline-none focus:ring-0 shadow-2xl shadow-black/40',
+          'z-[9999] min-w-[10rem] overflow-hidden rounded-2xl bg-white/50 dark:bg-[#212121]/50 backdrop-blur-sm border border-border/50 dark:border-neutral-700/50 p-1.5 text-foreground outline-none focus:outline-none focus:ring-0',
           className
         )}
         {...props}
@@ -89,7 +89,7 @@ const DropdownMenuContent = React.forwardRef<
       ref={ref}
       sideOffset={sideOffset}
       className={cn(
-        'z-[9999] min-w-[8rem] overflow-hidden rounded-2xl border border-border/80 dark:border-neutral-700/80 bg-background dark:bg-[#212121] p-1.5 text-foreground outline-none focus:outline-none focus:ring-0 shadow-2xl shadow-black/40',
+        'z-[9999] min-w-[8rem] overflow-hidden rounded-2xl bg-white/50 dark:bg-[#212121]/50 backdrop-blur-sm border border-border/50 dark:border-neutral-700/50 p-1.5 text-foreground outline-none focus:outline-none focus:ring-0',
         className
       )}
       {...props}

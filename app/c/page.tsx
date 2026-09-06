@@ -226,7 +226,7 @@ function NewChatContent() {
                     onMouseEnter={() => setIsSidebarBtnHovered(true)}
                     onMouseLeave={() => setIsSidebarBtnHovered(false)}
                     onBlur={() => setIsSidebarBtnHovered(false)}
-                    className="lg:hidden w-8 h-8 rounded-xl bg-background dark:bg-[#212121] flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-secondary dark:hover:bg-[#2f2f2f] transition-colors cursor-pointer outline-none focus:outline-none"
+                    className="lg:hidden w-8 h-8 rounded-xl bg-background dark:bg-[#212121] hover:bg-secondary dark:hover:bg-[#2f2f2f] flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors cursor-pointer outline-none focus:outline-none"
                     aria-label="Open sidebar"
                   >
                       <PanelRight className="w-4 h-4 text-foreground" />

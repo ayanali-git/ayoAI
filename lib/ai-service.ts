@@ -88,7 +88,10 @@ export class AIService {
     }
 
     try {
-      const systemPrompt = `You are CloseAI, a helpful, thorough, and intelligent AI assistant. Always provide comprehensive, fully detailed answers, complete explanations, and complete code solutions without stopping or truncating prematurely.
+      const systemPrompt = `You are CloseAI, a helpful, thorough, and intelligent AI assistant. Always provide comprehensive, fully detailed answers, complete explanations, and clean code solutions without stopping prematurely. Format your output in clean, elegant Markdown:
+- When presenting tabular data, always use standard GitHub-Flavored Markdown tables with newlines between rows.
+- Use fenced code blocks with the appropriate language identifier for all code snippets.
+- Use bold text (**text**) cleanly without orphaned asterisks.
 ${fileContext ? `\n\nFile Context:\n${fileContext}` : ''}`;
 
       const fullMessages: any[] = [
@@ -206,7 +209,10 @@ ${fileContext ? `\n\nFile Context:\n${fileContext}` : ''}`;
       try {
         const model = genAI.getGenerativeModel({ model: candidate });
 
-        const systemPrompt = `You are CloseAI, a helpful, thorough, and intelligent AI assistant. Always provide comprehensive, fully detailed answers, complete explanations, and complete code solutions without stopping or truncating prematurely.
+        const systemPrompt = `You are CloseAI, a helpful, thorough, and intelligent AI assistant. Always provide comprehensive, fully detailed answers, complete explanations, and clean code solutions without stopping prematurely. Format your output in clean, elegant Markdown:
+- When presenting tabular data, always use standard GitHub-Flavored Markdown tables with newlines between rows.
+- Use fenced code blocks with the appropriate language identifier for all code snippets.
+- Use bold text (**text**) cleanly without orphaned asterisks.
 ${fileContext ? `\n\nFile Context:\n${fileContext}` : ''}`;
 
         const lastMessage = messages[messages.length - 1];

@@ -9,63 +9,59 @@ interface SidebarContextType {
 }
 
 const SidebarContext = createContext<SidebarContextType>({
-  sidebarOpen: false,
+  sidebarOpen: true,
   setSidebarOpen: () => {},
   toggleSidebar: () => {},
 });
 
 export function SidebarProvider({
   children,
-  defaultOpen = false,
+  defaultOpen = true,
 }: {
   children: React.ReactNode;
   defaultOpen?: boolean;
 }) {
   const [sidebarOpen, setSidebarOpen] = useState<boolean>(defaultOpen);
+  const [mounted, setMounted] = useState<boolean>(false);
 
-  // Sync state on client mount from cookie/localStorage if available
+  // Sync state on client mount strictly from localStorage
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const match = document.cookie.match(/(?:^|;\s*)sidebar_open=(true|false)/);
-      if (match) {
-        setSidebarOpen(match[1] === 'true');
-      } else {
-        try {
-          const stored = localStorage.getItem('sidebar_open');
-          if (stored !== null) {
-            setSidebarOpen(stored === 'true');
-          }
-        } catch (e) {}
-      }
+    // Clean up any old sidebar_open cookie from the browser
+    if (typeof document !== 'undefined') {
+      document.cookie = 'sidebar_open=; path=/; max-age=0; expires=Thu, 01 Jan 1970 00:00:00 GMT';
     }
+    try {
+      const stored = localStorage.getItem('sidebar_open');
+      if (stored !== null) {
+        setSidebarOpen(stored === 'true');
+      } else {
+        // Default to open on desktop (>= 768px), closed on mobile
+        const isDesktop = window.innerWidth >= 768;
+        setSidebarOpen(isDesktop);
+        localStorage.setItem('sidebar_open', String(isDesktop));
+      }
+    } catch (e) {}
+    setMounted(true);
   }, []);
 
-  const persistState = (open: boolean) => {
-    if (typeof document !== 'undefined') {
-      document.cookie = `sidebar_open=${open}; path=/; max-age=31536000; SameSite=Lax`;
+  // Save to localStorage whenever sidebarOpen changes after mount
+  useEffect(() => {
+    if (mounted) {
       try {
-        localStorage.setItem('sidebar_open', String(open));
+        localStorage.setItem('sidebar_open', String(sidebarOpen));
       } catch (e) {}
     }
-  };
-
-  const handleSetSidebarOpen: React.Dispatch<React.SetStateAction<boolean>> = (action) => {
-    setSidebarOpen((prev) => {
-      const next = typeof action === 'function' ? action(prev) : action;
-      persistState(next);
-      return next;
-    });
-  };
+  }, [sidebarOpen, mounted]);
 
   const toggleSidebar = () => {
-    handleSetSidebarOpen((prev) => !prev);
+    setSidebarOpen((prev) => !prev);
   };
 
   return (
     <SidebarContext.Provider
       value={{
         sidebarOpen,
-        setSidebarOpen: handleSetSidebarOpen,
+        setSidebarOpen,
         toggleSidebar,
       }}
     >

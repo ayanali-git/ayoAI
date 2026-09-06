@@ -2,6 +2,7 @@ import './globals.css';
 import 'katex/dist/katex.min.css';
 import 'goey-toast/styles.css';
 import type { Metadata } from 'next';
+import { cookies } from 'next/headers';
 import { ToasterProvider } from '@/components/ui/toaster';
 import { AuthProvider } from '@/components/auth-provider';
 import { SubscriptionProvider } from '@/components/subscription-provider';
@@ -9,10 +10,10 @@ import { ThemeProvider } from '@/components/theme-provider';
 import { TooltipProvider } from '@/components/ui/tooltip';
 
 export const metadata: Metadata = {
-  title: 'closeAI',
+  title: 'CloseAI',
   description: 'AI assistant for research, coding, writing, and creating.',
   keywords: 'AI assistant, artificial intelligence, chat, productivity, generative AI',
-  authors: [{ name: 'closeAI' }],
+  authors: [{ name: 'CloseAI' }],
   icons: {
     icon: [
       { url: '/favicon.ico', sizes: 'any' },
@@ -25,16 +26,16 @@ export const metadata: Metadata = {
     apple: '/apple-touch-icon.png',
   },
   openGraph: {
-    title: 'closeAI',
+    title: 'CloseAI',
     description: 'AI assistant for research, coding, writing, and creating.',
     url: 'https://closeai.com',
-    siteName: 'closeAI',
+    siteName: 'CloseAI',
     locale: 'en_US',
     type: 'website',
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'closeAI',
+    title: 'CloseAI',
     description: 'AI assistant for research, coding, writing, and creating.',
   },
 };
@@ -44,6 +45,9 @@ export default function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
+  const cookieStore = cookies();
+  const initialPlan = cookieStore.get('user_plan')?.value || 'free';
+
   return (
     <html lang="en" suppressHydrationWarning>
       <body className="min-h-screen bg-background text-foreground antialiased font-sans">
@@ -55,7 +59,7 @@ export default function RootLayout({
         >
           <TooltipProvider delayDuration={150}>
             <AuthProvider>
-              <SubscriptionProvider>
+              <SubscriptionProvider initialPlan={initialPlan}>
                 {children}
                 <ToasterProvider />
               </SubscriptionProvider>

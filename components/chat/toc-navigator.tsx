@@ -7,7 +7,6 @@ import {
   type MouseEvent,
 } from "react";
 import { cn } from "@/lib/utils";
-import BlurFade from "@/components/ui/blur-fade";
 import { Message } from "@/lib/chat-service";
 
 export type Heading = {
@@ -35,7 +34,7 @@ function TocPopup({
   }, [scrollActiveSectionId]);
 
   return (
-    <div className="w-[min(20rem,calc(100vw-2rem))] rounded-2xl border border-border/80 dark:border-neutral-700/80 bg-background dark:bg-[#212121] py-2 shadow-xl">
+    <div className="w-[min(20rem,calc(100vw-2rem))] rounded-2xl bg-white/50 dark:bg-[#212121]/50 backdrop-blur-sm border border-border/50 dark:border-neutral-700/50 py-2">
       <nav className="flex flex-col max-h-[360px] overflow-y-auto p-1 scrollbar-thin">
         {headings.map((heading) => {
           const isActive = heading.id === scrollActiveSectionId;
@@ -49,7 +48,7 @@ function TocPopup({
               data-selected={isActive ? "true" : undefined}
               title={heading.text}
               className={cn(
-                "hover-box relative isolate mx-1 rounded-xl px-3 py-2 text-[15px] leading-snug cursor-pointer transition-colors duration-150",
+                "hover-box relative mx-1 rounded-xl px-3 py-2 text-[15px] leading-snug cursor-pointer transition-colors duration-150",
                 "overflow-hidden text-ellipsis whitespace-nowrap text-left hover:bg-secondary dark:hover:bg-[#2f2f2f]",
                 isActive ? "bg-secondary dark:bg-[#2f2f2f] text-foreground font-medium" : "text-muted-foreground"
               )}
@@ -238,7 +237,7 @@ function PreviewRail({
         }
       }}
       className={cn(
-        "isolate relative flex overflow-visible pointer-events-none justify-end",
+        "relative flex overflow-visible pointer-events-none justify-end",
         isHorizontal
           ? "w-full min-h-48 flex-col items-center justify-center"
           : "h-fit w-fit",
@@ -378,7 +377,7 @@ export function TocNavigator({
           const truncated = text.length > 80 ? text.substring(0, 80) + "..." : text;
 
           return {
-            id: msg.id ? `msg-user-${msg.id}` : `message-user-${index}`,
+            id: msg.id ? `msg-${msg.id}` : `message-${index}`,
             text: truncated,
             level: 2,
           };
@@ -516,14 +515,14 @@ export function TocNavigator({
 
   return (
     <aside className="pointer-events-none fixed top-1/2 right-5 z-30 hidden h-[min(460px,70vh)] w-fit -translate-y-1/2 select-none md:block">
-      <BlurFade delay={0.12} duration={0.4}>
+      <div className="animate-in fade-in-0 duration-200">
         <PreviewRail
           headings={headings}
           scrollActiveSectionId={scrollActiveSectionId}
           onNavigate={handleLinkClick}
           className="h-[min(460px,70vh)]"
         />
-      </BlurFade>
+      </div>
     </aside>
   );
 }

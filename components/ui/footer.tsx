@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { CloseAIIcon } from "@/components/brand/logo";
-import { Globe, ArrowUpRight } from "lucide-react";
+import { Globe, ArrowUpRight, Copy, Copyright } from "lucide-react";
 
 export function Footer() {
   return (
@@ -229,9 +229,8 @@ export function Footer() {
                   </Link>
                 </li>
                 <li>
-                  <Link href="/product/api-docs" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-muted-foreground hover:text-foreground transition-colors">
+                  <Link href="/product/api-docs" className="flex items-center gap-1 text-muted-foreground hover:text-foreground transition-colors">
                     <span>Developer Forum</span>
-                    <ArrowUpRight className="w-4 h-4 stroke-[2.5]" />
                   </Link>
                 </li>
               </ul>
@@ -353,20 +352,21 @@ export function Footer() {
         {/* Bottom Bar: Copyright, Center Language, & Social Links (Single divider above) */}
         <div className="pt-8 flex flex-col md:flex-row items-center justify-between gap-6 text-[13.5px] text-muted-foreground">
           {/* Left: Brand & Copyright */}
-          <div className="flex flex-wrap items-center justify-center md:justify-start gap-x-3 gap-y-1.5 text-center md:text-left">
-            <span className="text-muted-foreground/80">© 2026 closeAI. All rights reserved.</span>
+          <div className="flex flex-wrap items-center justify-center text-base md:justify-start gap-x-1 text-center md:text-left">
+            <Copyright className="w-4 h-4" />
+            <span className="text-muted-foreground/80">2026 CloseAI. All rights reserved.</span>
           </div>
 
           {/* Center: Language Switcher */}
           <div className="flex items-center justify-center">
-            <button className="flex items-center gap-1.5 px-3 py-3 rounded-full bg-secondary/50 hover:bg-secondary hover:text-foreground transition-colors cursor-pointer whitespace-nowrap">
-              <Globe className="w-4 h-4 shrink-0" />
+            <button className="flex items-center text-base gap-1.5 px-4 py-2 rounded-full bg-white/50 dark:bg-[#212121]/50 hover:bg-secondary dark:hover:bg-[#2f2f2f] text-muted-foreground hover:text-foreground transition-colors cursor-pointer whitespace-nowrap">
+              <Globe className="w-4 h-4" />
               <span>English (United States)</span>
             </button>
           </div>
 
           {/* Right / Middle: Social Links with ArrowUpRight Icons */}
-          <div className="flex flex-wrap items-center justify-center md:justify-end gap-x-5 gap-y-2">
+          <div className="flex flex-wrap text-base items-center justify-center md:justify-end gap-x-5 gap-y-2">
             <a
               href="https://x.com"
               target="_blank"

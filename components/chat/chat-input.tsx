@@ -499,7 +499,7 @@ export const ChatInput = forwardRef<HTMLDivElement, ChatInputProps>(function Cha
         alignOffset={menuAlignOffset}
         avoidCollisions={true}
         collisionPadding={12}
-        className="w-64 max-w-[calc(100vw-24px)] rounded-2xl p-1.5 bg-background dark:bg-[#212121] border border-border/80 dark:border-neutral-700/80 shadow-2xl shadow-black/40 select-none outline-none"
+        className="w-64 max-w-[calc(100vw-24px)] rounded-2xl p-1.5 bg-white/50 dark:bg-[#212121]/50 backdrop-blur-sm border border-border/50 dark:border-neutral-700/50 select-none outline-none"
         style={{
           WebkitFontSmoothing: "antialiased",
           MozOsxFontSmoothing: "grayscale",
@@ -617,7 +617,8 @@ export const ChatInput = forwardRef<HTMLDivElement, ChatInputProps>(function Cha
         {...getRootProps()}
         ref={pillRef}
         className={cn(
-          "relative bg-background dark:bg-[#212121] border border-border/80 dark:border-neutral-700/80 transition-all duration-200",
+          "relative bg-white/50 dark:bg-[#212121]/50 backdrop-blur-sm border border-border/50 dark:border-neutral-700/50 transition-all duration-200",
+          "focus-within:bg-background dark:focus-within:bg-background focus-within:text-foreground dark:focus-within:text-foreground",
           isExpandedLayout
             ? "rounded-3xl p-2.5 sm:p-3"
             : "rounded-full px-1.5 sm:px-2 py-1 min-h-[48px] sm:min-h-[52px] flex items-center",
@@ -663,7 +664,7 @@ export const ChatInput = forwardRef<HTMLDivElement, ChatInputProps>(function Cha
                 placeholder="Ask anything"
                 rows={1}
                 disabled={isTyping || isUploading}
-                className="w-full min-w-0 bg-transparent border-0 p-0 text-[16px] sm:text-[16.5px] text-foreground placeholder:text-muted-foreground/70 focus:outline-none focus:ring-0 resize-none min-h-[44px] max-h-[200px] leading-relaxed"
+                className="w-full min-w-0 bg-transparent border-0 p-0 text-[16px] sm:text-[16.5px] text-foreground placeholder:text-muted-foreground focus:placeholder:text-foreground transition-colors focus:outline-none focus:ring-0 resize-none min-h-[44px] max-h-[200px] leading-relaxed"
               />
             </div>
 
@@ -695,7 +696,7 @@ export const ChatInput = forwardRef<HTMLDivElement, ChatInputProps>(function Cha
                 placeholder="Ask anything"
                 rows={1}
                 disabled={isTyping || isUploading}
-                className="w-full min-w-0 bg-transparent border-0 px-0.5 sm:px-1 py-0 text-[16px] sm:text-[16.5px] text-foreground placeholder:text-muted-foreground/75 focus:outline-none focus:ring-0 resize-none h-[26px] leading-[26px] overflow-hidden scrollbar-none"
+                className="w-full min-w-0 bg-transparent border-0 px-0.5 sm:px-1 py-0 text-[16px] sm:text-[16.5px] text-foreground placeholder:text-muted-foreground focus:placeholder:text-foreground transition-colors focus:outline-none focus:ring-0 resize-none h-[26px] leading-[26px] overflow-hidden scrollbar-none"
               />
             </div>
 

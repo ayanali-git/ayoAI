@@ -1,6 +1,6 @@
 'use client';
 
-import { AnimatedArrow } from '@/components/ui/animated-arrow';
+import { AnimatedArrow } from '@/components/ui/animated-icons';
 
 export default function CareersPage() {
   const roles = [

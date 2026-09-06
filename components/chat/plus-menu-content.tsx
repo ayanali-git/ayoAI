@@ -1014,7 +1014,7 @@ export function PlusMenuContent({
           <DropdownMenuSubContent
             sideOffset={4}
             alignOffset={-130}
-            className="w-64 max-w-[calc(100vw-24px)] rounded-2xl p-1.5 bg-background dark:bg-[#212121] border border-border/80 dark:border-neutral-700/80 select-none outline-none"
+            className="w-64 max-w-[calc(100vw-24px)] rounded-2xl p-1.5 bg-white/50 dark:bg-[#212121]/50 backdrop-blur-sm border border-border/50 dark:border-neutral-700/50 select-none outline-none"
           >
             {/* Row 1: Model (Submenu dropdown on HOVER) */}
             <DropdownMenuSub>
@@ -1033,7 +1033,7 @@ export function PlusMenuContent({
               <DropdownMenuSubContent
                 sideOffset={4}
                 alignOffset={-125}
-                className="w-64 max-w-[calc(100vw-24px)] rounded-2xl p-1.5 bg-background dark:bg-[#212121] border border-border/80 dark:border-neutral-700/80 select-none outline-none"
+                className="w-64 max-w-[calc(100vw-24px)] rounded-2xl p-1.5 bg-white/50 dark:bg-[#212121]/50 backdrop-blur-sm border border-border/50 dark:border-neutral-700/50 select-none outline-none"
               >
                 <DropdownMenuRadioGroup
                   value={model}
@@ -1091,7 +1091,7 @@ export function PlusMenuContent({
               <DropdownMenuSubContent
                 sideOffset={4}
                 alignOffset={-150}
-                className="w-64 max-w-[calc(100vw-24px)] rounded-2xl p-1.5 bg-background dark:bg-[#212121] border border-border/80 dark:border-neutral-700/80 select-none outline-none"
+                className="w-64 max-w-[calc(100vw-24px)] rounded-2xl p-1.5 bg-white/50 dark:bg-[#212121]/50 backdrop-blur-sm border border-border/50 dark:border-neutral-700/50 select-none outline-none"
               >
                 <DropdownMenuRadioGroup
                   value={String(tierIndex)}
@@ -1131,7 +1131,7 @@ export function PlusMenuContent({
               <DropdownMenuSubContent
                 sideOffset={4}
                 alignOffset={-80}
-                className="w-64 max-w-[calc(100vw-24px)] rounded-2xl p-1.5 bg-background dark:bg-[#212121] border border-border/80 dark:border-neutral-700/80 select-none outline-none"
+                className="w-64 max-w-[calc(100vw-24px)] rounded-2xl p-1.5 bg-white/50 dark:bg-[#212121]/50 backdrop-blur-sm border border-border/50 dark:border-neutral-700/50 select-none outline-none"
               >
                 <DropdownMenuRadioGroup
                   value={speed}
@@ -1165,7 +1165,7 @@ export function PlusMenuContent({
               <DropdownMenuSubContent
                 sideOffset={4}
                 alignOffset={-50}
-                className="w-64 max-w-[calc(100vw-24px)] rounded-2xl p-3 bg-background dark:bg-[#212121] border border-border/80 dark:border-neutral-700/80 select-none outline-none"
+                className="w-64 max-w-[calc(100vw-24px)] rounded-2xl p-3 bg-white/50 dark:bg-[#212121]/50 backdrop-blur-sm border border-border/50 dark:border-neutral-700/50 select-none outline-none"
                 onPointerDown={(e) => e.stopPropagation()}
               >
                 <ModelSliderCard

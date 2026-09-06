@@ -7,12 +7,12 @@ export default function HelpPage() {
     <div className="py-12 sm:py-16 w-full max-w-4xl mx-auto min-w-0">
       <header className="mb-10 sm:mb-12 text-center">
         <h1 className="text-3xl sm:text-5xl font-semibold tracking-tight text-foreground mb-4 sm:mb-6">How can we help?</h1>
-        <div className="relative max-w-2xl mx-auto">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+        <div className="relative max-w-2xl mx-auto group">
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground group-focus-within:text-foreground transition-colors pointer-events-none" />
           <input 
             type="text" 
             placeholder="Search for articles, guides, and FAQs..." 
-            className="w-full pl-12 pr-4 py-3.5 sm:py-4 bg-card border border-border rounded-full text-base sm:text-lg focus:outline-none focus:ring-1 focus:ring-primary"
+            className="w-full pl-12 pr-4 py-3.5 sm:py-4 bg-card rounded-full text-base sm:text-lg focus:outline-none text-foreground placeholder:text-muted-foreground focus:placeholder:text-foreground transition-colors"
           />
         </div>
       </header>

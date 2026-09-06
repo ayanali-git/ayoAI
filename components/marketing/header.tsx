@@ -4,9 +4,6 @@ import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
-  Search,
-  X,
-  ChevronDown,
   ArrowUpRight,
   ArrowUp,
   ArrowLeft,
@@ -15,7 +12,7 @@ import {
   Menu,
 } from "lucide-react";
 import { CloseAIIcon } from "@/components/brand/logo";
-import { AnimatedArrow } from "@/components/ui/animated-arrow";
+import { AnimatedArrow, AnimatedChevron, AnimatedSearchClose } from "@/components/ui/animated-icons";
 import { useAuth } from "@/hooks/use-auth";
 import {
   DropdownMenu,
@@ -47,15 +44,26 @@ export function MarketingHeader() {
   const [mobileSubMenu, setMobileSubMenu] = useState<MegaMenuCategory>(null);
   const [accountMenuOpen, setAccountMenuOpen] = useState(false);
   const [loginMenuOpen, setLoginMenuOpen] = useState(false);
+  const [tryMenuOpen, setTryMenuOpen] = useState(false);
+  const [hoveredNav, setHoveredNav] = useState<string | null>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
   const accountTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const loginTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const tryTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  const currentActiveNav = hoveredNav || activeMenu;
+
+  const getNavButtonColor = (key: string) => {
+    if (!currentActiveNav) return "text-foreground";
+    return currentActiveNav === key ? "text-foreground" : "text-muted-foreground";
+  };
 
   const handleAccountEnter = () => {
     if (accountTimeoutRef.current) clearTimeout(accountTimeoutRef.current);
     if (timeoutRef.current) clearTimeout(timeoutRef.current);
     setActiveMenu(null);
+    setHoveredNav(null);
     setAccountMenuOpen(true);
   };
 
@@ -70,6 +78,7 @@ export function MarketingHeader() {
     if (loginTimeoutRef.current) clearTimeout(loginTimeoutRef.current);
     if (timeoutRef.current) clearTimeout(timeoutRef.current);
     setActiveMenu(null);
+    setHoveredNav(null);
     setLoginMenuOpen(true);
   };
 
@@ -77,6 +86,21 @@ export function MarketingHeader() {
     if (loginTimeoutRef.current) clearTimeout(loginTimeoutRef.current);
     loginTimeoutRef.current = setTimeout(() => {
       setLoginMenuOpen(false);
+    }, 200);
+  };
+
+  const handleTryEnter = () => {
+    if (tryTimeoutRef.current) clearTimeout(tryTimeoutRef.current);
+    if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    setActiveMenu(null);
+    setHoveredNav(null);
+    setTryMenuOpen(true);
+  };
+
+  const handleTryLeave = () => {
+    if (tryTimeoutRef.current) clearTimeout(tryTimeoutRef.current);
+    tryTimeoutRef.current = setTimeout(() => {
+      setTryMenuOpen(false);
     }, 200);
   };
 
@@ -91,6 +115,7 @@ export function MarketingHeader() {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
         setActiveMenu(null);
+        setHoveredNav(null);
         setIsSearchOpen(false);
       }
     };
@@ -106,6 +131,7 @@ export function MarketingHeader() {
   };
 
   const handleMouseLeave = () => {
+    setHoveredNav(null);
     timeoutRef.current = setTimeout(() => {
       setActiveMenu(null);
     }, 150);
@@ -124,7 +150,7 @@ export function MarketingHeader() {
       {/* Backdrop blur overlay when mega menu is active */}
       <div
         className={cn(
-          "fixed inset-0 top-14 z-40 bg-background/98 backdrop-blur-2xl animate-in fade-in-0 duration-200 pointer-events-none",
+          "fixed inset-0 top-14 z-40 bg-background/98 backdrop-blur-2xl pointer-events-none",
           activeMenu ? "opacity-100 pointer-events-auto" : "opacity-0"
         )}
         onClick={() => setActiveMenu(null)}
@@ -133,7 +159,7 @@ export function MarketingHeader() {
       {/* FULLSCREEN SEARCH OVERLAY */}
       {isSearchOpen && (
         <div
-          className="fixed inset-0 top-14 z-40 bg-background/98 backdrop-blur-2xl flex flex-col items-center pt-24 px-6 animate-in fade-in-0 duration-200 select-none"
+          className="fixed inset-0 top-14 z-40 bg-background/98 backdrop-blur-2xl flex flex-col items-center pt-24 px-6 select-none"
           onClick={(e) => {
             if (e.target === e.currentTarget) {
               setIsSearchOpen(false);
@@ -156,10 +182,15 @@ export function MarketingHeader() {
               <div className="flex items-center gap-2 shrink-0 pl-4">
                 <button
                   type="submit"
-                  className="w-8 h-8 rounded-full bg-foreground text-background flex items-center justify-center hover:opacity-90 transition-opacity cursor-pointer"
+                  className={cn(
+                    "w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center transition-all shrink-0",
+                    searchQuery.trim().length > 0
+                      ? "bg-foreground text-background cursor-pointer hover:opacity-90 active:scale-95"
+                      : "bg-white/50 dark:bg-[#212121]/50 text-foreground cursor-not-allowed opacity-60"
+                  )}
                   aria-label="Submit search"
                 >
-                  <ArrowUp className="w-4 h-4" />
+                  <ArrowUp className="w-5 h-5 stroke-[3]" />
                 </button>
               </div>
             </div>
@@ -176,9 +207,13 @@ export function MarketingHeader() {
           <div className="flex items-center gap-8">
             <Link
               href="/"
-              onMouseEnter={() => setActiveMenu(null)}
+              onMouseEnter={() => {
+                setActiveMenu(null);
+                setHoveredNav(null);
+              }}
               onClick={() => {
                 setActiveMenu(null);
+                setHoveredNav(null);
                 setIsSearchOpen(false);
               }}
               className="flex items-center gap-2 hover:opacity-85 transition-opacity"
@@ -189,79 +224,85 @@ export function MarketingHeader() {
             </Link>
 
             {/* Desktop Navigation */}
-            <nav className="hidden lg:flex items-center gap-6">
+            <nav 
+              className="hidden lg:flex items-center gap-6"
+              onMouseLeave={() => setHoveredNav(null)}
+            >
               {/* Research */}
               <button
-                onMouseEnter={() => handleMouseEnter("research")}
+                onMouseEnter={() => {
+                  setHoveredNav("research");
+                  handleMouseEnter("research");
+                }}
                 onClick={() => {
                   setIsSearchOpen(false);
                   setActiveMenu(activeMenu === "research" ? null : "research");
                 }}
                 className={cn(
-                  "text-[13.5px] font-medium transition-colors py-1 cursor-pointer flex items-center gap-1",
-                  activeMenu === "research"
-                    ? "text-foreground"
-                    : "text-muted-foreground hover:text-foreground"
+                  "group text-[13.5px] font-medium transition-colors py-1 cursor-pointer flex items-center gap-1",
+                  getNavButtonColor("research")
                 )}
               >
                 <span>Research</span>
-                <ChevronDown
-                  className={cn(
-                    "w-4 h-4 transition-transform duration-200",
-                    activeMenu === "research" && "rotate-180"
-                  )}
+                <AnimatedChevron
+                  open={activeMenu === "research"}
+                  size={13}
+                  className="text-muted-foreground group-hover:text-foreground transition-colors"
                 />
               </button>
 
               {/* Products */}
               <button
-                onMouseEnter={() => handleMouseEnter("products")}
+                onMouseEnter={() => {
+                  setHoveredNav("products");
+                  handleMouseEnter("products");
+                }}
                 onClick={() => {
                   setIsSearchOpen(false);
                   setActiveMenu(activeMenu === "products" ? null : "products");
                 }}
                 className={cn(
-                  "text-[13.5px] font-medium transition-colors py-1 cursor-pointer flex items-center gap-1",
-                  activeMenu === "products"
-                    ? "text-foreground"
-                    : "text-muted-foreground hover:text-foreground"
+                  "group text-[13.5px] font-medium transition-colors py-1 cursor-pointer flex items-center gap-1",
+                  getNavButtonColor("products")
                 )}
               >
                 <span>Products</span>
-                <ChevronDown
-                  className={cn(
-                    "w-4 h-4 transition-transform duration-200",
-                    activeMenu === "products" && "rotate-180"
-                  )}
+                <AnimatedChevron
+                  open={activeMenu === "products"}
+                  size={13}
+                  className="text-muted-foreground group-hover:text-foreground transition-colors"
                 />
               </button>
 
               {/* Business */}
               <button
-                onMouseEnter={() => handleMouseEnter("business")}
+                onMouseEnter={() => {
+                  setHoveredNav("business");
+                  handleMouseEnter("business");
+                }}
                 onClick={() => {
                   setIsSearchOpen(false);
                   setActiveMenu(activeMenu === "business" ? null : "business");
                 }}
                 className={cn(
-                  "text-[13.5px] font-medium transition-colors py-1 cursor-pointer flex items-center gap-1",
-                  activeMenu === "business"
-                    ? "text-foreground"
-                    : "text-muted-foreground hover:text-foreground"
+                  "group text-[13.5px] font-medium transition-colors py-1 cursor-pointer flex items-center gap-1",
+                  getNavButtonColor("business")
                 )}
               >
                 <span>Business</span>
-                <ChevronDown
-                  className={cn(
-                    "w-4 h-4 transition-transform duration-200",
-                    activeMenu === "business" && "rotate-180"
-                  )}
+                <AnimatedChevron
+                  open={activeMenu === "business"}
+                  size={13}
+                  className="text-muted-foreground group-hover:text-foreground transition-colors"
                 />
               </button>
 
               {/* Developers */}
               <button
-                onMouseEnter={() => handleMouseEnter("developers")}
+                onMouseEnter={() => {
+                  setHoveredNav("developers");
+                  handleMouseEnter("developers");
+                }}
                 onClick={() => {
                   setIsSearchOpen(false);
                   setActiveMenu(
@@ -269,87 +310,92 @@ export function MarketingHeader() {
                   );
                 }}
                 className={cn(
-                  "text-[13.5px] font-medium transition-colors py-1 cursor-pointer flex items-center gap-1",
-                  activeMenu === "developers"
-                    ? "text-foreground"
-                    : "text-muted-foreground hover:text-foreground"
+                  "group text-[13.5px] font-medium transition-colors py-1 cursor-pointer flex items-center gap-1",
+                  getNavButtonColor("developers")
                 )}
               >
                 <span>Developers</span>
-                <ChevronDown
-                  className={cn(
-                    "w-4 h-4 transition-transform duration-200",
-                    activeMenu === "developers" && "rotate-180"
-                  )}
+                <AnimatedChevron
+                  open={activeMenu === "developers"}
+                  size={13}
+                  className="text-muted-foreground group-hover:text-foreground transition-colors"
                 />
               </button>
 
               {/* Company */}
               <button
-                onMouseEnter={() => handleMouseEnter("company")}
+                onMouseEnter={() => {
+                  setHoveredNav("company");
+                  handleMouseEnter("company");
+                }}
                 onClick={() => {
                   setIsSearchOpen(false);
                   setActiveMenu(activeMenu === "company" ? null : "company");
                 }}
                 className={cn(
-                  "text-[13.5px] font-medium transition-colors py-1 cursor-pointer flex items-center gap-1",
-                  activeMenu === "company"
-                    ? "text-foreground"
-                    : "text-muted-foreground hover:text-foreground"
+                  "group text-[13.5px] font-medium transition-colors py-1 cursor-pointer flex items-center gap-1",
+                  getNavButtonColor("company")
                 )}
               >
                 <span>Company</span>
-                <ChevronDown
-                  className={cn(
-                    "w-4 h-4 transition-transform duration-200",
-                    activeMenu === "company" && "rotate-180"
-                  )}
+                <AnimatedChevron
+                  open={activeMenu === "company"}
+                  size={13}
+                  className="text-muted-foreground group-hover:text-foreground transition-colors"
                 />
               </button>
 
               {/* Foundation (Non-dropdown link: closes menu immediately on hover) */}
               <Link
                 href="/foundation"
-                onMouseEnter={() => setActiveMenu(null)}
+                onMouseEnter={() => {
+                  setHoveredNav("foundation");
+                  setActiveMenu(null);
+                }}
                 onClick={() => {
                   setActiveMenu(null);
+                  setHoveredNav(null);
                   setIsSearchOpen(false);
                 }}
-                className="text-[13.5px] font-medium text-muted-foreground hover:text-foreground transition-colors py-1"
+                className={cn(
+                  "text-[13.5px] font-medium transition-colors py-1",
+                  getNavButtonColor("foundation")
+                )}
               >
                 Foundation
               </Link>
 
               {/* Search / Close Toggle in Navigation */}
-              {isSearchOpen ? (
-                <button
-                  onMouseEnter={() => setActiveMenu(null)}
-                  onClick={() => setIsSearchOpen(false)}
-                  className="text-muted-foreground hover:text-foreground p-1 pt-2 transition-colors cursor-pointer"
-                  aria-label="Close search"
-                >
-                  <X className="w-4 h-4" />
-                </button>
-              ) : (
-                <button
-                  onMouseEnter={() => setActiveMenu(null)}
-                  onClick={() => {
-                    setActiveMenu(null);
-                    setIsSearchOpen(true);
-                  }}
-                  className="text-muted-foreground hover:text-foreground p-1 pt-2 transition-colors cursor-pointer"
-                  aria-label="Search"
-                >
-                  <Search className="w-4 h-4" />
-                </button>
-              )}
+              <button
+                onMouseEnter={() => {
+                  setHoveredNav("search");
+                  setActiveMenu(null);
+                }}
+                onClick={() => {
+                  setActiveMenu(null);
+                  setIsSearchOpen(!isSearchOpen);
+                }}
+                className={cn(
+                  "p-1 pt-2 transition-colors cursor-pointer flex items-center justify-center",
+                  getNavButtonColor("search")
+                )}
+                aria-label={isSearchOpen ? "Close search" : "Open search"}
+              >
+                <AnimatedSearchClose
+                  isOpen={isSearchOpen}
+                  size={16}
+                />
+              </button>
             </nav>
           </div>
 
           {/* Right CTA Actions */}
           <div
             className="hidden lg:flex items-center gap-3"
-            onMouseEnter={() => setActiveMenu(null)}
+            onMouseEnter={() => {
+              setActiveMenu(null);
+              setHoveredNav(null);
+            }}
           >
             {user ? (
               <>
@@ -361,14 +407,13 @@ export function MarketingHeader() {
                   <button
                     type="button"
                     onClick={() => setAccountMenuOpen(!accountMenuOpen)}
-                    className="flex rounded-full bg-secondary items-center gap-1.5 text-[13px] font-medium text-muted-foreground hover:text-foreground transition-colors px-3 py-2 cursor-pointer outline-none select-none"
+                    className="group flex rounded-full bg-white/50 dark:bg-[#212121]/50 hover:bg-secondary dark:hover:bg-[#2f2f2f] items-center gap-1.5 text-[13px] font-medium text-muted-foreground hover:text-foreground transition-colors px-4 py-2 cursor-pointer outline-none select-none"
                   >
                     <span>Account</span>
-                    <ChevronDown
-                      className={cn(
-                        "w-4 h-4 transition-transform duration-200",
-                        accountMenuOpen && "rotate-180"
-                      )}
+                    <AnimatedChevron
+                      open={accountMenuOpen}
+                      size={13}
+                      className="text-muted-foreground group-hover:text-foreground transition-colors"
                     />
                   </button>
 
@@ -377,20 +422,20 @@ export function MarketingHeader() {
                     <div
                       onMouseEnter={handleAccountEnter}
                       onMouseLeave={handleAccountLeave}
-                      className="absolute right-0 top-full pt-2 z-50 animate-in fade-in-0 zoom-in-95 duration-150"
+                      className="absolute right-0 top-full pt-2 z-50"
                     >
-                      <div className="w-48 rounded-2xl p-1.5 bg-background dark:bg-[#212121] border border-border/80 dark:border-neutral-700/80">
+                      <div className="w-48 rounded-2xl p-1.5 bg-white/50 dark:bg-[#212121]/50 backdrop-blur-sm border border-border/50 dark:border-neutral-700/50">
                         <Link
                           href="/c"
                           onClick={() => setAccountMenuOpen(false)}
-                          className="flex items-center gap-2 px-3 py-2 text-md rounded-xl text-foreground hover:bg-secondary dark:hover:bg-[#2f2f2f] transition-colors"
+                          className="flex items-center gap-2 px-4 py-2 text-md rounded-xl text-foreground hover:bg-secondary dark:hover:bg-[#2f2f2f] transition-colors"
                         >
                           Open Chat
                         </Link>
                         <Link
                           href="/settings"
                           onClick={() => setAccountMenuOpen(false)}
-                          className="flex items-center gap-2 px-3 py-2 text-md rounded-xl text-foreground hover:bg-secondary dark:hover:bg-[#2f2f2f] transition-colors"
+                          className="flex items-center gap-2 px-4 py-2 text-md rounded-xl text-foreground hover:bg-secondary dark:hover:bg-[#2f2f2f] transition-colors"
                         >
                           Settings
                         </Link>
@@ -401,7 +446,7 @@ export function MarketingHeader() {
                             setAccountMenuOpen(false);
                             signOut();
                           }}
-                          className="w-full flex items-center gap-2 px-3 py-2 text-md rounded-xl text-red-500 hover:bg-secondary dark:hover:bg-[#2f2f2f] transition-colors text-left cursor-pointer"
+                          className="w-full flex items-center gap-2 px-4 py-2 text-md rounded-xl text-red-500 hover:bg-secondary dark:hover:bg-[#2f2f2f] transition-colors text-left cursor-pointer"
                         >
                           Log out
                         </button>
@@ -412,7 +457,7 @@ export function MarketingHeader() {
 
                 <Button
                   asChild
-                  className="group rounded-full px-3 h-9 text-[13px] font-medium bg-foreground text-background hover:opacity-90 transition-opacity cursor-pointer"
+                  className="group rounded-full px-4 h-9 text-[13px] font-medium bg-foreground text-background hover:opacity-90 transition-opacity cursor-pointer"
                 >
                   <Link href="/c" className="flex items-center gap-1">
                     <span>Go to Chat</span>
@@ -430,14 +475,13 @@ export function MarketingHeader() {
                   <button
                     type="button"
                     onClick={() => setLoginMenuOpen(!loginMenuOpen)}
-                    className="flex rounded-full bg-background dark:bg-secondary hover:bg-secondary dark:hover:bg-[#2f2f2f] items-center gap-1.5 text-[13px] font-medium text-muted-foreground hover:text-foreground transition-colors px-3 py-2 cursor-pointer outline-none select-none"
+                    className="group flex rounded-full bg-white/50 dark:bg-[#212121]/50 hover:bg-secondary dark:hover:bg-[#2f2f2f] items-center gap-1.5 text-[13px] font-medium text-muted-foreground hover:text-foreground transition-colors px-4 py-2 cursor-pointer outline-none select-none"
                   >
                     <span>Log in</span>
-                    <ChevronDown
-                      className={cn(
-                        "w-4 h-4 transition-transform duration-200",
-                        loginMenuOpen && "rotate-180"
-                      )}
+                    <AnimatedChevron
+                      open={loginMenuOpen}
+                      size={13}
+                      className="text-muted-foreground group-hover:text-foreground transition-colors"
                     />
                   </button>
 
@@ -446,20 +490,20 @@ export function MarketingHeader() {
                     <div
                       onMouseEnter={handleLoginEnter}
                       onMouseLeave={handleLoginLeave}
-                      className="absolute right-0 top-full pt-2 z-50 animate-in fade-in-0 zoom-in-95 duration-150"
+                      className="absolute right-0 top-full pt-2 z-50"
                     >
-                      <div className="w-52 rounded-2xl p-1.5 bg-background dark:bg-secondary border border-border/80 dark:border-neutral-700/80">
+                      <div className="w-52 rounded-2xl p-1.5 bg-white/50 dark:bg-[#212121]/50 backdrop-blur-sm border border-border/50 dark:border-neutral-700/50">
                         <Link
                           href="/auth/login"
                           onClick={() => setLoginMenuOpen(false)}
-                          className="flex items-center gap-2 px-3 py-2 text-md rounded-xl text-foreground hover:bg-secondary dark:hover:bg-[#2f2f2f] transition-colors"
+                          className="flex items-center gap-2 px-4 py-2 text-md rounded-xl text-foreground hover:bg-secondary dark:hover:bg-[#2f2f2f] transition-colors"
                         >
                           Log in to closeAI
                         </Link>
                         <Link
                           href="/auth/login?type=enterprise"
                           onClick={() => setLoginMenuOpen(false)}
-                          className="flex items-center gap-2 px-3 py-2 text-md rounded-xl text-foreground hover:bg-secondary dark:hover:bg-[#2f2f2f] transition-colors"
+                          className="flex items-center gap-2 px-4 py-2 text-md rounded-xl text-foreground hover:bg-secondary dark:hover:bg-[#2f2f2f] transition-colors"
                         >
                           Log in to Enterprise
                         </Link>
@@ -468,15 +512,71 @@ export function MarketingHeader() {
                   )}
                 </div>
 
-                <Button
-                  asChild
-                  className="group rounded-full px-5 h-9 text-[13px] font-medium bg-foreground text-background hover:opacity-90 transition-opacity cursor-pointer"
+                {/* SpaceXAI style split Try for free button */}
+                <div
+                  onMouseEnter={handleTryEnter}
+                  onMouseLeave={handleTryLeave}
+                  className="relative group hidden sm:block"
                 >
-                  <Link href="/c" className="flex items-center">
-                    <span>Try now</span>
-                    <ArrowUpRight className="w-4 h-4 ml-1" />
-                  </Link>
-                </Button>
+                  <div className="flex items-stretch rounded-full bg-foreground text-background h-9 overflow-hidden">
+                    <Link
+                      href="/c"
+                      className="flex items-center rounded-l-full pl-4 pr-3 text-[13px] font-medium transition-colors hover:bg-black/10 dark:hover:bg-white/10"
+                    >
+                      Try for free
+                    </Link>
+                    <div className="w-[1px] bg-background/25 self-stretch my-1.5" />
+                    <button
+                      type="button"
+                      onClick={() => setTryMenuOpen(!tryMenuOpen)}
+                      className="flex items-center rounded-r-full pl-2 pr-3 transition-colors hover:bg-black/10 dark:hover:bg-white/10 cursor-pointer outline-none"
+                      aria-label="More options"
+                    >
+                      <AnimatedChevron
+                        open={tryMenuOpen}
+                        size={14}
+                        strokeWidth={2}
+                        className="text-background"
+                      />
+                    </button>
+                  </div>
+
+                  {/* Zero-flicker Hover Dropdown Bridge */}
+                  {tryMenuOpen && (
+                    <div
+                      onMouseEnter={handleTryEnter}
+                      onMouseLeave={handleTryLeave}
+                      className="absolute right-0 top-full pt-2 z-50"
+                    >
+                      <div className="w-52 rounded-2xl p-1.5 bg-white/50 dark:bg-[#212121]/50 backdrop-blur-sm border border-border/50 dark:border-neutral-700/50">
+                        <Link
+                          href="/c"
+                          onClick={() => setTryMenuOpen(false)}
+                          className="flex items-center justify-between px-3.5 py-2 text-[13px] rounded-xl text-foreground hover:bg-secondary dark:hover:bg-[#2f2f2f] transition-colors"
+                        >
+                          <span>Open Web Chat</span>
+                          <ArrowUpRight className="w-3.5 h-3.5 text-muted-foreground" />
+                        </Link>
+                        <Link
+                          href="/c"
+                          onClick={() => setTryMenuOpen(false)}
+                          className="flex items-center justify-between px-3.5 py-2 text-[13px] rounded-xl text-foreground hover:bg-secondary dark:hover:bg-[#2f2f2f] transition-colors"
+                        >
+                          <span>CloseAI for Desktop</span>
+                          <ArrowUpRight className="w-3.5 h-3.5 text-muted-foreground" />
+                        </Link>
+                        <Link
+                          href="/product/docs"
+                          onClick={() => setTryMenuOpen(false)}
+                          className="flex items-center justify-between px-3.5 py-2 text-[13px] rounded-xl text-foreground hover:bg-secondary dark:hover:bg-[#2f2f2f] transition-colors"
+                        >
+                          <span>API & Developers</span>
+                          <ArrowUpRight className="w-3.5 h-3.5 text-muted-foreground" />
+                        </Link>
+                      </div>
+                    </div>
+                  )}
+                </div>
               </>
             )}
           </div>
@@ -488,22 +588,21 @@ export function MarketingHeader() {
                 setIsSearchOpen(!isSearchOpen);
                 setMobileNavOpen(false);
               }}
-              className="p-2 text-muted-foreground hover:text-foreground"
-              aria-label="Search"
+              className="p-2 text-muted-foreground hover:text-foreground transition-colors flex items-center justify-center"
+              aria-label={isSearchOpen ? "Close search" : "Search"}
             >
-              {isSearchOpen ? (
-                <X className="w-4 h-4" />
-              ) : (
-                <Search className="w-4 h-4" />
-              )}
+              <AnimatedSearchClose
+                isOpen={isSearchOpen}
+                size={16}
+              />
             </button>
             <button
               onClick={() => {
                 setMobileNavOpen(!mobileNavOpen);
                 setMobileSubMenu(null);
               }}
-              className="p-2 text-foreground hover:opacity-80 transition-opacity"
-              aria-label="Toggle menu"
+              className="p-2 text-muted-foreground hover:text-foreground"
+              aria-label="Menu"
             >
               {mobileNavOpen ? (
                 <PanelRight className="w-4 h-4" />
@@ -519,7 +618,7 @@ export function MarketingHeader() {
         {/* ---------------------------------------------------------------- */}
         {activeMenu && (
           <div
-            className="hidden lg:block absolute top-14 left-0 w-full border-b border-border bg-background transition-all duration-150 animate-in fade-in-0 slide-in-from-top-1 z-50"
+            className="hidden lg:block absolute top-14 left-0 w-full border-b border-border bg-background z-50"
             onMouseEnter={() => {
               if (timeoutRef.current) clearTimeout(timeoutRef.current);
             }}
@@ -1123,7 +1222,7 @@ export function MarketingHeader() {
         {/* MOBILE NAVIGATION DRAWER                            */}
         {/* ---------------------------------------------------------------- */}
         {mobileNavOpen && (
-          <div className="lg:hidden fixed inset-x-0 top-14 bottom-0 bg-background border-b border-border p-6 flex flex-col justify-between overflow-y-auto animate-in fade-in-0 duration-150 z-50 select-none">
+          <div className="lg:hidden fixed inset-x-0 top-14 bottom-0 bg-background border-b border-border p-6 flex flex-col justify-between overflow-y-auto z-50 select-none">
             {mobileSubMenu === null ? (
               /* LEVEL 1: MAIN NAVIGATION LIST (Image 3) */
               <div className="flex flex-col justify-between h-full">
@@ -1187,7 +1286,7 @@ export function MarketingHeader() {
                   ) : (
                     <button
                       onClick={() => setMobileSubMenu("login")}
-                      className="block text-3xl sm:text-4xl font-medium text-muted-foreground hover:text-foreground transition-colors py-1 text-left w-full cursor-pointer"
+                      className="block text-3xl sm:text-4xl font-medium text-foreground hover:text-muted-foreground transition-colors py-1 text-left w-full cursor-pointer"
                     >
                       Login
                     </button>
@@ -1196,7 +1295,7 @@ export function MarketingHeader() {
               </div>
             ) : (
               /* LEVEL 2: CATEGORY SUBMENU (Image 5) */
-              <div className="flex flex-col h-full justify-between animate-in fade-in-0 slide-in-from-right-4 duration-150">
+              <div className="flex flex-col h-full justify-between">
                 <div className="space-y-6">
                   {/* Top Back Navigation Button */}
                   <button
