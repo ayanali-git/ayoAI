@@ -547,6 +547,8 @@ export function MarketingHeader() {
             </button>
             <button
               onClick={() => {
+                setIsSearchOpen(false);
+                setActiveMenu(null);
                 setMobileNavOpen(!mobileNavOpen);
                 setMobileSubMenu(null);
               }}
@@ -1218,30 +1220,42 @@ export function MarketingHeader() {
 
                 <div className="pt-8 border-t border-border/50 space-y-4 pb-4">
                   {user ? (
-                    <button
-                      onClick={() => setMobileSubMenu("account")}
-                      className="block text-3xl sm:text-4xl font-medium text-foreground hover:opacity-80 transition-opacity py-1 text-left w-full cursor-pointer"
-                    >
-                      Account
-                    </button>
+                    <>
+                      <button
+                        onClick={() => setMobileSubMenu("account")}
+                        className="block text-3xl sm:text-4xl font-medium text-foreground hover:opacity-80 transition-opacity py-1 text-left w-full cursor-pointer"
+                      >
+                        Account
+                      </button>
+                      <Link
+                        href="/c"
+                        onClick={() => setMobileNavOpen(false)}
+                        className="flex items-center gap-1.5 text-3xl sm:text-4xl font-medium tracking-tight text-foreground hover:opacity-80 transition-opacity py-1"
+                      >
+                        <span>Try now</span>
+                        <AnimatedArrow size={26} />
+                      </Link>
+                    </>
                   ) : (
-                    <button
-                      onClick={() => setMobileSubMenu("login")}
-                      className="block text-3xl sm:text-4xl font-medium text-foreground hover:text-muted-foreground transition-colors py-1 text-left w-full cursor-pointer"
-                    >
-                      Login
-                    </button>
+                    <>
+                      <button
+                        onClick={() => setMobileSubMenu("login")}
+                        className="block text-3xl sm:text-4xl font-medium text-foreground hover:text-muted-foreground transition-colors py-1 text-left w-full cursor-pointer"
+                      >
+                        Login
+                      </button>
+                      <Link
+                        href="/auth/signup"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        onClick={() => setMobileNavOpen(false)}
+                        className="flex items-center gap-1.5 text-3xl sm:text-4xl font-medium tracking-tight text-foreground hover:opacity-80 transition-opacity py-1"
+                      >
+                        <span>Sign up</span>
+                        <ArrowUpRight className="w-6 h-6 stroke-[2.5]" />
+                      </Link>
+                    </>
                   )}
-                  <Link
-                    href="/auth/signup"
-                    target="_black"
-                    rel="noopener noreferrer"
-                    onClick={() => setMobileNavOpen(false)}
-                    className="flex items-center gap-1.5 text-3xl sm:text-4xl font-medium tracking-tight text-foreground hover:opacity-80 transition-opacity py-1"
-                  >
-                    <span>Sign up</span>
-                    <ArrowUpRight className="w-6 h-6 stroke-[2.5]" />
-                  </Link>
                 </div>
               </div>
             ) : (

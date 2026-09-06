@@ -215,6 +215,7 @@ export const ChatInput = forwardRef<HTMLDivElement, ChatInputProps>(function Cha
   const [isFullyExpanded, setIsFullyExpanded] = useState(false);
   const [menuSideOffset, setMenuSideOffset] = useState(14);
   const [menuAlignOffset, setMenuAlignOffset] = useState(0);
+  const [menuWidth, setMenuWidth] = useState<number | undefined>(undefined);
   const recognitionRef = useRef<any>(null);
   const [currentModel, setCurrentModel] = useState(selectedModel);
 
@@ -315,13 +316,15 @@ export const ChatInput = forwardRef<HTMLDivElement, ChatInputProps>(function Cha
       // Place the dropdown 10px above the top border of the chat input pill:
       setMenuSideOffset(Math.round(distToPillTop + 10));
 
+      // Always align cleanly with the left edge of the chat input pill:
+      const distToPillLeft = Math.max(0, buttonRect.left - pillRect.left);
+      setMenuAlignOffset(-Math.round(distToPillLeft));
+
       if (isMobile) {
-        // On small screen devices, align cleanly with the + button so it doesn't overhang
-        setMenuAlignOffset(0);
+        // On small screen devices, match the exact width of the input pill so left & right edges align
+        setMenuWidth(Math.round(pillRect.width));
       } else {
-        // On desktop, align cleanly with the left edge of the chat input pill:
-        const distToPillLeft = Math.max(0, buttonRect.left - pillRect.left);
-        setMenuAlignOffset(-Math.round(distToPillLeft));
+        setMenuWidth(undefined);
       }
     }
   }, []);
@@ -534,8 +537,12 @@ export const ChatInput = forwardRef<HTMLDivElement, ChatInputProps>(function Cha
         alignOffset={menuAlignOffset}
         avoidCollisions={true}
         collisionPadding={12}
-        className="w-[244px] max-w-[calc(100vw-24px)] rounded-2xl p-1.5 bg-white/50 dark:bg-[#212121]/50 backdrop-blur-sm border border-border/50 dark:border-neutral-700/50 select-none outline-none"
+        className={cn(
+          "rounded-2xl p-1.5 bg-white/50 dark:bg-[#212121]/50 backdrop-blur-sm border border-border/50 dark:border-neutral-700/50 select-none outline-none",
+          menuWidth ? "" : "w-[244px] max-w-[calc(100vw-24px)]"
+        )}
         style={{
+          width: menuWidth ? `${menuWidth}px` : undefined,
           WebkitFontSmoothing: "antialiased",
           MozOsxFontSmoothing: "grayscale",
         }}
@@ -566,7 +573,7 @@ export const ChatInput = forwardRef<HTMLDivElement, ChatInputProps>(function Cha
             type="button"
             onClick={(e) => e.preventDefault()}
             style={{ cursor: "not-allowed" }}
-            className="hidden min-[420px]:flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-full text-base sm:text-[15px] font-medium text-muted-foreground/50 opacity-60 cursor-not-allowed select-none bg-transparent hover:bg-transparent"
+            className="flex items-center gap-1 px-1.5 sm:px-2.5 py-1 rounded-full text-[13px] sm:text-[14px] font-medium text-muted-foreground/50 opacity-60 cursor-not-allowed select-none bg-transparent hover:bg-transparent shrink-0"
             aria-label="Think mode (Coming soon)"
           >
             <Brain className="w-5 h-5 text-muted-foreground/50 pointer-events-none" />

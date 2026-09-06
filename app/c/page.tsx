@@ -264,7 +264,7 @@ function NewChatContent() {
                 onModelChange={setSelectedModel}
                 selectedTier={selectedModelTier}
                 onTierChange={setSelectedModelTier}
-                centered={true}
+                centered={false}
                 showDisclaimer={false}
               />
             </WelcomeScreen>
@@ -304,10 +304,7 @@ function NewChatFallback() {
         </div>
       )}
       <div className="flex-1 flex flex-col items-center justify-center min-w-0">
-        <div className="w-full max-w-2xl px-4 flex flex-col items-center justify-center space-y-6">
-          <div className="h-8 w-64 bg-secondary/80 dark:bg-neutral-800/60 rounded-xl animate-pulse" />
-          <div className="h-12 w-full bg-secondary/60 dark:bg-neutral-800/40 rounded-full animate-pulse" />
-        </div>
+        <Loader className="w-6 h-6 animate-spin text-muted-foreground" />
       </div>
     </div>
   );

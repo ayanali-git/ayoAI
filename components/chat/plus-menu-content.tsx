@@ -1014,7 +1014,8 @@ export function PlusMenuContent({
           <DropdownMenuSubContent
             sideOffset={4}
             alignOffset={-130}
-            avoidCollisions={false}
+            avoidCollisions={true}
+            collisionPadding={12}
             className="w-[241px] max-w-[calc(100vw-24px)] rounded-2xl p-1.5 bg-white/50 dark:bg-[#212121]/50 backdrop-blur-sm border border-border/50 dark:border-neutral-700/50 select-none outline-none"
           >
             {/* Row 1: Model (Submenu dropdown on HOVER) */}
@@ -1034,7 +1035,8 @@ export function PlusMenuContent({
               <DropdownMenuSubContent
                 sideOffset={4}
                 alignOffset={-125}
-                avoidCollisions={false}
+                avoidCollisions={true}
+                collisionPadding={12}
                 className="w-[241px] max-w-[calc(100vw-24px)] rounded-2xl p-1.5 bg-white/50 dark:bg-[#212121]/50 backdrop-blur-sm border border-border/50 dark:border-neutral-700/50 select-none outline-none"
               >
                 <DropdownMenuRadioGroup
@@ -1093,7 +1095,8 @@ export function PlusMenuContent({
               <DropdownMenuSubContent
                 sideOffset={4}
                 alignOffset={-150}
-                avoidCollisions={false}
+                avoidCollisions={true}
+                collisionPadding={12}
                 className="w-[241px] max-w-[calc(100vw-24px)] rounded-2xl p-1.5 bg-white/50 dark:bg-[#212121]/50 backdrop-blur-sm border border-border/50 dark:border-neutral-700/50 select-none outline-none"
               >
                 <DropdownMenuRadioGroup
@@ -1134,7 +1137,8 @@ export function PlusMenuContent({
               <DropdownMenuSubContent
                 sideOffset={4}
                 alignOffset={-80}
-                avoidCollisions={false}
+                avoidCollisions={true}
+                collisionPadding={12}
                 className="w-[241px] max-w-[calc(100vw-24px)] rounded-2xl p-1.5 bg-white/50 dark:bg-[#212121]/50 backdrop-blur-sm border border-border/50 dark:border-neutral-700/50 select-none outline-none"
               >
                 <DropdownMenuRadioGroup
@@ -1169,7 +1173,8 @@ export function PlusMenuContent({
               <DropdownMenuSubContent
                 sideOffset={4}
                 alignOffset={-50}
-                avoidCollisions={false}
+                avoidCollisions={true}
+                collisionPadding={12}
                 className="w-[241px] max-w-[calc(100vw-24px)] rounded-2xl p-3 bg-white/50 dark:bg-[#212121]/50 backdrop-blur-sm border border-border/50 dark:border-neutral-700/50 select-none outline-none"
                 onPointerDown={(e) => e.stopPropagation()}
               >

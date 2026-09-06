@@ -845,6 +845,9 @@ export function Sidebar({
                           key={chat.id}
                           onClick={() => {
                             onChatSelect(chat.id);
+                            if (typeof window !== 'undefined' && window.innerWidth < 768) {
+                              onToggle();
+                            }
                           }}
                           onMouseEnter={() => setHoveredChatId(chat.id)}
                           onMouseLeave={() => setHoveredChatId(null)}
@@ -954,9 +957,11 @@ export function Sidebar({
 
               <DropdownMenuContent
                 side="top"
-                align="start"
+                align="center"
                 sideOffset={8}
-                className="w-[244px] max-h-[calc(100dvh-5rem)] overflow-y-auto rounded-2xl p-1.5 mb-1 bg-white/50 dark:bg-[#212121]/50 backdrop-blur-sm border border-border/50 dark:border-neutral-700/50 outline-none focus:outline-none ring-0"
+                avoidCollisions={true}
+                collisionPadding={12}
+                className="w-[236px] max-w-[calc(100vw-24px)] max-h-[calc(100dvh-5rem)] overflow-y-auto rounded-2xl p-1.5 mb-1 bg-white/50 dark:bg-[#212121]/50 backdrop-blur-sm border border-border/50 dark:border-neutral-700/50 outline-none focus:outline-none ring-0"
               >
                 {renderAccountMenuItems()}
               </DropdownMenuContent>

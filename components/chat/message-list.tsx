@@ -200,7 +200,7 @@ function CodeBlock({ language, code }: { language: string; code: string }) {
       </div>
 
       {/* Code content with horizontal scrollbar */}
-      <div className="p-3.5 sm:p-4 code-scroll text-[15px] sm:text-[14px] font-mono leading-relaxed bg-neutral-100 dark:bg-[#1f1f1f] select-text">
+      <div className="p-3.5 sm:p-4 overflow-x-auto code-scroll text-[15px] sm:text-[14px] font-mono leading-relaxed bg-neutral-100 dark:bg-[#1f1f1f] select-text">
         <pre className="!m-0 !p-0 bg-transparent border-0 font-mono whitespace-pre w-max min-w-full">
           <code
             className={`!bg-transparent !p-0 font-mono whitespace-pre block language-${displayLang}`}
