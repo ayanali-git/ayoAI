@@ -833,7 +833,7 @@ export function Sidebar({
                 if (groupChats.length === 0) return null;
                 return (
                   <div key={group} className="space-y-0.5">
-                    <div className="px-3 py-1 text-[13px] font-semibold tracking-wider text-muted-foreground/80 uppercase">
+                    <div className="px-3 py-1 text-[15px] font-semibold tracking-wider text-muted-foreground/80 uppercase">
                       {group}
                     </div>
                     {groupChats.map((chat) => {
@@ -945,7 +945,7 @@ export function Sidebar({
                     <p className="text-[15px] font-medium text-foreground truncate leading-snug">
                       {displayName}
                     </p>
-                    <p className="text-[13px] text-muted-foreground leading-none" suppressHydrationWarning>
+                    <p className="text-[15px] text-muted-foreground leading-none" suppressHydrationWarning>
                       {planDisplay}
                     </p>
                   </div>

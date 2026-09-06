@@ -200,7 +200,7 @@ function CodeBlock({ language, code }: { language: string; code: string }) {
       </div>
 
       {/* Code content with horizontal scrollbar */}
-      <div className="p-3.5 sm:p-4 code-scroll text-[13.5px] sm:text-[14px] font-mono leading-relaxed bg-neutral-100 dark:bg-[#1f1f1f] select-text">
+      <div className="p-3.5 sm:p-4 code-scroll text-[15px] sm:text-[14px] font-mono leading-relaxed bg-neutral-100 dark:bg-[#1f1f1f] select-text">
         <pre className="!m-0 !p-0 bg-transparent border-0 font-mono whitespace-pre w-max min-w-full">
           <code
             className={`!bg-transparent !p-0 font-mono whitespace-pre block language-${displayLang}`}
@@ -569,7 +569,7 @@ export function MessageList({
                       }
                       return (
                         <div className="my-3 sm:my-4 rounded-xl overflow-hidden border border-neutral-200/90 dark:border-neutral-700/60 bg-neutral-50 dark:bg-[#1e1e1e] p-3 code-scroll">
-                          <pre className="text-[13.5px] font-mono text-neutral-900 dark:text-neutral-100 whitespace-pre w-max min-w-full">
+                          <pre className="text-[15px] font-mono text-neutral-900 dark:text-neutral-100 whitespace-pre w-max min-w-full">
                             {children}
                           </pre>
                         </div>
@@ -578,7 +578,7 @@ export function MessageList({
                     code({ className, children, ...props }: any) {
                       return (
                         <code
-                          className="bg-neutral-200/60 dark:bg-white/10 text-foreground px-1.5 py-0.5 rounded-md font-mono text-[13.5px] font-normal select-text"
+                          className="bg-neutral-200/60 dark:bg-white/10 text-foreground px-1.5 py-0.5 rounded-md font-mono text-[15px] font-normal select-text"
                           {...props}
                         >
                           {children}
@@ -699,7 +699,6 @@ export function MessageList({
           (messages[messages.length - 1]?.role === "assistant" &&
             !messages[messages.length - 1]?.content)) && (
           <div className="flex gap-2.5 sm:gap-3 items-center py-2 animate-in fade-in-0 duration-150 select-none">
-            <div className="w-2 h-2 rounded-full bg-foreground/60 animate-ping" />
             <span className="text-[14px] sm:text-[14.5px] font-medium text-muted-foreground animate-pulse">
               Thinking...
             </span>

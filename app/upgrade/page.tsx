@@ -268,11 +268,11 @@ export default function UpgradePage() {
                 }`}
               >
                 {isCurrentPlan ? (
-                  <span className="absolute -top-3 left-1/2 -translate-x-1/2 px-3.5 py-0.5 rounded-full bg-foreground text-background text-[13px] font-semibold tracking-wide uppercase">
+                  <span className="absolute -top-3 left-1/2 -translate-x-1/2 px-3.5 py-0.5 rounded-full bg-foreground text-background text-[15px] font-semibold tracking-wide uppercase">
                     Active Plan
                   </span>
                 ) : plan.popular ? (
-                  <span className="absolute -top-3 left-1/2 -translate-x-1/2 px-3.5 py-0.5 rounded-full bg-foreground text-background text-[13px] font-semibold tracking-wide uppercase">
+                  <span className="absolute -top-3 left-1/2 -translate-x-1/2 px-3.5 py-0.5 rounded-full bg-foreground text-background text-[15px] font-semibold tracking-wide uppercase">
                     Most Popular
                   </span>
                 ) : null}

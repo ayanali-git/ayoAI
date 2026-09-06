@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { MarketingHeader } from "@/components/marketing/header";
@@ -69,12 +69,12 @@ export default function LandingPage() {
                     handleHeroSubmit(e);
                   }
                 }}
-                placeholder="Ask about anything, from research to reasoning and more..."
-                rows={2}
+                placeholder="Ask about anything"
+                rows={3}
                 disabled={isSubmitting}
-                className="w-full bg-transparent resize-none text-[16px] text-foreground placeholder:text-muted-foreground focus:placeholder:text-foreground transition-colors outline-none border-none ring-0 leading-relaxed"
+                className="w-full bg-transparent resize-none text-[17px] text-foreground placeholder:text-muted-foreground focus:placeholder:text-foreground transition-colors outline-none border-none ring-0 leading-relaxed"
               />
-              <div className="flex items-center justify-end" onClick={(e) => e.stopPropagation()}>
+              <div className="flex items-center justify-end pt-3" onClick={(e) => e.stopPropagation()}>
                 <button
                   type="submit"
                   disabled={!heroPrompt.trim() || isSubmitting}
@@ -106,7 +106,7 @@ export default function LandingPage() {
                   type="button"
                   onClick={() => handlePillClick(pill.prompt)}
                   className={cn(
-                    "px-4 py-3 rounded-full text-md sm:text-[13px] transition-all cursor-pointer",
+                    "px-4 py-3 rounded-full text-md sm:text-[15px] transition-all cursor-pointer",
                     isSelected
                       ? "bg-secondary text-foreground"
                       : "bg-white/50 dark:bg-[#212121]/50 backdrop-blur-sm hover:bg-secondary text-muted-foreground hover:text-foreground"
@@ -166,6 +166,8 @@ export default function LandingPage() {
                   <div className="flex items-center gap-2 text-md text-muted-foreground">
                     <span className="font-semibold text-foreground">Product</span>
                     <span>·</span>
+                    <span>Jan 05, 2026</span>
+                    <span>·</span>
                     <span>18 min read</span>
                   </div>
                 </div>
@@ -194,6 +196,8 @@ export default function LandingPage() {
                   </h3>
                   <div className="flex items-center gap-2 text-md text-muted-foreground">
                     <span className="font-semibold text-foreground">Security</span>
+                    <span>·</span>
+                    <span>Feb 10, 2026</span>
                     <span>·</span>
                     <span>8 min read</span>
                   </div>
@@ -235,6 +239,8 @@ export default function LandingPage() {
                   <div className="flex items-center gap-2 text-md text-muted-foreground">
                     <span className="font-semibold text-foreground">Product</span>
                     <span>·</span>
+                    <span>Mar 15, 2026</span>
+                    <span>·</span>
                     <span>5 min read</span>
                   </div>
                 </div>
@@ -274,7 +280,7 @@ export default function LandingPage() {
                   <div className="flex items-center gap-2 text-md text-muted-foreground">
                     <span className="font-semibold text-foreground">Product</span>
                     <span>·</span>
-                    <span>Jul 23, 2026</span>
+                    <span>Apr 20, 2026</span>
                     <span>·</span>
                     <span>7 min read</span>
                   </div>
@@ -298,7 +304,7 @@ export default function LandingPage() {
               className="group inline-flex items-center text-md font-semibold text-foreground uppercase tracking-wider"
             >
               <span>View news</span>
-              <AnimatedArrow size={14} />
+              <AnimatedArrow size={18} />
             </Link>
           </div>
 
@@ -307,37 +313,37 @@ export default function LandingPage() {
               {
                 title: "Global partnership for frontier AI research infrastructure",
                 category: "Company",
-                date: "Aug 20, 2026",
+                date: "May 05, 2026",
                 color: "from-blue-600 via-indigo-600 to-purple-800",
               },
               {
                 title: "Frontier safety commitments and verifiable alignment benchmarks",
                 category: "Research",
-                date: "Aug 18, 2026",
+                date: "Jun 10, 2026",
                 color: "from-amber-500 via-orange-600 to-red-700",
               },
               {
                 title: "New benchmark records on SWE-bench and Olympiad mathematics",
                 category: "Research",
-                date: "Aug 14, 2026",
+                date: "Jul 15, 2026",
                 color: "from-emerald-500 via-teal-600 to-cyan-800",
               },
               {
                 title: "Advancements in live audio synthesis and spatial perception",
                 category: "Product",
-                date: "Aug 10, 2026",
+                date: "Aug 20, 2026",
                 color: "from-cyan-500 via-sky-600 to-blue-800",
               },
               {
                 title: "Enterprise privacy safeguards with zero unauthorized retention",
                 category: "Company",
-                date: "Aug 06, 2026",
+                date: "Sep 25, 2026",
                 color: "from-fuchsia-500 via-pink-600 to-rose-800",
               },
               {
                 title: "Expanding developer grants for open frontier research",
                 category: "Foundation",
-                date: "Aug 01, 2026",
+                date: "Nov 30, 2026",
                 color: "from-violet-500 via-purple-600 to-indigo-900",
               },
             ].map((news, i) => (
@@ -348,7 +354,7 @@ export default function LandingPage() {
               >
                 {/* Visual Thumbnail */}
                 <div className={`h-40 w-full bg-gradient-to-br ${news.color} opacity-85 group-hover:opacity-100 transition-opacity flex items-end p-4`}>
-                  <span className="text-[13px] font-semibold text-white/90 uppercase tracking-wider bg-black/40 px-2.5 py-1 rounded-full backdrop-blur-md">
+                  <span className="text-[15px] font-semibold text-white/90 uppercase tracking-wider bg-black/40 px-2.5 py-1 rounded-full backdrop-blur-md">
                     {news.category}
                   </span>
                 </div>
@@ -376,7 +382,7 @@ export default function LandingPage() {
               className="group inline-flex items-center text-md font-semibold text-foreground uppercase tracking-wider"
             >
               <span>View all</span>
-              <AnimatedArrow size={14} />
+              <AnimatedArrow size={18} />
             </Link>
           </div>
 
@@ -386,19 +392,16 @@ export default function LandingPage() {
                 title: "Scaling exploration across polar science & climate dynamics",
                 category: "Science",
                 gradient: "from-sky-900 via-indigo-950 to-black",
-                date: "July 2026",
               },
               {
                 title: "Coding intelligence accelerated in high-velocity teams",
                 category: "Engineering",
                 gradient: "from-stone-900 via-neutral-900 to-black",
-                date: "July 2026",
               },
               {
                 title: "Next-generation motorsport aerodynamic engineering with closeAI",
                 category: "Industry",
                 gradient: "from-red-950 via-neutral-950 to-black",
-                date: "June 2026",
               },
             ].map((story, i) => (
               <Link
@@ -417,7 +420,7 @@ export default function LandingPage() {
                   <h3 className="text-xl font-semibold text-white group-hover:underline leading-snug mb-2">
                     {story.title}
                   </h3>
-                  <p className="text-md text-neutral-400">{story.date}</p>
+                  <p className="text-md text-neutral-400">Individual Articles</p>
                 </div>
               </Link>
             ))}
@@ -437,53 +440,44 @@ export default function LandingPage() {
               className="group inline-flex items-center text-md font-semibold text-foreground uppercase tracking-wider"
             >
               <span>View research</span>
-              <AnimatedArrow size={14} />
+              <AnimatedArrow size={18} />
             </Link>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <Link
               href="/research/overview"
-              className="group rounded-3xl p-7 border border-border/50 bg-[#0e1118] text-white flex flex-col justify-between min-h-[300px] hover:border-border transition-all"
+              className="group rounded-3xl p-7 border border-border/50 bg-[#0e1118] text-white flex flex-col justify-end min-h-[300px] hover:border-border transition-all"
             >
-              <div className="w-10 h-10 rounded-2xl bg-blue-500/20 text-blue-400 flex items-center justify-center mb-4">
-                <Sparkles className="w-4 h-4" />
-              </div>
               <div>
                 <h3 className="text-lg font-semibold text-white group-hover:underline leading-snug mb-2">
                   The next generation model architecture and self-verifying chains
                 </h3>
-                <p className="text-md text-neutral-400">Research Paper • August 2026</p>
+                <p className="text-md text-neutral-400">Research Paper</p>
               </div>
             </Link>
 
             <Link
               href="/research/overview"
-              className="group rounded-3xl p-7 border border-border/50 bg-[#16140e] text-white flex flex-col justify-between min-h-[300px] hover:border-border transition-all"
+              className="group rounded-3xl p-7 border border-border/50 bg-[#16140e] text-white flex flex-col justify-end min-h-[300px] hover:border-border transition-all"
             >
-              <div className="w-10 h-10 rounded-2xl bg-amber-500/20 text-amber-400 flex items-center justify-center mb-4 font-mono font-bold text-md">
-                n²·Δ
-              </div>
               <div>
                 <h3 className="text-lg font-semibold text-white group-hover:underline leading-snug mb-2">
                   Unit Distance Problem & Discrete Mathematics Optimization
                 </h3>
-                <p className="text-md text-neutral-400">Research Paper • July 2026</p>
+                <p className="text-md text-neutral-400">Research Paper</p>
               </div>
             </Link>
 
             <Link
               href="/research/overview"
-              className="group rounded-3xl p-7 border border-border/50 bg-[#0e1713] text-white flex flex-col justify-between min-h-[300px] hover:border-border transition-all"
+              className="group rounded-3xl p-7 border border-border/50 bg-[#0e1713] text-white flex flex-col justify-end min-h-[300px] hover:border-border transition-all"
             >
-              <div className="w-10 h-10 rounded-2xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center mb-4 font-mono font-bold text-md">
-                DNA·8
-              </div>
               <div>
                 <h3 className="text-lg font-semibold text-white group-hover:underline leading-snug mb-2">
                   Introducing closeAI-Rosalind for Molecular Biology & Therapeutics
                 </h3>
-                <p className="text-md text-neutral-400">Research Paper • July 2026</p>
+                <p className="text-md text-neutral-400">Research Paper</p>
               </div>
             </Link>
           </div>
@@ -502,16 +496,15 @@ export default function LandingPage() {
               className="group inline-flex items-center text-md font-semibold text-foreground uppercase tracking-wider"
             >
               <span>Explore enterprise</span>
-              <AnimatedArrow size={14} />
+              <AnimatedArrow size={18} />
             </Link>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <Link
               href="/business/enterprise"
-              className="group rounded-3xl p-8 border border-border/50 bg-gradient-to-br from-[#7a6438] via-[#4d3d1f] to-[#1e1709] text-white flex flex-col justify-between min-h-[280px] transition-all"
+              className="group rounded-3xl p-8 border border-border/50 bg-gradient-to-br from-[#7a6438] via-[#4d3d1f] to-[#1e1709] text-white flex flex-col justify-end min-h-[280px] transition-all"
             >
-              <span className="text-2xl font-bold tracking-tight">Model ML</span>
               <div>
                 <p className="text-md font-medium text-neutral-200 group-hover:underline mb-1">
                   Accelerating deep learning experimentation with closeAI infrastructure
@@ -522,9 +515,8 @@ export default function LandingPage() {
 
             <Link
               href="/business/enterprise"
-              className="group rounded-3xl p-8 border border-border/50 bg-gradient-to-br from-[#2e333d] via-[#1a1d24] to-[#0c0e12] text-white flex flex-col justify-between min-h-[280px] transition-all"
+              className="group rounded-3xl p-8 border border-border/50 bg-gradient-to-br from-[#2e333d] via-[#1a1d24] to-[#0c0e12] text-white flex flex-col justify-end min-h-[280px] transition-all"
             >
-              <span className="text-2xl font-bold tracking-tight">Global Bank</span>
               <div>
                 <p className="text-md font-medium text-neutral-200 group-hover:underline mb-1">
                   Scaling private institutional financial analysis with frontier security
@@ -535,9 +527,8 @@ export default function LandingPage() {
 
             <Link
               href="/business/enterprise"
-              className="group rounded-3xl p-8 border border-border/50 bg-gradient-to-br from-[#d95d1e] via-[#8c350a] to-[#2b0f02] text-white flex flex-col justify-between min-h-[280px] transition-all"
+              className="group rounded-3xl p-8 border border-border/50 bg-gradient-to-br from-[#d95d1e] via-[#8c350a] to-[#2b0f02] text-white flex flex-col justify-end min-h-[280px] transition-all"
             >
-              <span className="text-2xl font-bold tracking-tight">_zapier</span>
               <div>
                 <p className="text-md font-medium text-neutral-200 group-hover:underline mb-1">
                   Empowering millions with autonomous multi-agent task execution

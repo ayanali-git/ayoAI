@@ -18,6 +18,8 @@ import {
   Check,
   Paperclip,
   Square,
+  Maximize2,
+  Minimize2,
 } from "lucide-react";
 import { useDropzone } from "react-dropzone";
 import {
@@ -159,7 +161,7 @@ function FilePreviewCard({ file, onRemove }: { file: File; onRemove: () => void 
 
       {/* File info */}
       <div className="flex flex-col min-w-0 pr-0.5">
-        <span className="text-[13.5px] font-semibold text-neutral-900 dark:text-neutral-100 truncate max-w-[130px] sm:max-w-[160px] leading-tight">
+        <span className="text-[15px] font-semibold text-neutral-900 dark:text-neutral-100 truncate max-w-[130px] sm:max-w-[160px] leading-tight">
           {file.name}
         </span>
         <span className="text-[11.5px] text-neutral-500 dark:text-neutral-400 capitalize leading-tight mt-0.5">
@@ -210,6 +212,7 @@ export const ChatInput = forwardRef<HTMLDivElement, ChatInputProps>(function Cha
   const [isListening, setIsListening] = useState(false);
   const [plusMenuOpen, setPlusMenuOpen] = useState(false);
   const [isMultiLine, setIsMultiLine] = useState(false);
+  const [isFullyExpanded, setIsFullyExpanded] = useState(false);
   const [menuSideOffset, setMenuSideOffset] = useState(14);
   const [menuAlignOffset, setMenuAlignOffset] = useState(0);
   const recognitionRef = useRef<any>(null);
@@ -235,45 +238,70 @@ export const ChatInput = forwardRef<HTMLDivElement, ChatInputProps>(function Cha
     noKeyboard: true,
   });
 
-  // Auto-resize textarea and detect multiline
-  useEffect(() => {
-    if (!textareaRef.current) {
-      setIsMultiLine(Boolean(message && message.includes("\n")));
-      return;
-    }
+  // Check if content is bigger (e.g. 5-10 lines or one-two paragraphs)
+  const lineCount = (message || "").split("\n").length;
+  const isBigContent =
+    lineCount >= 4 ||
+    (message && message.trim().length >= 180) ||
+    ((message || "").includes("\n") && (message || "").trim().length >= 80) ||
+    isFullyExpanded;
 
-    // When message is cleared or empty, immediately reset height and collapse
-    if (!message || message.trim() === "") {
-      textareaRef.current.style.height = "26px";
-      textareaRef.current.style.overflowY = "hidden";
-      setIsMultiLine(false);
-      return;
-    }
-
-    if (message.includes("\n")) {
-      textareaRef.current.style.height = "auto";
-      const scrollH = textareaRef.current.scrollHeight;
-      textareaRef.current.style.height = `${Math.min(scrollH, 200)}px`;
-      textareaRef.current.style.overflowY = scrollH > 200 ? "auto" : "hidden";
-      setIsMultiLine(true);
-    } else {
-      textareaRef.current.style.height = "auto";
-      const scrollH = textareaRef.current.scrollHeight;
-      if (scrollH > 38) {
-        textareaRef.current.style.height = `${Math.min(scrollH, 200)}px`;
-        textareaRef.current.style.overflowY = scrollH > 200 ? "auto" : "hidden";
-        setIsMultiLine(true);
-      } else {
-        textareaRef.current.style.height = "26px";
-        textareaRef.current.style.overflowY = "hidden";
-        setIsMultiLine(false);
-      }
-    }
-  }, [message]);
+  // Check if content dynamically requires multiline layout
+  const isTextMultiLine = Boolean(
+    message &&
+    message.trim().length > 0 &&
+    (message.includes("\n") || message.length > 25 || isMultiLine)
+  );
 
   const isExpandedLayout =
+    isFullyExpanded ||
     uploadedFiles.length > 0 ||
-    (Boolean(message && message.trim()) && (isMultiLine || message.includes("\n")));
+    isTextMultiLine;
+
+  // Auto-resize textarea height smoothly
+  const adjustHeight = useCallback(() => {
+    const el = textareaRef.current;
+    if (!el) return;
+
+    // When message is cleared or empty, immediately collapse
+    if (!message || message.trim() === "") {
+      el.style.height = "26px";
+      el.style.overflowY = "hidden";
+      setIsMultiLine(false);
+      if (isFullyExpanded) setIsFullyExpanded(false);
+      return;
+    }
+
+    // Reset height to measure scrollHeight accurately
+    el.style.height = "auto";
+    const scrollH = el.scrollHeight;
+    const maxH = isFullyExpanded ? 460 : 200;
+
+    if (scrollH > 38 || message.includes("\n")) {
+      setIsMultiLine(true);
+      if (scrollH > maxH) {
+        el.style.height = `${maxH}px`;
+        el.style.overflowY = "auto";
+      } else {
+        // Expand smoothly to exact height without micro-overflow
+        el.style.height = `${Math.max(scrollH, 44)}px`;
+        el.style.overflowY = "hidden";
+      }
+    } else {
+      el.style.height = "26px";
+      el.style.overflowY = "hidden";
+      setIsMultiLine(false);
+    }
+  }, [message, isFullyExpanded]);
+
+  useEffect(() => {
+    adjustHeight();
+  }, [adjustHeight]);
+
+  useEffect(() => {
+    window.addEventListener("resize", adjustHeight);
+    return () => window.removeEventListener("resize", adjustHeight);
+  }, [adjustHeight]);
 
   // Calculate dynamic menu sideOffset & alignOffset so it is ALWAYS positioned above the chat input pill
   const updateMenuPosition = useCallback(() => {
@@ -397,6 +425,12 @@ export const ChatInput = forwardRef<HTMLDivElement, ChatInputProps>(function Cha
   }, []);
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Escape" && isFullyExpanded) {
+      e.preventDefault();
+      setIsFullyExpanded(false);
+      return;
+    }
+
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       if (
@@ -404,6 +438,7 @@ export const ChatInput = forwardRef<HTMLDivElement, ChatInputProps>(function Cha
         !isTyping &&
         !isUploading
       ) {
+        setIsFullyExpanded(false);
         onSend();
       }
     }
@@ -499,7 +534,7 @@ export const ChatInput = forwardRef<HTMLDivElement, ChatInputProps>(function Cha
         alignOffset={menuAlignOffset}
         avoidCollisions={true}
         collisionPadding={12}
-        className="w-64 max-w-[calc(100vw-24px)] rounded-2xl p-1.5 bg-white/50 dark:bg-[#212121]/50 backdrop-blur-sm border border-border/50 dark:border-neutral-700/50 select-none outline-none"
+        className="w-[244px] max-w-[calc(100vw-24px)] rounded-2xl p-1.5 bg-white/50 dark:bg-[#212121]/50 backdrop-blur-sm border border-border/50 dark:border-neutral-700/50 select-none outline-none"
         style={{
           WebkitFontSmoothing: "antialiased",
           MozOsxFontSmoothing: "grayscale",
@@ -531,7 +566,7 @@ export const ChatInput = forwardRef<HTMLDivElement, ChatInputProps>(function Cha
             type="button"
             onClick={(e) => e.preventDefault()}
             style={{ cursor: "not-allowed" }}
-            className="hidden min-[420px]:flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-full text-base sm:text-[13px] font-medium text-muted-foreground/50 opacity-60 cursor-not-allowed select-none bg-transparent hover:bg-transparent"
+            className="hidden min-[420px]:flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-full text-base sm:text-[15px] font-medium text-muted-foreground/50 opacity-60 cursor-not-allowed select-none bg-transparent hover:bg-transparent"
             aria-label="Think mode (Coming soon)"
           >
             <Brain className="w-5 h-5 text-muted-foreground/50 pointer-events-none" />
@@ -574,7 +609,7 @@ export const ChatInput = forwardRef<HTMLDivElement, ChatInputProps>(function Cha
         <TooltipTrigger asChild>
           <button
             type="button"
-            onClick={isTyping ? onStop : onSend}
+            onClick={isTyping ? onStop : () => { setIsFullyExpanded(false); onSend(); }}
             disabled={(!hasContent && !isTyping) || isUploading}
             className={cn(
               "w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center transition-all shrink-0",
@@ -609,7 +644,7 @@ export const ChatInput = forwardRef<HTMLDivElement, ChatInputProps>(function Cha
       ref={ref}
       className={cn(
         "w-full select-none transition-all duration-200 relative",
-        centered ? "max-w-2xl mx-auto px-2 sm:px-4" : "max-w-3xl mx-auto px-2 sm:px-4"
+        centered ? "max-w-2xl mx-auto px-6" : "max-w-3xl mx-auto px-6"
       )}
     >
       {children}
@@ -619,9 +654,10 @@ export const ChatInput = forwardRef<HTMLDivElement, ChatInputProps>(function Cha
         className={cn(
           "relative bg-white/50 dark:bg-[#212121]/50 backdrop-blur-sm border border-border/50 dark:border-neutral-700/50 transition-all duration-200",
           "focus-within:bg-background dark:focus-within:bg-background focus-within:text-foreground dark:focus-within:text-foreground",
+          "rounded-3xl",
           isExpandedLayout
-            ? "rounded-3xl p-2.5 sm:p-3"
-            : "rounded-full px-1.5 sm:px-2 py-1 min-h-[48px] sm:min-h-[52px] flex items-center",
+            ? "p-3.5 sm:p-4"
+            : "px-2 sm:px-3 py-1.5 min-h-[48px] sm:min-h-[52px] flex items-center",
           isDragActive && "ring-2 ring-primary border-primary"
         )}
       >
@@ -654,18 +690,60 @@ export const ChatInput = forwardRef<HTMLDivElement, ChatInputProps>(function Cha
         {isExpandedLayout ? (
           /* Multiline Layout: full-width textarea on top, bottom toolbar with + on left and tools on right */
           <div className="flex flex-col w-full">
-            <div className="w-full px-1.5 sm:px-2 pt-0.5 pb-1">
+            <div className="w-full px-1.5 sm:px-2 pt-0.5 pb-1 relative">
               <textarea
                 ref={textareaRef}
                 value={message}
-                onChange={(e) => onMessageChange(e.target.value)}
+                onChange={(e) => {
+                  onMessageChange(e.target.value);
+                  const el = e.target;
+                  el.style.height = "auto";
+                  const scrollH = el.scrollHeight;
+                  const maxH = isFullyExpanded ? 460 : 200;
+                  if (scrollH > maxH) {
+                    el.style.height = `${maxH}px`;
+                    el.style.overflowY = "auto";
+                  } else {
+                    el.style.height = `${Math.max(scrollH, 44)}px`;
+                    el.style.overflowY = "hidden";
+                  }
+                }}
                 onKeyDown={handleKeyDown}
                 onPaste={handlePaste}
                 placeholder="Ask anything"
                 rows={1}
                 disabled={isTyping || isUploading}
-                className="w-full min-w-0 bg-transparent border-0 p-0 text-[16px] sm:text-[16.5px] text-foreground placeholder:text-muted-foreground focus:placeholder:text-foreground transition-colors focus:outline-none focus:ring-0 resize-none min-h-[44px] max-h-[200px] leading-relaxed"
+                className={cn(
+                  "w-full min-w-0 bg-transparent border-0 p-0 text-[16px] sm:text-[16.5px] text-foreground placeholder:text-muted-foreground focus:placeholder:text-foreground transition-colors focus:outline-none focus:ring-0 resize-none leading-relaxed",
+                  isFullyExpanded ? "min-h-[280px]" : "min-h-[44px]",
+                  isBigContent && "pr-14 sm:pr-16"
+                )}
               />
+
+              {/* Expand / Collapse button: matches Add files & Dictate button style & tooltip */}
+              {isBigContent && (
+                <div className="absolute top-0.5 right-6 sm:right-8 z-10">
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <button
+                        type="button"
+                        onClick={() => setIsFullyExpanded((prev) => !prev)}
+                        className="w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-secondary transition-all shrink-0 cursor-pointer"
+                        aria-label={isFullyExpanded ? "Collapse" : "Expand"}
+                      >
+                        {isFullyExpanded ? (
+                          <Minimize2 className="w-4 h-4 sm:w-5 sm:h-5" />
+                        ) : (
+                          <Maximize2 className="w-4 h-4 sm:w-5 sm:h-5" />
+                        )}
+                      </button>
+                    </TooltipTrigger>
+                    <TooltipContent className="text-md">
+                      {isFullyExpanded ? "Collapse" : "Expand"}
+                    </TooltipContent>
+                  </Tooltip>
+                </div>
+              )}
             </div>
 
             {/* Bottom Toolbar Row: + button placed down side like others buttons */}
@@ -690,7 +768,15 @@ export const ChatInput = forwardRef<HTMLDivElement, ChatInputProps>(function Cha
               <textarea
                 ref={textareaRef}
                 value={message}
-                onChange={(e) => onMessageChange(e.target.value)}
+                onChange={(e) => {
+                  onMessageChange(e.target.value);
+                  const el = e.target;
+                  el.style.height = "auto";
+                  const scrollH = el.scrollHeight;
+                  if (scrollH > 38 || e.target.value.includes("\n")) {
+                    setIsMultiLine(true);
+                  }
+                }}
                 onKeyDown={handleKeyDown}
                 onPaste={handlePaste}
                 placeholder="Ask anything"
@@ -710,7 +796,7 @@ export const ChatInput = forwardRef<HTMLDivElement, ChatInputProps>(function Cha
       {/* Responsive Disclaimer */}
       {showDisclaimer && (
         <div className="text-center pt-2 pb-0.5 px-3 select-none">
-          <p className="text-[13px] sm:text-base text-muted-foreground/60 font-normal tracking-tight leading-tight">
+          <p className="text-[15px] sm:text-base text-muted-foreground/60 font-normal tracking-tight leading-tight">
             CloseAI can make mistakes. Verify important info.
           </p>
         </div>

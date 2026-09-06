@@ -113,7 +113,7 @@ function TierMarqueeText({
               ? `transform ${duration}s linear 0.15s`
               : "transform 0.25s ease-out",
         }}
-        className="inline-block whitespace-nowrap text-[13.5px] select-none text-left"
+        className="inline-block whitespace-nowrap text-[15px] select-none text-left"
       >
         {text}
       </span>
@@ -191,7 +191,7 @@ function ModelMarqueeText({
               ? `transform ${duration}s linear 0.15s`
               : "transform 0.25s ease-out",
         }}
-        className="inline-block whitespace-nowrap text-[12.5px] sm:text-[13px] select-none text-inherit font-inherit"
+        className="inline-block whitespace-nowrap text-[12.5px] sm:text-[15px] select-none text-inherit font-inherit"
       >
         {text}
       </span>
@@ -529,13 +529,13 @@ function ModelSliderCard({
           )}
         >
           {isUltra ? (
-            <span className="w-full text-center text-[13px] font-semibold bg-gradient-to-r from-[#7C3AED] to-[#9333EA] bg-clip-text text-transparent">
+            <span className="w-full text-center text-[15px] font-semibold bg-gradient-to-r from-[#7C3AED] to-[#9333EA] bg-clip-text text-transparent">
               Consumes usage limits faster
             </span>
           ) : (
             <>
-              <span className="text-[13px] text-[#8E9299] dark:text-[#8e8e93]">Faster</span>
-              <span className="text-[13px] text-[#8E9299] dark:text-[#8e8e93]">Smarter</span>
+              <span className="text-[15px] text-[#8E9299] dark:text-[#8e8e93]">Faster</span>
+              <span className="text-[15px] text-[#8E9299] dark:text-[#8e8e93]">Smarter</span>
             </>
           )}
         </div>
@@ -780,7 +780,7 @@ export function PlusMenuContent({
             e.stopPropagation();
             setSubView("advanced");
           }}
-          className="w-full flex items-center justify-between px-3 py-1.5 rounded-xl text-[13px] text-muted-foreground [@media(hover:hover)]:hover:text-foreground [@media(hover:hover)]:hover:bg-secondary dark:[@media(hover:hover)]:hover:bg-[#2f2f2f] active:bg-secondary/80 dark:active:bg-[#2f2f2f]/80 transition-colors cursor-pointer outline-none focus:outline-none focus:bg-transparent focus-visible:outline-none"
+          className="w-full flex items-center justify-between px-3 py-1.5 rounded-xl text-[15px] text-muted-foreground [@media(hover:hover)]:hover:text-foreground [@media(hover:hover)]:hover:bg-secondary dark:[@media(hover:hover)]:hover:bg-[#2f2f2f] active:bg-secondary/80 dark:active:bg-[#2f2f2f]/80 transition-colors cursor-pointer outline-none focus:outline-none focus:bg-transparent focus-visible:outline-none"
         >
           <span>Advanced</span>
           <ChevronRight className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
@@ -820,7 +820,7 @@ export function PlusMenuContent({
             onMouseLeave={() => setHoveredModelIdx(null)}
             onFocus={() => setHoveredModelIdx(idx)}
             onBlur={() => setHoveredModelIdx(null)}
-            className="w-full flex items-center justify-between px-3 py-2 rounded-xl text-[13.5px] text-foreground [@media(hover:hover)]:hover:bg-secondary dark:[@media(hover:hover)]:hover:bg-[#2f2f2f] active:bg-secondary/80 dark:active:bg-[#2f2f2f]/80 transition-colors cursor-pointer min-w-0 outline-none focus:outline-none focus:bg-transparent focus-visible:outline-none text-left"
+            className="w-full flex items-center justify-between px-3 py-2 rounded-xl text-[15px] text-foreground [@media(hover:hover)]:hover:bg-secondary dark:[@media(hover:hover)]:hover:bg-[#2f2f2f] active:bg-secondary/80 dark:active:bg-[#2f2f2f]/80 transition-colors cursor-pointer min-w-0 outline-none focus:outline-none focus:bg-transparent focus-visible:outline-none text-left"
           >
             <TierMarqueeText text={m.label} isHovered={hoveredModelIdx === idx} />
             {model === m.key && <Check className="w-4 h-4 text-foreground shrink-0 ml-2" />}
@@ -843,7 +843,7 @@ export function PlusMenuContent({
             onMouseLeave={() => setHoveredModelIdx(null)}
             onFocus={() => setHoveredModelIdx(idx + 3)}
             onBlur={() => setHoveredModelIdx(null)}
-            className="w-full flex items-center justify-between px-3 py-2 rounded-xl text-[13.5px] text-foreground [@media(hover:hover)]:hover:bg-secondary dark:[@media(hover:hover)]:hover:bg-[#2f2f2f] active:bg-secondary/80 dark:active:bg-[#2f2f2f]/80 transition-colors cursor-pointer min-w-0 outline-none focus:outline-none focus:bg-transparent focus-visible:outline-none text-left"
+            className="w-full flex items-center justify-between px-3 py-2 rounded-xl text-[15px] text-foreground [@media(hover:hover)]:hover:bg-secondary dark:[@media(hover:hover)]:hover:bg-[#2f2f2f] active:bg-secondary/80 dark:active:bg-[#2f2f2f]/80 transition-colors cursor-pointer min-w-0 outline-none focus:outline-none focus:bg-transparent focus-visible:outline-none text-left"
           >
             <TierMarqueeText text={m.label} isHovered={hoveredModelIdx === idx + 3} />
             {model === m.key && <Check className="w-4 h-4 text-foreground shrink-0 ml-2" />}
@@ -884,7 +884,7 @@ export function PlusMenuContent({
             onMouseLeave={() => setHoveredTierIdx(null)}
             onFocus={() => setHoveredTierIdx(idx)}
             onBlur={() => setHoveredTierIdx(null)}
-            className="w-full flex items-center justify-between px-3 py-2 rounded-xl text-[13.5px] text-foreground [@media(hover:hover)]:hover:bg-secondary dark:[@media(hover:hover)]:hover:bg-[#2f2f2f] active:bg-secondary/80 dark:active:bg-[#2f2f2f]/80 transition-colors cursor-pointer min-w-0 outline-none focus:outline-none focus:bg-transparent focus-visible:outline-none text-left"
+            className="w-full flex items-center justify-between px-3 py-2 rounded-xl text-[15px] text-foreground [@media(hover:hover)]:hover:bg-secondary dark:[@media(hover:hover)]:hover:bg-[#2f2f2f] active:bg-secondary/80 dark:active:bg-[#2f2f2f]/80 transition-colors cursor-pointer min-w-0 outline-none focus:outline-none focus:bg-transparent focus-visible:outline-none text-left"
           >
             <TierMarqueeText text={tier.label} isHovered={hoveredTierIdx === idx} />
             {tierIndex === idx && <Check className="w-4 h-4 text-foreground shrink-0 ml-2" />}
@@ -925,7 +925,7 @@ export function PlusMenuContent({
             onMouseLeave={() => setHoveredSpeedIdx(null)}
             onFocus={() => setHoveredSpeedIdx(idx)}
             onBlur={() => setHoveredSpeedIdx(null)}
-            className="w-full flex items-center justify-between px-3 py-2 rounded-xl text-[13.5px] text-foreground [@media(hover:hover)]:hover:bg-secondary dark:[@media(hover:hover)]:hover:bg-[#2f2f2f] active:bg-secondary/80 dark:active:bg-[#2f2f2f]/80 transition-colors cursor-pointer min-w-0 outline-none focus:outline-none focus:bg-transparent focus-visible:outline-none text-left"
+            className="w-full flex items-center justify-between px-3 py-2 rounded-xl text-[15px] text-foreground [@media(hover:hover)]:hover:bg-secondary dark:[@media(hover:hover)]:hover:bg-[#2f2f2f] active:bg-secondary/80 dark:active:bg-[#2f2f2f]/80 transition-colors cursor-pointer min-w-0 outline-none focus:outline-none focus:bg-transparent focus-visible:outline-none text-left"
           >
             <TierMarqueeText text={s.label} isHovered={hoveredSpeedIdx === idx} />
             {speed === s.key && <Check className="w-4 h-4 text-foreground shrink-0 ml-2" />}
@@ -1014,7 +1014,8 @@ export function PlusMenuContent({
           <DropdownMenuSubContent
             sideOffset={4}
             alignOffset={-130}
-            className="w-64 max-w-[calc(100vw-24px)] rounded-2xl p-1.5 bg-white/50 dark:bg-[#212121]/50 backdrop-blur-sm border border-border/50 dark:border-neutral-700/50 select-none outline-none"
+            avoidCollisions={false}
+            className="w-[241px] max-w-[calc(100vw-24px)] rounded-2xl p-1.5 bg-white/50 dark:bg-[#212121]/50 backdrop-blur-sm border border-border/50 dark:border-neutral-700/50 select-none outline-none"
           >
             {/* Row 1: Model (Submenu dropdown on HOVER) */}
             <DropdownMenuSub>
@@ -1033,7 +1034,8 @@ export function PlusMenuContent({
               <DropdownMenuSubContent
                 sideOffset={4}
                 alignOffset={-125}
-                className="w-64 max-w-[calc(100vw-24px)] rounded-2xl p-1.5 bg-white/50 dark:bg-[#212121]/50 backdrop-blur-sm border border-border/50 dark:border-neutral-700/50 select-none outline-none"
+                avoidCollisions={false}
+                className="w-[241px] max-w-[calc(100vw-24px)] rounded-2xl p-1.5 bg-white/50 dark:bg-[#212121]/50 backdrop-blur-sm border border-border/50 dark:border-neutral-700/50 select-none outline-none"
               >
                 <DropdownMenuRadioGroup
                   value={model}
@@ -1047,7 +1049,7 @@ export function PlusMenuContent({
                       onMouseLeave={() => setHoveredModelIdx(null)}
                       onFocus={() => setHoveredModelIdx(idx)}
                       onBlur={() => setHoveredModelIdx(null)}
-                      className="cursor-pointer text-[13.5px] rounded-xl px-3 py-2 text-foreground transition-colors hover:bg-secondary dark:hover:bg-[#2f2f2f] flex items-center justify-between min-w-0 text-left"
+                      className="cursor-pointer text-[15px] rounded-xl px-3 py-2 text-foreground transition-colors hover:bg-secondary dark:hover:bg-[#2f2f2f] flex items-center justify-between min-w-0 text-left"
                     >
                       <TierMarqueeText text={m.label} isHovered={hoveredModelIdx === idx} />
                     </DropdownMenuRadioItem>
@@ -1063,7 +1065,7 @@ export function PlusMenuContent({
                       onMouseLeave={() => setHoveredModelIdx(null)}
                       onFocus={() => setHoveredModelIdx(idx + 3)}
                       onBlur={() => setHoveredModelIdx(null)}
-                      className="cursor-pointer text-[13.5px] rounded-xl px-3 py-2 text-foreground transition-colors hover:bg-secondary dark:hover:bg-[#2f2f2f] flex items-center justify-between min-w-0 text-left"
+                      className="cursor-pointer text-[15px] rounded-xl px-3 py-2 text-foreground transition-colors hover:bg-secondary dark:hover:bg-[#2f2f2f] flex items-center justify-between min-w-0 text-left"
                     >
                       <TierMarqueeText text={m.label} isHovered={hoveredModelIdx === idx + 3} />
                     </DropdownMenuRadioItem>
@@ -1091,7 +1093,8 @@ export function PlusMenuContent({
               <DropdownMenuSubContent
                 sideOffset={4}
                 alignOffset={-150}
-                className="w-64 max-w-[calc(100vw-24px)] rounded-2xl p-1.5 bg-white/50 dark:bg-[#212121]/50 backdrop-blur-sm border border-border/50 dark:border-neutral-700/50 select-none outline-none"
+                avoidCollisions={false}
+                className="w-[241px] max-w-[calc(100vw-24px)] rounded-2xl p-1.5 bg-white/50 dark:bg-[#212121]/50 backdrop-blur-sm border border-border/50 dark:border-neutral-700/50 select-none outline-none"
               >
                 <DropdownMenuRadioGroup
                   value={String(tierIndex)}
@@ -1105,7 +1108,7 @@ export function PlusMenuContent({
                       onMouseLeave={() => setHoveredTierIdx(null)}
                       onFocus={() => setHoveredTierIdx(idx)}
                       onBlur={() => setHoveredTierIdx(null)}
-                      className="cursor-pointer text-[13.5px] rounded-xl px-3 py-2 text-foreground transition-colors hover:bg-secondary dark:hover:bg-[#2f2f2f] flex items-center justify-between min-w-0 text-left"
+                      className="cursor-pointer text-[15px] rounded-xl px-3 py-2 text-foreground transition-colors hover:bg-secondary dark:hover:bg-[#2f2f2f] flex items-center justify-between min-w-0 text-left"
                     >
                       <TierMarqueeText text={tier.label} isHovered={hoveredTierIdx === idx} />
                     </DropdownMenuRadioItem>
@@ -1131,7 +1134,8 @@ export function PlusMenuContent({
               <DropdownMenuSubContent
                 sideOffset={4}
                 alignOffset={-80}
-                className="w-64 max-w-[calc(100vw-24px)] rounded-2xl p-1.5 bg-white/50 dark:bg-[#212121]/50 backdrop-blur-sm border border-border/50 dark:border-neutral-700/50 select-none outline-none"
+                avoidCollisions={false}
+                className="w-[241px] max-w-[calc(100vw-24px)] rounded-2xl p-1.5 bg-white/50 dark:bg-[#212121]/50 backdrop-blur-sm border border-border/50 dark:border-neutral-700/50 select-none outline-none"
               >
                 <DropdownMenuRadioGroup
                   value={speed}
@@ -1145,7 +1149,7 @@ export function PlusMenuContent({
                       onMouseLeave={() => setHoveredSpeedIdx(null)}
                       onFocus={() => setHoveredSpeedIdx(idx)}
                       onBlur={() => setHoveredSpeedIdx(null)}
-                      className="cursor-pointer text-[13.5px] rounded-xl px-3 py-2 text-foreground transition-colors hover:bg-secondary dark:hover:bg-[#2f2f2f] flex items-center justify-between min-w-0 text-left"
+                      className="cursor-pointer text-[15px] rounded-xl px-3 py-2 text-foreground transition-colors hover:bg-secondary dark:hover:bg-[#2f2f2f] flex items-center justify-between min-w-0 text-left"
                     >
                       <TierMarqueeText text={s.label} isHovered={hoveredSpeedIdx === idx} />
                     </DropdownMenuRadioItem>
@@ -1159,13 +1163,14 @@ export function PlusMenuContent({
 
             {/* Row 4: Advanced Submenu */}
             <DropdownMenuSub>
-              <DropdownMenuSubTrigger className="flex items-center justify-between px-3 py-1.5 rounded-xl cursor-pointer text-[13px] text-muted-foreground hover:text-foreground hover:bg-secondary dark:hover:bg-[#2f2f2f] data-[state=open]:bg-secondary dark:data-[state=open]:bg-[#2f2f2f] transition-colors outline-none whitespace-nowrap [&>svg:last-child]:shrink-0 [&>svg:last-child]:ml-1 text-left">
+              <DropdownMenuSubTrigger className="flex items-center justify-between px-3 py-1.5 rounded-xl cursor-pointer text-[15px] text-muted-foreground hover:text-foreground hover:bg-secondary dark:hover:bg-[#2f2f2f] data-[state=open]:bg-secondary dark:data-[state=open]:bg-[#2f2f2f] transition-colors outline-none whitespace-nowrap [&>svg:last-child]:shrink-0 [&>svg:last-child]:ml-1 text-left">
                 <span className="shrink-0">Advanced</span>
               </DropdownMenuSubTrigger>
               <DropdownMenuSubContent
                 sideOffset={4}
                 alignOffset={-50}
-                className="w-64 max-w-[calc(100vw-24px)] rounded-2xl p-3 bg-white/50 dark:bg-[#212121]/50 backdrop-blur-sm border border-border/50 dark:border-neutral-700/50 select-none outline-none"
+                avoidCollisions={false}
+                className="w-[241px] max-w-[calc(100vw-24px)] rounded-2xl p-3 bg-white/50 dark:bg-[#212121]/50 backdrop-blur-sm border border-border/50 dark:border-neutral-700/50 select-none outline-none"
                 onPointerDown={(e) => e.stopPropagation()}
               >
                 <ModelSliderCard

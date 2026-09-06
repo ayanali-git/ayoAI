@@ -71,7 +71,7 @@ export default function ResearchOverviewPage() {
           className="group inline-flex items-center text-md font-semibold uppercase tracking-wider text-foreground"
         >
           <span>Try in closeAI Chat</span>
-          <AnimatedArrow size={14} />
+          <AnimatedArrow size={18} />
         </Link>
       </div>
 
@@ -91,7 +91,7 @@ export default function ResearchOverviewPage() {
               className="p-6 rounded-2xl border border-border/50 bg-card hover:border-border transition-all flex flex-col justify-between group"
             >
               <div className="flex items-center justify-between mb-3">
-                <span className="text-[13px] font-semibold tracking-wider uppercase bg-secondary px-2.5 py-1 rounded-full text-foreground">
+                <span className="text-[15px] font-semibold tracking-wider uppercase bg-secondary px-2.5 py-1 rounded-full text-foreground">
                   {paper.tag}
                 </span>
                 <span className="text-md text-muted-foreground">{paper.date}</span>

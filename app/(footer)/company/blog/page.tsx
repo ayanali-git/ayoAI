@@ -49,7 +49,7 @@ export default function BlogPage() {
             <p className="text-muted-foreground text-base sm:text-base mb-4 leading-relaxed">{post.excerpt}</p>
             <div className="inline-flex items-center text-base sm:text-base font-medium hover:underline">
               <span>Read article</span>
-              <AnimatedArrow size={14} />
+              <AnimatedArrow size={18} />
             </div>
           </article>
         ))}

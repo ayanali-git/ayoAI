@@ -158,7 +158,7 @@ export default function SignupPage() {
             <div className="w-full border-t border-border" />
           </div>
           <div className="relative flex justify-center text-md">
-            <span className="bg-card px-3 text-muted-foreground uppercase font-semibold text-[13px] tracking-wider">
+            <span className="bg-card px-3 text-muted-foreground uppercase font-semibold text-[15px] tracking-wider">
               or
             </span>
           </div>

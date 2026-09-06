@@ -9,18 +9,6 @@ interface AnimatedArrowProps extends React.HTMLAttributes<HTMLSpanElement> {
   size?: number;
 }
 
-/**
- * Animated Chevron to Arrow on Hover (Exact x.ai / SpaceXAI design)
- * 
- * At rest (idle):
- * - Displays a clean right-pointing chevron (>).
- * 
- * On hover:
- * - The chevron vertex smoothly shifts slightly forward (15 -> 18)
- * - The arrow stem line emerges from the chevron vertex and expands backward to the left (15 -> 9)
- * - Stem opacity smoothly transitions from 0 to 1
- * - Powered by spring physics: stiffness 500, damping 30
- */
 export function AnimatedArrow({ className, size = 16, style, ...props }: AnimatedArrowProps) {
   const ref = useRef<HTMLSpanElement>(null);
   const [hovered, setHovered] = useState(false);
@@ -96,22 +84,11 @@ export interface AnimatedChevronProps extends React.SVGAttributes<SVGSVGElement>
   strokeWidth?: number;
 }
 
-/**
- * Animated Chevron Morph on Hover / Open (Exact x.ai / SpaceXAI design)
- * 
- * At rest (idle down chevron):
- * - Displays a clean downward-pointing polyline points: "4,6 8,10 12,6".
- * 
- * On hover or when open=true (upward chevron):
- * - Center vertex smoothly glides upward from y=10 to y=6
- * - Outer arms glide downward from y=6 to y=10 ("4,10 8,6 12,10")
- * - Driven by spring physics: stiffness 400, damping 30
- */
 export function AnimatedChevron({
   open,
   className,
-  size = 14,
-  strokeWidth = 1.75,
+  size = 18,
+  strokeWidth = 1.5,
   style,
   ...props
 }: AnimatedChevronProps) {
@@ -189,8 +166,8 @@ export function AnimatedSearchClose({
   open,
   isOpen,
   className,
-  size = 16,
-  strokeWidth = 1.7,
+  size = 18,
+  strokeWidth = 1.5,
   style,
   ...props
 }: AnimatedSearchCloseProps) {

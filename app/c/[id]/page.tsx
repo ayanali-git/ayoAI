@@ -668,7 +668,7 @@ export default function ActiveChatPage() {
               >
                 <DropdownMenuItem
                   onClick={() => toast("No files attached to this chat")}
-                  className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-[13px] font-normal cursor-pointer text-foreground hover:bg-secondary dark:hover:bg-[#2f2f2f] transition-colors"
+                  className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-[15px] font-normal cursor-pointer text-foreground hover:bg-secondary dark:hover:bg-[#2f2f2f] transition-colors"
                 >
                   <Folder className="w-4 h-4 text-muted-foreground" />
                   <span>View files in chat</span>
@@ -686,7 +686,7 @@ export default function ActiveChatPage() {
                     loadChats();
                     toast.success(isStarred ? "Chat unpinned" : "Chat pinned");
                   }}
-                  className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-[13px] font-normal cursor-pointer text-foreground hover:bg-secondary dark:hover:bg-[#2f2f2f] transition-colors"
+                  className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-[15px] font-normal cursor-pointer text-foreground hover:bg-secondary dark:hover:bg-[#2f2f2f] transition-colors"
                 >
                   {chats.find((c) => c.id === chatId)?.starred ? (
                     <>
@@ -703,7 +703,7 @@ export default function ActiveChatPage() {
 
                 <DropdownMenuItem
                   onClick={() => toast.success("Chat archived")}
-                  className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-[13px] font-normal cursor-pointer text-foreground hover:bg-secondary dark:hover:bg-[#2f2f2f] transition-colors"
+                  className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-[15px] font-normal cursor-pointer text-foreground hover:bg-secondary dark:hover:bg-[#2f2f2f] transition-colors"
                 >
                   <Archive className="w-4 h-4 text-muted-foreground" />
                   <span>Archive</span>
@@ -714,7 +714,7 @@ export default function ActiveChatPage() {
                     await chatService.deleteChat(supabase, chatId);
                     router.push("/c");
                   }}
-                  className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-[13px] font-normal cursor-pointer text-red-500 hover:bg-red-500/10 focus:text-red-500 transition-colors"
+                  className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-[15px] font-normal cursor-pointer text-red-500 hover:bg-red-500/10 focus:text-red-500 transition-colors"
                 >
                   <Trash2 className="w-4 h-4 text-red-500" />
                   <span>Delete</span>
@@ -733,77 +733,79 @@ export default function ActiveChatPage() {
             isChatLoading ? "overflow-y-hidden" : "overflow-y-auto"
           )}
         >
-          {/* Messages Container or Loader */}
-          {isChatLoading ? (
-            <div className="flex-1 w-full h-full flex flex-col items-center justify-center pb-16 text-muted-foreground animate-in fade-in-0 duration-150">
-              <Loader className="w-6 h-6 animate-spin text-foreground/80" />
-            </div>
-          ) : (
-            <div className={cn("transition-all duration-200", uploadedFiles.length > 0 ? "pb-48" : "pb-40 sm:pb-36")}>
-              <MessageList
-                messages={messages}
-                user={user}
-                isTyping={isTyping}
-                pendingMessage={pendingMessage}
-                onRegenerate={handleRegenerate}
-                onEditAndResend={handleEditAndResend}
-              />
-            </div>
-          )}
-          {/* Right-Edge TOC Navigator */}
-          {!isChatLoading && <TocNavigator messages={messages} containerRef={scrollContainerRef} />}
-        </div>
+          <div className="flex-1 flex flex-col min-h-full">
+            {/* Messages Container or Loader */}
+            {isChatLoading ? (
+              <div className="flex-1 w-full h-full flex flex-col items-center justify-center pb-16 text-muted-foreground animate-in fade-in-0 duration-150">
+                <Loader className="w-6 h-6 animate-spin text-foreground/80" />
+              </div>
+            ) : (
+              <div className="flex-1 pb-4 sm:pb-6">
+                <MessageList
+                  messages={messages}
+                  user={user}
+                  isTyping={isTyping}
+                  pendingMessage={pendingMessage}
+                  onRegenerate={handleRegenerate}
+                  onEditAndResend={handleEditAndResend}
+                />
+              </div>
+            )}
+            {/* Right-Edge TOC Navigator */}
+            {!isChatLoading && <TocNavigator messages={messages} containerRef={scrollContainerRef} />}
 
-        {/* Floating Input Dock */}
-        <div className="absolute bottom-0 left-0 right-0 z-20 pointer-events-none pb-[max(env(safe-area-inset-bottom,0px),0.5rem)] bg-gradient-to-t from-background via-background/90 to-transparent pt-4">
-          <div className="pointer-events-auto">
-            <ChatInput
-              message={inputValue}
-              onMessageChange={setInputValue}
-              onSend={handleSend}
-              onStop={handleStop}
-              uploadedFiles={uploadedFiles}
-              onFilesChange={setUploadedFiles}
-              isTyping={isTyping}
-              isUploading={isUploading}
-              showDisclaimer={messages.length > 0}
-              selectedModel={selectedModel}
-              onModelChange={setSelectedModel}
-              selectedTier={selectedModelTier}
-              onTierChange={setSelectedModelTier}
-            >
-              {/* Dynamic Floating Scroll-to-Bottom Button — stays right above input pill */}
-              <AnimatePresence>
-                {showScrollBottom && (
-                  <motion.div
-                    initial={{ opacity: 0, y: 10, scale: 0.92 }}
-                    animate={{ opacity: 1, y: 0, scale: 1 }}
-                    exit={{ opacity: 0, y: 10, scale: 0.92 }}
-                    transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
-                    className="absolute bottom-full mb-3 left-1/2 -translate-x-1/2 z-30 pointer-events-auto"
-                  >
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            isAutoScrollPinnedRef.current = true;
-                            scrollToBottom("smooth");
-                          }}
-                          className="w-9 h-9 rounded-full bg-white/50 dark:bg-[#212121]/50 backdrop-blur-sm border border-border/50 dark:border-neutral-700/50 flex items-center justify-center text-neutral-700 dark:text-neutral-200 hover:text-foreground dark:hover:text-foreground hover:bg-background dark:hover:bg-background transition-all cursor-pointer"
-                          aria-label="Scroll to bottom"
-                        >
-                          <ArrowDown className="w-4 h-4" />
-                        </button>
-                      </TooltipTrigger>
-                      <TooltipContent side="top" sideOffset={8} className="text-md">
-                        Scroll to bottom
-                      </TooltipContent>
-                    </Tooltip>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </ChatInput>
+            {/* Floating Input Dock inside scroll container for 100% scrollbar-aware width alignment */}
+            <div className="sticky bottom-0 left-0 right-0 z-20 pointer-events-none pb-[max(env(safe-area-inset-bottom,0px),0.5rem)] bg-gradient-to-t from-background via-background/90 to-transparent pt-4 mt-auto">
+              <div className="pointer-events-auto">
+                <ChatInput
+                  message={inputValue}
+                  onMessageChange={setInputValue}
+                  onSend={handleSend}
+                  onStop={handleStop}
+                  uploadedFiles={uploadedFiles}
+                  onFilesChange={setUploadedFiles}
+                  isTyping={isTyping}
+                  isUploading={isUploading}
+                  showDisclaimer={messages.length > 0}
+                  selectedModel={selectedModel}
+                  onModelChange={setSelectedModel}
+                  selectedTier={selectedModelTier}
+                  onTierChange={setSelectedModelTier}
+                >
+                  {/* Dynamic Floating Scroll-to-Bottom Button — stays right above input pill */}
+                  <AnimatePresence>
+                    {showScrollBottom && (
+                      <motion.div
+                        initial={{ opacity: 0, y: 10, scale: 0.92 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: 10, scale: 0.92 }}
+                        transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
+                        className="absolute bottom-full mb-3 left-1/2 -translate-x-1/2 z-30 pointer-events-auto"
+                      >
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                isAutoScrollPinnedRef.current = true;
+                                scrollToBottom("smooth");
+                              }}
+                              className="w-9 h-9 rounded-full bg-white/50 dark:bg-[#212121]/50 backdrop-blur-sm border border-border/50 dark:border-neutral-700/50 flex items-center justify-center text-neutral-700 dark:text-neutral-200 hover:text-foreground dark:hover:text-foreground hover:bg-background dark:hover:bg-background transition-all cursor-pointer"
+                              aria-label="Scroll to bottom"
+                            >
+                              <ArrowDown className="w-4 h-4" />
+                            </button>
+                          </TooltipTrigger>
+                          <TooltipContent side="top" sideOffset={8} className="text-md">
+                            Scroll to bottom
+                          </TooltipContent>
+                        </Tooltip>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </ChatInput>
+              </div>
+            </div>
           </div>
         </div>
       </div>

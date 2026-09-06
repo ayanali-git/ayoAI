@@ -1,19 +1,13 @@
 import './globals.css';
 import 'katex/dist/katex.min.css';
 import 'goey-toast/styles.css';
-import type { Metadata, Viewport } from 'next';
+import type { Metadata } from 'next';
 import { cookies } from 'next/headers';
 import { ToasterProvider } from '@/components/ui/toaster';
 import { AuthProvider } from '@/components/auth-provider';
 import { SubscriptionProvider } from '@/components/subscription-provider';
 import { ThemeProvider } from '@/components/theme-provider';
 import { TooltipProvider } from '@/components/ui/tooltip';
-
-export const viewport: Viewport = {
-  width: 'device-width',
-  initialScale: 1,
-  maximumScale: 1,
-};
 
 export const metadata: Metadata = {
   title: 'CloseAI',
@@ -56,6 +50,9 @@ export default function RootLayout({
 
   return (
     <html lang="en" suppressHydrationWarning>
+      <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+      </head>
       <body className="min-h-screen bg-background text-foreground antialiased font-sans">
         <ThemeProvider
           attribute="class"

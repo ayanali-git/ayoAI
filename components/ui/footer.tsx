@@ -6,8 +6,8 @@ import { Globe, ArrowUpRight, Copy, Copyright } from "lucide-react";
 
 export function Footer() {
   return (
-    <footer className="w-full bg-background text-foreground pt-16 pb-12 px-6 sm:px-8 select-none">
-      <div className="max-w-[1400px] mx-auto">
+    <footer className="w-full bg-background text-foreground pt-10 pb-5 select-none">
+      <div className="max-w-[1400px] mx-auto px-6 sm:px-10">
         {/* Multi-Tier 5-Column Links Grid matching */}
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-8 lg:gap-12 pb-16 border-b border-border/40">
           
@@ -103,20 +103,18 @@ export function Footer() {
                   </Link>
                 </li>
                 <li>
-                  <Link href="/business/enterprise" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-muted-foreground hover:text-foreground transition-colors">
+                  <Link href="/business/enterprise" className="flex items-center gap-1 text-muted-foreground hover:text-foreground transition-colors">
                     <span>closeAI Business</span>
-                    <ArrowUpRight className="w-4 h-4 stroke-[2.5]" />
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/business/enterprise" className="flex items-center gap-1 text-muted-foreground hover:text-foreground transition-colors">
+                    <span>closeAI Education</span>
                   </Link>
                 </li>
                 <li>
                   <Link href="/business/enterprise" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-muted-foreground hover:text-foreground transition-colors">
                     <span>closeAI Enterprise</span>
-                    <ArrowUpRight className="w-4 h-4 stroke-[2.5]" />
-                  </Link>
-                </li>
-                <li>
-                  <Link href="/business/enterprise" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-muted-foreground hover:text-foreground transition-colors">
-                    <span>closeAI for Education</span>
                     <ArrowUpRight className="w-4 h-4 stroke-[2.5]" />
                   </Link>
                 </li>
@@ -141,12 +139,6 @@ export function Footer() {
                 <li>
                   <Link href="/product/api-docs" className="text-muted-foreground hover:text-foreground transition-colors">
                     Overview
-                  </Link>
-                </li>
-                <li>
-                  <Link href="/auth/login" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-muted-foreground hover:text-foreground transition-colors">
-                    <span>API Log In</span>
-                    <ArrowUpRight className="w-4 h-4 stroke-[2.5]" />
                   </Link>
                 </li>
                 <li>
@@ -338,11 +330,6 @@ export function Footer() {
                     Privacy Policy
                   </Link>
                 </li>
-                <li>
-                  <Link href="/support/privacy" className="text-muted-foreground hover:text-foreground transition-colors">
-                    Other Policies
-                  </Link>
-                </li>
               </ul>
             </div>
           </div>
@@ -350,7 +337,7 @@ export function Footer() {
         </div>
 
         {/* Bottom Bar: Copyright, Center Language, & Social Links (Single divider above) */}
-        <div className="pt-8 flex flex-col md:flex-row items-center justify-between gap-6 text-[13.5px] text-muted-foreground">
+        <div className="pt-8 flex flex-col md:flex-row items-center justify-between gap-6 text-[15px] text-muted-foreground">
           {/* Left: Brand & Copyright */}
           <div className="flex flex-wrap items-center justify-center text-base md:justify-start gap-x-1 text-center md:text-left">
             <Copyright className="w-4 h-4" />

@@ -12,7 +12,11 @@ import {
   Menu,
 } from "lucide-react";
 import { CloseAIIcon } from "@/components/brand/logo";
-import { AnimatedArrow, AnimatedChevron, AnimatedSearchClose } from "@/components/ui/animated-icons";
+import {
+  AnimatedArrow,
+  AnimatedChevron,
+  AnimatedSearchClose,
+} from "@/components/ui/animated-icons";
 import { useAuth } from "@/hooks/use-auth";
 import {
   DropdownMenu,
@@ -56,7 +60,9 @@ export function MarketingHeader() {
 
   const getNavButtonColor = (key: string) => {
     if (!currentActiveNav) return "text-foreground";
-    return currentActiveNav === key ? "text-foreground" : "text-muted-foreground";
+    return currentActiveNav === key
+      ? "text-foreground"
+      : "text-muted-foreground";
   };
 
   const handleAccountEnter = () => {
@@ -176,7 +182,7 @@ export function MarketingHeader() {
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Ask about research, models, pricing..."
+                placeholder="Search anything"
                 className="w-full bg-transparent text-2xl sm:text-3xl text-foreground font-normal placeholder:text-muted-foreground outline-none border-none ring-0"
               />
               <div className="flex items-center gap-2 shrink-0 pl-4">
@@ -224,7 +230,7 @@ export function MarketingHeader() {
             </Link>
 
             {/* Desktop Navigation */}
-            <nav 
+            <nav
               className="hidden lg:flex items-center gap-6"
               onMouseLeave={() => setHoveredNav(null)}
             >
@@ -239,14 +245,14 @@ export function MarketingHeader() {
                   setActiveMenu(activeMenu === "research" ? null : "research");
                 }}
                 className={cn(
-                  "group text-[13.5px] font-medium transition-colors py-1 cursor-pointer flex items-center gap-1",
+                  "group text-[15px] font-medium transition-colors py-1 cursor-pointer flex items-center gap-1",
                   getNavButtonColor("research")
                 )}
               >
                 <span>Research</span>
                 <AnimatedChevron
                   open={activeMenu === "research"}
-                  size={13}
+                  size={18}
                   className="text-muted-foreground group-hover:text-foreground transition-colors"
                 />
               </button>
@@ -262,14 +268,14 @@ export function MarketingHeader() {
                   setActiveMenu(activeMenu === "products" ? null : "products");
                 }}
                 className={cn(
-                  "group text-[13.5px] font-medium transition-colors py-1 cursor-pointer flex items-center gap-1",
+                  "group text-[15px] font-medium transition-colors py-1 cursor-pointer flex items-center gap-1",
                   getNavButtonColor("products")
                 )}
               >
                 <span>Products</span>
                 <AnimatedChevron
                   open={activeMenu === "products"}
-                  size={13}
+                  size={18}
                   className="text-muted-foreground group-hover:text-foreground transition-colors"
                 />
               </button>
@@ -285,14 +291,14 @@ export function MarketingHeader() {
                   setActiveMenu(activeMenu === "business" ? null : "business");
                 }}
                 className={cn(
-                  "group text-[13.5px] font-medium transition-colors py-1 cursor-pointer flex items-center gap-1",
+                  "group text-[15px] font-medium transition-colors py-1 cursor-pointer flex items-center gap-1",
                   getNavButtonColor("business")
                 )}
               >
                 <span>Business</span>
                 <AnimatedChevron
                   open={activeMenu === "business"}
-                  size={13}
+                  size={18}
                   className="text-muted-foreground group-hover:text-foreground transition-colors"
                 />
               </button>
@@ -310,14 +316,14 @@ export function MarketingHeader() {
                   );
                 }}
                 className={cn(
-                  "group text-[13.5px] font-medium transition-colors py-1 cursor-pointer flex items-center gap-1",
+                  "group text-[15px] font-medium transition-colors py-1 cursor-pointer flex items-center gap-1",
                   getNavButtonColor("developers")
                 )}
               >
                 <span>Developers</span>
                 <AnimatedChevron
                   open={activeMenu === "developers"}
-                  size={13}
+                  size={18}
                   className="text-muted-foreground group-hover:text-foreground transition-colors"
                 />
               </button>
@@ -333,14 +339,14 @@ export function MarketingHeader() {
                   setActiveMenu(activeMenu === "company" ? null : "company");
                 }}
                 className={cn(
-                  "group text-[13.5px] font-medium transition-colors py-1 cursor-pointer flex items-center gap-1",
+                  "group text-[15px] font-medium transition-colors py-1 cursor-pointer flex items-center gap-1",
                   getNavButtonColor("company")
                 )}
               >
                 <span>Company</span>
                 <AnimatedChevron
                   open={activeMenu === "company"}
-                  size={13}
+                  size={18}
                   className="text-muted-foreground group-hover:text-foreground transition-colors"
                 />
               </button>
@@ -358,7 +364,7 @@ export function MarketingHeader() {
                   setIsSearchOpen(false);
                 }}
                 className={cn(
-                  "text-[13.5px] font-medium transition-colors py-1",
+                  "text-[15px] font-medium transition-colors py-1",
                   getNavButtonColor("foundation")
                 )}
               >
@@ -381,10 +387,7 @@ export function MarketingHeader() {
                 )}
                 aria-label={isSearchOpen ? "Close search" : "Open search"}
               >
-                <AnimatedSearchClose
-                  isOpen={isSearchOpen}
-                  size={16}
-                />
+                <AnimatedSearchClose isOpen={isSearchOpen} size={18} />
               </button>
             </nav>
           </div>
@@ -407,12 +410,12 @@ export function MarketingHeader() {
                   <button
                     type="button"
                     onClick={() => setAccountMenuOpen(!accountMenuOpen)}
-                    className="group flex rounded-full bg-white/50 dark:bg-[#212121]/50 hover:bg-secondary dark:hover:bg-[#2f2f2f] items-center gap-1.5 text-[13px] font-medium text-muted-foreground hover:text-foreground transition-colors px-4 py-2 cursor-pointer outline-none select-none"
+                    className="group flex rounded-full bg-white/50 dark:bg-[#212121]/50 hover:bg-secondary dark:hover:bg-[#2f2f2f] items-center gap-1.5 text-[15px] font-medium text-muted-foreground hover:text-foreground transition-colors px-4 py-2 cursor-pointer outline-none select-none"
                   >
                     <span>Account</span>
                     <AnimatedChevron
                       open={accountMenuOpen}
-                      size={13}
+                      size={18}
                       className="text-muted-foreground group-hover:text-foreground transition-colors"
                     />
                   </button>
@@ -424,7 +427,7 @@ export function MarketingHeader() {
                       onMouseLeave={handleAccountLeave}
                       className="absolute right-0 top-full pt-2 z-50"
                     >
-                      <div className="w-48 rounded-2xl p-1.5 bg-white/50 dark:bg-[#212121]/50 backdrop-blur-sm border border-border/50 dark:border-neutral-700/50">
+                      <div className="w-40 rounded-2xl p-1.5 bg-white/50 dark:bg-[#212121]/50 backdrop-blur-sm">
                         <Link
                           href="/c"
                           onClick={() => setAccountMenuOpen(false)}
@@ -457,10 +460,10 @@ export function MarketingHeader() {
 
                 <Button
                   asChild
-                  className="group rounded-full px-4 h-9 text-[13px] font-medium bg-foreground text-background hover:opacity-90 transition-opacity cursor-pointer"
+                  className="group rounded-full px-4 h-9 text-[15px] font-medium bg-foreground text-background hover:opacity-90 transition-opacity cursor-pointer"
                 >
                   <Link href="/c" className="flex items-center gap-1">
-                    <span>Go to Chat</span>
+                    <span>Try now</span>
                     <AnimatedArrow size={16} />
                   </Link>
                 </Button>
@@ -475,12 +478,12 @@ export function MarketingHeader() {
                   <button
                     type="button"
                     onClick={() => setLoginMenuOpen(!loginMenuOpen)}
-                    className="group flex rounded-full bg-white/50 dark:bg-[#212121]/50 hover:bg-secondary dark:hover:bg-[#2f2f2f] items-center gap-1.5 text-[13px] font-medium text-muted-foreground hover:text-foreground transition-colors px-4 py-2 cursor-pointer outline-none select-none"
+                    className="group flex rounded-full bg-white/50 dark:bg-[#212121]/50 hover:bg-secondary dark:hover:bg-[#2f2f2f] items-center gap-1.5 text-[15px] font-medium text-muted-foreground hover:text-foreground transition-colors px-4 py-2 cursor-pointer outline-none select-none"
                   >
                     <span>Log in</span>
                     <AnimatedChevron
                       open={loginMenuOpen}
-                      size={13}
+                      size={18}
                       className="text-muted-foreground group-hover:text-foreground transition-colors"
                     />
                   </button>
@@ -492,91 +495,40 @@ export function MarketingHeader() {
                       onMouseLeave={handleLoginLeave}
                       className="absolute right-0 top-full pt-2 z-50"
                     >
-                      <div className="w-52 rounded-2xl p-1.5 bg-white/50 dark:bg-[#212121]/50 backdrop-blur-sm border border-border/50 dark:border-neutral-700/50">
+                      <div className="w-40 rounded-2xl p-1.5 bg-white/50 dark:bg-[#212121]/50 backdrop-blur-sm">
                         <Link
                           href="/auth/login"
                           onClick={() => setLoginMenuOpen(false)}
                           className="flex items-center gap-2 px-4 py-2 text-md rounded-xl text-foreground hover:bg-secondary dark:hover:bg-[#2f2f2f] transition-colors"
                         >
-                          Log in to closeAI
+                          CloseAI
                         </Link>
                         <Link
                           href="/auth/login?type=enterprise"
                           onClick={() => setLoginMenuOpen(false)}
                           className="flex items-center gap-2 px-4 py-2 text-md rounded-xl text-foreground hover:bg-secondary dark:hover:bg-[#2f2f2f] transition-colors"
                         >
-                          Log in to Enterprise
+                          Enterprise
                         </Link>
                       </div>
                     </div>
                   )}
                 </div>
 
-                {/* SpaceXAI style split Try for free button */}
-                <div
-                  onMouseEnter={handleTryEnter}
-                  onMouseLeave={handleTryLeave}
-                  className="relative group hidden sm:block"
+                <Button
+                  asChild
+                  className="group rounded-full px-4 h-9 text-[15px] font-medium bg-foreground text-background hover:opacity-90 transition-opacity cursor-pointer hidden sm:inline-flex"
                 >
-                  <div className="flex items-stretch rounded-full bg-foreground text-background h-9 overflow-hidden">
-                    <Link
-                      href="/c"
-                      className="flex items-center rounded-l-full pl-4 pr-3 text-[13px] font-medium transition-colors hover:bg-black/10 dark:hover:bg-white/10"
-                    >
-                      Try for free
-                    </Link>
-                    <div className="w-[1px] bg-background/25 self-stretch my-1.5" />
-                    <button
-                      type="button"
-                      onClick={() => setTryMenuOpen(!tryMenuOpen)}
-                      className="flex items-center rounded-r-full pl-2 pr-3 transition-colors hover:bg-black/10 dark:hover:bg-white/10 cursor-pointer outline-none"
-                      aria-label="More options"
-                    >
-                      <AnimatedChevron
-                        open={tryMenuOpen}
-                        size={14}
-                        strokeWidth={2}
-                        className="text-background"
-                      />
-                    </button>
-                  </div>
-
-                  {/* Zero-flicker Hover Dropdown Bridge */}
-                  {tryMenuOpen && (
-                    <div
-                      onMouseEnter={handleTryEnter}
-                      onMouseLeave={handleTryLeave}
-                      className="absolute right-0 top-full pt-2 z-50"
-                    >
-                      <div className="w-52 rounded-2xl p-1.5 bg-white/50 dark:bg-[#212121]/50 backdrop-blur-sm border border-border/50 dark:border-neutral-700/50">
-                        <Link
-                          href="/c"
-                          onClick={() => setTryMenuOpen(false)}
-                          className="flex items-center justify-between px-3.5 py-2 text-[13px] rounded-xl text-foreground hover:bg-secondary dark:hover:bg-[#2f2f2f] transition-colors"
-                        >
-                          <span>Open Web Chat</span>
-                          <ArrowUpRight className="w-3.5 h-3.5 text-muted-foreground" />
-                        </Link>
-                        <Link
-                          href="/c"
-                          onClick={() => setTryMenuOpen(false)}
-                          className="flex items-center justify-between px-3.5 py-2 text-[13px] rounded-xl text-foreground hover:bg-secondary dark:hover:bg-[#2f2f2f] transition-colors"
-                        >
-                          <span>CloseAI for Desktop</span>
-                          <ArrowUpRight className="w-3.5 h-3.5 text-muted-foreground" />
-                        </Link>
-                        <Link
-                          href="/product/docs"
-                          onClick={() => setTryMenuOpen(false)}
-                          className="flex items-center justify-between px-3.5 py-2 text-[13px] rounded-xl text-foreground hover:bg-secondary dark:hover:bg-[#2f2f2f] transition-colors"
-                        >
-                          <span>API & Developers</span>
-                          <ArrowUpRight className="w-3.5 h-3.5 text-muted-foreground" />
-                        </Link>
-                      </div>
-                    </div>
-                  )}
-                </div>
+                  <Link
+                    href="/auth/signup"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-1"
+                  >
+                    <span>Sign up</span>
+                    <ArrowUpRight className="w-4 h-4" />
+                  </Link>
+                </Button>
               </>
             )}
           </div>
@@ -591,10 +543,7 @@ export function MarketingHeader() {
               className="p-2 text-muted-foreground hover:text-foreground transition-colors flex items-center justify-center"
               aria-label={isSearchOpen ? "Close search" : "Search"}
             >
-              <AnimatedSearchClose
-                isOpen={isSearchOpen}
-                size={16}
-              />
+              <AnimatedSearchClose isOpen={isSearchOpen} size={18} />
             </button>
             <button
               onClick={() => {
@@ -1268,14 +1217,6 @@ export function MarketingHeader() {
                 </div>
 
                 <div className="pt-8 border-t border-border/50 space-y-4 pb-4">
-                  <Link
-                    href="/c"
-                    onClick={() => setMobileNavOpen(false)}
-                    className="flex items-center gap-1.5 text-3xl sm:text-4xl font-medium tracking-tight text-foreground hover:opacity-80 transition-opacity py-1"
-                  >
-                    <span>Try now</span>
-                    <ArrowUpRight className="w-6 h-6 stroke-[2.5]" />
-                  </Link>
                   {user ? (
                     <button
                       onClick={() => setMobileSubMenu("account")}
@@ -1291,6 +1232,16 @@ export function MarketingHeader() {
                       Login
                     </button>
                   )}
+                  <Link
+                    href="/auth/signup"
+                    target="_black"
+                    rel="noopener noreferrer"
+                    onClick={() => setMobileNavOpen(false)}
+                    className="flex items-center gap-1.5 text-3xl sm:text-4xl font-medium tracking-tight text-foreground hover:opacity-80 transition-opacity py-1"
+                  >
+                    <span>Sign up</span>
+                    <ArrowUpRight className="w-6 h-6 stroke-[2.5]" />
+                  </Link>
                 </div>
               </div>
             ) : (
@@ -1606,9 +1557,9 @@ export function MarketingHeader() {
                     <div className="space-y-6">
                       <div className="space-y-3">
                         {[
-                          { label: "Log in to closeAI", href: "/auth/login" },
+                          { label: "CloseAI", href: "/auth/login" },
                           {
-                            label: "Log in to Enterprise",
+                            label: "Enterprise",
                             href: "/auth/login?type=enterprise",
                           },
                         ].map((item, i) => (
@@ -1621,22 +1572,6 @@ export function MarketingHeader() {
                             {item.label}
                           </Link>
                         ))}
-                      </div>
-
-                      <div className="pt-4 border-t border-border/40">
-                        <div className="text-md uppercase tracking-wider text-muted-foreground font-semibold mb-3">
-                          Don&apos;t have an account?
-                        </div>
-                        <div className="space-y-2.5">
-                          <Link
-                            href="/auth/signup"
-                            onClick={() => setMobileNavOpen(false)}
-                            className="flex items-center gap-1.5 text-lg font-medium text-foreground hover:opacity-80 transition-opacity"
-                          >
-                            <span>Sign up for now</span>
-                            <ArrowUpRight className="w-4 h-4 stroke-[2.5]" />
-                          </Link>
-                        </div>
                       </div>
                     </div>
                   )}

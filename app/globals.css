@@ -67,12 +67,6 @@
   }
 }
 
-/* iOS Safari overscroll / bounce prevention */
-.no-overscroll {
-  overscroll-behavior: none;
-  -webkit-overflow-scrolling: touch;
-}
-
 /* Prevent iOS Safari / mobile browser auto-zoom on input and textarea focus */
 @media screen and (max-width: 1024px) {
   input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),

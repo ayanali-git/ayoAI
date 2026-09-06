@@ -86,7 +86,7 @@ export default function SafetyPage() {
           className="group inline-flex items-center text-md font-semibold uppercase tracking-wider text-foreground hover:underline"
         >
           <span>Explore system cards</span>
-          <AnimatedArrow size={14} />
+          <AnimatedArrow size={18} />
         </Link>
       </div>
     </div>
